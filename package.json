@@ -1,0 +1,46 @@
+{
+  "name": "warcraft-vscode",
+  "displayName": "warcraft-vscode",
+  "description": "A Warcraft III map develop toolset",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.33.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:extension.warcraft.merge"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.warcraft.merge",
+        "title": "Warcraft: Merge scripts"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.123",
+    "@types/mkdirp-promise": "^5.0.0",
+    "@types/mocha": "^2.2.42",
+    "@types/mz": "0.0.32",
+    "@types/node": "^10.12.21",
+    "tslint": "^5.12.1",
+    "typescript": "^3.3.1",
+    "vscode": "^1.1.28"
+  },
+  "dependencies": {
+    "lodash": "^4.17.11",
+    "mkdirp-promise": "^5.0.1",
+    "mz": "^2.7.0"
+  }
+}

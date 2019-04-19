@@ -10,14 +10,19 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:extension.warcraft.merge"
+    "onCommand:extension.warcraft.compile.debug",
+    "onCommand:extension.warcraft.pack"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "extension.warcraft.merge",
-        "title": "Warcraft: Merge scripts"
+        "command": "extension.warcraft.compile.debug",
+        "title": "Warcraft: Compile code Debug"
+      },
+      {
+        "command": "extension.warcraft.pack",
+        "title": "Warcraft: Pack map"
       }
     ]
   },
@@ -29,7 +34,6 @@
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.123",
     "@types/mkdirp-promise": "^5.0.0",
     "@types/mocha": "^2.2.42",
     "@types/mz": "0.0.32",
@@ -39,7 +43,6 @@
     "vscode": "^1.1.28"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
     "mkdirp-promise": "^5.0.1",
     "mz": "^2.7.0"
   }

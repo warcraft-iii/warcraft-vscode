@@ -9,7 +9,8 @@ import * as vscode from "vscode";
 import * as fs from "mz/fs";
 import * as path from "path";
 import * as code from "./code";
-import { pack } from "./pack";
+import * as pack from "./pack";
+import { isString } from "util";
 
 interface WarcraftConfig {
     GAME_PATH?: string;
@@ -20,19 +21,6 @@ interface WarcraftConfig {
     WE_CMDLINE?: string;
     MAP_PKG_PATH?: string;
 }
-
-function Check(target: any, key: string, descriptor: any) {
-    if (descriptor.value) {
-        return {
-            value: async function(...args: any[]) {
-                await target.check.apply(this);
-                return descriptor.value.apply(this, ...args);
-            }
-        };
-    }
-}
-
-type CommandMethod = (...args: any[]) => Promise<void>;
 
 export class Project {
     private static _instance = new Project();
@@ -47,23 +35,25 @@ export class Project {
         return Project._instance;
     }
 
-    static catch(target: Project, key: string, descriptor: TypedPropertyDescriptor<CommandMethod>) {
+    static catch(target: any, key: string, descriptor: any) {
         if (descriptor.value) {
-            return {
-                value: function(...args: any[]) {
-                    return descriptor.value.apply(this, ...args).catch(err => vscode.window.showErrorMessage(err));
+            const value = descriptor.value;
+            descriptor.value = async function() {
+                try {
+                    await value.apply(this, arguments);
+                } catch (error) {
+                    vscode.window.showErrorMessage(error.message);
                 }
             };
         }
     }
 
-    static validate(target: Project, key: string, descriptor: TypedPropertyDescriptor<CommandMethod>) {
+    static validate(target: any, key: string, descriptor: any) {
         if (descriptor.value) {
-            return {
-                value: async function(...args: any[]) {
-                    await target.check.apply(this);
-                    return descriptor.value.apply(this, ...args);
-                }
+            const value = descriptor.value;
+            descriptor.value = async function() {
+                await this.check();
+                return value.apply(this, arguments);
             };
         }
     }
@@ -80,7 +70,7 @@ export class Project {
     @Project.catch
     @Project.validate
     packMap() {
-        return pack(path.join(this._rootPath, this._pkgPath), `_${this._pkgPath}`);
+        return pack.pack(path.join(this._rootPath, this._pkgPath), path.join(this._rootPath, `_${this._pkgPath}`));
     }
 
     async check() {

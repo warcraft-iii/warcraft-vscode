@@ -6,28 +6,13 @@
  */
 
 import * as vscode from "vscode";
-import * as fs from "mz/fs";
-import * as path from "path";
 import * as code from "./code";
 import * as pack from "./pack";
-import { isString } from "util";
-
-interface WarcraftConfig {
-    GAME_PATH?: string;
-    GAME_BUILD?: string;
-    GAME_EXE?: string;
-    GAME_CMDLINE?: string;
-    WE_EXE?: string;
-    WE_CMDLINE?: string;
-    MAP_PKG_PATH?: string;
-}
+import * as runner from "./runner";
+import config from "./config";
 
 export class Project {
     private static _instance = new Project();
-
-    private _config: WarcraftConfig = {};
-    private _rootPath: string = "";
-    private _pkgPath: string = "";
 
     private constructor() {}
 
@@ -61,40 +46,28 @@ export class Project {
     @Project.catch
     @Project.validate
     compileDebug() {
-        return code.compileDebug(
-            path.join(this._rootPath, "src"),
-            path.join(this._rootPath, this._pkgPath, "war3map.lua")
-        );
+        return code.compileDebug(config.sourceFolder, config.scriptPath);
     }
 
     @Project.catch
     @Project.validate
     packMap() {
-        return pack.pack(path.join(this._rootPath, this._pkgPath), path.join(this._rootPath, `_${this._pkgPath}`));
+        return pack.pack(config.mapFolder, config.mapPath);
+    }
+
+    @Project.catch
+    @Project.validate
+    runGame() {
+        return runner.runGame();
+    }
+
+    @Project.catch
+    @Project.validate
+    runWorldEditor() {
+        return runner.runWorldEditor();
     }
 
     async check() {
-        if (!vscode.workspace.rootPath) {
-            throw new Error("Can not use in workspace");
-        }
-
-        const configFile = path.join(vscode.workspace.rootPath, "warcraft.json");
-        const stat = await fs.stat(configFile);
-        if (!stat.isFile()) {
-            throw new Error("Can not use in workspace");
-        }
-
-        const body = await fs.readFile(configFile, { encoding: "utf-8" });
-        if (!body) {
-            throw "ErrorCode.NotWarcraftProject";
-        }
-
-        const config = JSON.parse(body) as WarcraftConfig;
-        if (!config) {
-            throw "ErrorCode.NotWarcraftProject";
-        }
-
-        this._rootPath = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : "";
-        this._pkgPath = config.MAP_PKG_PATH ? config.MAP_PKG_PATH : "";
+        config.load();
     }
 }

@@ -11,18 +11,28 @@
   ],
   "activationEvents": [
     "onCommand:extension.warcraft.compile.debug",
-    "onCommand:extension.warcraft.pack"
+    "onCommand:extension.warcraft.pack",
+    "onCommand:extension.warcraft.run.game",
+    "onCommand:extension.warcraft.run.we"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "extension.warcraft.compile.debug",
-        "title": "Warcraft: Compile code Debug"
+        "title": "Warcraft: Compile Debug"
       },
       {
         "command": "extension.warcraft.pack",
-        "title": "Warcraft: Pack map"
+        "title": "Warcraft: Pack Map"
+      },
+      {
+        "command": "extension.warcraft.run.game",
+        "title": "Warcraft: Run Map"
+      },
+      {
+        "command": "extension.warcraft.run.we",
+        "title": "Warcraft: Open World Editor"
       }
     ]
   },

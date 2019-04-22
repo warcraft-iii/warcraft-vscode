@@ -6,10 +6,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     let disposables = [
         vscode.commands.registerCommand("extension.warcraft.compile.debug", () => project.compileDebug()),
-        vscode.commands.registerCommand("extension.warcraft.pack", () => project.packMap())
+        vscode.commands.registerCommand("extension.warcraft.pack", () => project.packMap()),
+        vscode.commands.registerCommand("extension.warcraft.run.game", () => project.runGame()),
+        vscode.commands.registerCommand("extension.warcraft.run.we", () => project.runWorldEditor())
     ];
-
-    console.log(process.arch, process.platform, process.versions);
 
     context.subscriptions.push(...disposables);
 }

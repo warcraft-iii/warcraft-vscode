@@ -33,18 +33,13 @@ class Config {
         return vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : "";
     }
 
-    get gameFolder(): string {
+    @Config.once
+    get gamePath(): string {
         return this._data.GAME_PATH;
     }
 
-    @Config.once
-    get gamePath(): string {
-        return path.join(this.gameFolder, this._data.GAME_EXE);
-    }
-
-    @Config.once
     get wePath(): string {
-        return path.join(this.gameFolder, this._data.WE_EXE);
+        return this._data.WE_PATH;
     }
 
     @Config.once
@@ -96,7 +91,7 @@ class Config {
             throw new Error(`Parse ${FILE_WARCRAFT} failed`);
         }
 
-        const keys = ["GAME_PATH", "GAME_EXE", "WE_EXE"];
+        const keys = ["GAME_PATH", "WE_PATH"];
         for (const key of keys) {
             if (!config[key]) {
                 throw new Error(`Lost config ${key}`);

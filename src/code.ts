@@ -8,7 +8,6 @@
 import * as path from "path";
 import * as fs from "mz/fs";
 import * as util from "./util";
-
 import mkdirp from "mkdirp-promise";
 
 const LUA = ".lua";

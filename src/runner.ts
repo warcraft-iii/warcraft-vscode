@@ -8,9 +8,8 @@
 import * as path from "path";
 import * as cp from "mz/child_process";
 import * as util from "./util";
+import mkdirp from "mkdirp-promise";
 import config from "./config";
-
-const mkdirp = require("mkdirp-promise");
 
 export async function runGame() {
     const docFolder = await util.getDocumentFolder();

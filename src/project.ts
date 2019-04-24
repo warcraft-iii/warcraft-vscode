@@ -9,6 +9,7 @@ import * as vscode from "vscode";
 import * as code from "./code";
 import * as pack from "./pack";
 import * as runner from "./runner";
+import * as lib from "./lib";
 import config from "./config";
 
 export class Project {
@@ -66,6 +67,36 @@ export class Project {
     @Project.validate
     runWorldEditor() {
         return runner.runWorldEditor();
+    }
+
+    @Project.catch
+    @Project.validate
+    async addLibrary() {
+        const library = await vscode.window.showQuickPick(lib.getClassicLibraries(), {
+            placeHolder: "Select library to add ..."
+        });
+
+        if (!library) {
+            return;
+        }
+
+        const ssh =
+            config.allowSshLibrary &&
+            (await (async () => {
+                const result = await vscode.window.showQuickPick([
+                    {
+                        label: "SSH",
+                        value: true
+                    },
+                    {
+                        label: "HTTPS",
+                        value: false
+                    }
+                ]);
+                return result ? result.value : false;
+            })());
+
+        await lib.addLibrary(library, ssh);
     }
 
     private _compileDebug() {

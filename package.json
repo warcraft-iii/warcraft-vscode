@@ -19,7 +19,8 @@
     "onCommand:extension.warcraft.compile.debug",
     "onCommand:extension.warcraft.pack",
     "onCommand:extension.warcraft.run.game",
-    "onCommand:extension.warcraft.run.we"
+    "onCommand:extension.warcraft.run.we",
+    "onCommand:extension.warcraft.library.add"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -39,6 +40,10 @@
       {
         "command": "extension.warcraft.run.we",
         "title": "Warcraft: Open World Editor"
+      },
+      {
+        "command": "extension.warcraft.library.add",
+        "title": "Warcraft: Add Library"
       }
     ]
   },
@@ -59,6 +64,7 @@
     "vscode": "^1.1.28"
   },
   "dependencies": {
+    "@octokit/rest": "^16.25.0",
     "mkdirp-promise": "^5.0.1",
     "mz": "^2.7.0"
   }

@@ -16,7 +16,7 @@ const DEBUG_TEMPLATE = path.join(__dirname, "../resources/debug.lua");
 
 export async function compileDebug(from: string, to: string) {
     if (!(await fs.stat(from)).isDirectory()) {
-        throw new Error("SourcePathNotFolder");
+        throw new Error("Not found source folder");
     }
 
     await mkdirp(path.dirname(to));

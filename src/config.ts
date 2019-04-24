@@ -33,13 +33,16 @@ class Config {
         return vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : "";
     }
 
-    @Config.once
     get gamePath(): string {
         return this._data.GAME_PATH;
     }
 
     get wePath(): string {
         return this._data.WE_PATH;
+    }
+
+    get allowSshLibrary(): boolean {
+        return !!this._data.ALLOW_SSH_LIBRARY;
     }
 
     @Config.once

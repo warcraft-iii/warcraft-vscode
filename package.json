@@ -3,6 +3,12 @@
   "displayName": "warcraft-vscode",
   "description": "A Warcraft III map develop toolset",
   "version": "0.0.1",
+  "publisher": "DengSir",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/warcraft-iii/warcraft-vscode.git"
+  },
   "engines": {
     "vscode": "^1.33.0"
   },

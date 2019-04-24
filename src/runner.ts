@@ -17,12 +17,13 @@ export async function runGame() {
         throw new Error("Not found documents folder");
     }
 
-    const target = path.join(docFolder, "Warcraft III/Map/Test", path.basename(config.mapPath));
+    const mapFolder = path.join(docFolder, "Warcraft III/Maps");
+    const target = path.join(mapFolder, "Test", path.basename(config.mapPath));
 
     await mkdirp(path.dirname(target));
     await util.copyFile(config.mapPath, target);
 
-    cp.spawn(config.gamePath, [...config.gameArgs, "-loadfile", target], {
+    cp.spawn(config.gamePath, [...config.gameArgs, "-loadfile", path.relative(mapFolder, target)], {
         detached: true
     });
 }

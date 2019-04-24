@@ -30,6 +30,7 @@ export class Project {
                     vscode.window.showErrorMessage(error.message);
                 }
             };
+            descriptor.value.raw = value;
         }
     }
 
@@ -46,25 +47,39 @@ export class Project {
     @Project.catch
     @Project.validate
     compileDebug() {
-        return code.compileDebug(config.sourceFolder, config.scriptPath);
+        return this._compileDebug();
     }
 
     @Project.catch
     @Project.validate
     packMap() {
-        return pack.pack(config.mapFolder, config.mapPath);
+        return this._packMap();
     }
 
     @Project.catch
     @Project.validate
     runGame() {
-        return runner.runGame();
+        return this._runGame();
     }
 
     @Project.catch
     @Project.validate
     runWorldEditor() {
         return runner.runWorldEditor();
+    }
+
+    private _compileDebug() {
+        return code.compileDebug(config.sourceFolder, config.scriptPath);
+    }
+
+    private _packMap() {
+        return pack.pack(config.mapFolder, config.mapPath);
+    }
+
+    private async _runGame() {
+        await this._compileDebug();
+        await this._packMap();
+        await runner.runGame();
     }
 
     async check() {

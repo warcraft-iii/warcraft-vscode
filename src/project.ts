@@ -12,6 +12,7 @@ import * as runner from "./runner";
 import * as lib from "./lib";
 import * as util from "./util";
 import env from "./environment";
+import mkdirp from "mkdirp-promise";
 
 export class Project {
     private static _instance = new Project();
@@ -125,6 +126,7 @@ export class Project {
     }
 
     private async _packMap() {
+        await mkdirp(env.buildMapFolder);
         await util.copyFolder(env.mapFolder, env.buildMapFolder);
         await pack.pack(env.buildMapFolder, env.outMapPath);
     }

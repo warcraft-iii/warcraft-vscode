@@ -25,9 +25,9 @@ export class Project {
     static catch(target: any, key: string, descriptor: any) {
         if (descriptor.value) {
             const value = descriptor.value;
-            descriptor.value = async function() {
+            descriptor.value = async function(...args: any[]) {
                 try {
-                    await value.apply(this, arguments);
+                    await value.apply(this, args);
                 } catch (error) {
                     vscode.window.showErrorMessage(error.message);
                 }
@@ -39,33 +39,55 @@ export class Project {
     static validate(target: any, key: string, descriptor: any) {
         if (descriptor.value) {
             const value = descriptor.value;
-            descriptor.value = async function() {
+            descriptor.value = async function(...args: any[]) {
                 await env.load();
-                return value.apply(this, arguments);
+                return value.apply(this, args);
             };
         }
     }
 
+    static progress(message: string) {
+        return function(target: any, key: string, descriptor: any) {
+            if (descriptor.value) {
+                const value = descriptor.value;
+                descriptor.value = function(...args: any[]) {
+                    return vscode.window.withProgress(
+                        {
+                            cancellable: false,
+                            location: vscode.ProgressLocation.Notification,
+                            title: "Warcraft: " + message
+                        },
+                        () => value.apply(this, args)
+                    );
+                };
+            }
+        };
+    }
+
     @Project.catch
     @Project.validate
+    @Project.progress("compiling scripts ...")
     compileDebug() {
         return this._compileDebug();
     }
 
     @Project.catch
     @Project.validate
+    @Project.progress("packing map ...")
     packMap() {
         return this._packMap();
     }
 
     @Project.catch
     @Project.validate
+    @Project.progress("starting game ...")
     runGame() {
         return this._runGame();
     }
 
     @Project.catch
     @Project.validate
+    @Project.progress("starting world editor ...")
     runWorldEditor() {
         return runner.runWorldEditor();
     }
@@ -81,23 +103,21 @@ export class Project {
             return;
         }
 
-        const ssh =
-            env.allowSshLibrary &&
-            (await (async () => {
-                const result = await vscode.window.showQuickPick([
-                    {
-                        label: "SSH",
-                        value: true
-                    },
-                    {
-                        label: "HTTPS",
-                        value: false
-                    }
-                ]);
-                return result ? result.value : false;
-            })());
+        const isSsh = env.allowSshLibrary && (await this._askSsh());
+        await this._addLibrary(library, isSsh);
+    }
 
-        await lib.addLibrary(library, ssh);
+    private async _askSsh() {
+        const result = await vscode.window.showQuickPick([
+            { label: "SSH", value: true },
+            { label: "HTTPS", value: false }
+        ]);
+        return result ? result.value : false;
+    }
+
+    @Project.progress("checkouting submodule ...")
+    private _addLibrary(library: lib.ClassicLibrary, isSsh: boolean) {
+        return lib.addLibrary(library, isSsh);
     }
 
     private _compileDebug() {
@@ -106,7 +126,7 @@ export class Project {
 
     private async _packMap() {
         await util.copyFolder(env.mapFolder, env.buildMapFolder);
-        return pack.pack(env.buildMapFolder, env.outMapPath);
+        await pack.pack(env.buildMapFolder, env.outMapPath);
     }
 
     private async _runGame() {

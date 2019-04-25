@@ -1,5 +1,5 @@
 /**
- * @File   : config.ts
+ * @File   : environment.ts
  * @Author : Dencer (tdaddon@163.com)
  * @Link   : https://dengsir.github.io
  * @Date   : 4/22/2019, 11:18:19 AM
@@ -12,8 +12,9 @@ import * as fs from "mz/fs";
 const FILE_WARCRAFT = "warcraft.json";
 const FILE_SCRIPT = "war3map.lua";
 const FILE_MAP = "_warcraft_vscode_test.w3x";
+const FOLDER_BUILD = ".build";
 
-class Config {
+class Environment {
     private data: any;
 
     private get config() {
@@ -52,12 +53,20 @@ class Config {
         return path.join(this.rootPath, this.data.mapdir);
     }
 
-    get outMapPath(): string {
-        return path.join(this.rootPath, FILE_MAP);
+    get buildFolder(): string {
+        return path.join(this.rootPath, FOLDER_BUILD);
     }
 
-    get scriptPath(): string {
-        return path.join(this.mapFolder, FILE_SCRIPT);
+    get buildMapFolder(): string {
+        return path.join(this.buildFolder, this.data.mapdir);
+    }
+
+    get outMapPath(): string {
+        return path.join(this.buildFolder, FILE_MAP);
+    }
+
+    get outScriptPath(): string {
+        return path.join(this.buildMapFolder, FILE_SCRIPT);
     }
 
     async load() {
@@ -109,4 +118,4 @@ class Config {
     }
 }
 
-export default new Config();
+export default new Environment();

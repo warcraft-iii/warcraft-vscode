@@ -10,28 +10,28 @@ import * as fs from "mz/fs";
 import * as cp from "mz/child_process";
 import * as util from "./util";
 import mkdirp from "mkdirp-promise";
-import config from "./config";
+import env from "./environment";
 
-export async function runGame() {
+export async function runGame(map: string) {
     const docFolder = await util.getDocumentFolder();
     if (!docFolder) {
         throw new Error("Not found documents folder");
     }
 
-    const isPtr = await fs.exists(path.join(path.dirname(config.gamePath), "../Warcraft III Public Test Launcher.exe"));
+    const isPtr = await fs.exists(path.join(path.dirname(env.gamePath), "../Warcraft III Public Test Launcher.exe"));
     const mapFolder = path.join(docFolder, isPtr ? "Warcraft III Public Test" : "Warcraft III", "Maps");
-    const target = path.join(mapFolder, "Test", path.basename(config.outMapPath));
+    const target = path.join(mapFolder, "Test", path.basename(map));
 
     await mkdirp(path.dirname(target));
-    await util.copyFile(config.outMapPath, target);
+    await util.copyFile(map, target);
 
-    cp.spawn(config.gamePath, [...config.gameArgs, "-loadfile", path.relative(mapFolder, target)], {
+    cp.spawn(env.gamePath, [...env.gameArgs, "-loadfile", path.relative(mapFolder, target)], {
         detached: true
     });
 }
 
 export function runWorldEditor() {
-    cp.spawn(config.wePath, [...config.weArgs, "-loadfile", config.mapFolder], {
+    cp.spawn(env.wePath, [...env.weArgs, "-loadfile", env.mapFolder], {
         detached: true
     });
 }

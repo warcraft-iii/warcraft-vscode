@@ -8,6 +8,7 @@
 import * as fs from "mz/fs";
 import * as cp from "mz/child_process";
 import * as path from "path";
+import mkdirp from "mkdirp-promise";
 
 async function _getAllFiles(root: string, r: string[]) {
     const files = (await fs.readdir(root)).map(file => path.join(root, file));
@@ -47,10 +48,10 @@ export async function getDocumentFolder() {
     });
 }
 
-export function copyFile(src: string, dst: string) {
+export function copyFile(from: string, to: string) {
     return new Promise((resolve, reject) => {
-        fs.createReadStream(src)
-            .pipe(fs.createWriteStream(dst))
+        fs.createReadStream(from)
+            .pipe(fs.createWriteStream(to))
             .on("close", (err: any) => {
                 if (err) {
                     reject(err);
@@ -59,4 +60,26 @@ export function copyFile(src: string, dst: string) {
                 }
             });
     });
+}
+
+export async function copyFolder(from: string, to: string) {
+    const stat = await fs.stat(to);
+    if (stat && !stat.isDirectory()) {
+        throw Error("target not a folder");
+    }
+
+    await mkdirp(to);
+    await Promise.all(
+        (await fs.readdir(from)).map(async file => {
+            const source = path.join(from, file);
+            const target = path.join(to, file);
+            const stat = await fs.stat(source);
+
+            if (stat.isDirectory()) {
+                await copyFolder(source, target);
+            } else {
+                await copyFile(source, target);
+            }
+        })
+    );
 }

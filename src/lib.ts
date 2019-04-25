@@ -10,7 +10,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "mz/fs";
 import * as cp from "mz/child_process";
-import config from "./config";
+import env from "./environment";
 
 const octokit = new Octokit();
 
@@ -38,7 +38,7 @@ export async function getClassicLibraries(): Promise<ClassicLibrary[]> {
 export async function addLibrary(library: ClassicLibrary, ssh: boolean) {
     const target = path.posix.join("src/lib", library.label);
 
-    if (await fs.exists(path.join(config.rootPath, target))) {
+    if (await fs.exists(path.join(env.rootPath, target))) {
         throw new Error(`${target} already exists`);
     }
 
@@ -46,7 +46,7 @@ export async function addLibrary(library: ClassicLibrary, ssh: boolean) {
         "git",
         ["submodule", "add", ssh ? library.ssh_url : library.clone_url, target],
         {
-            cwd: config.rootPath
+            cwd: env.rootPath
         }
     );
 

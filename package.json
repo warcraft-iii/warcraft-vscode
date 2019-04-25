@@ -17,7 +17,7 @@
   ],
   "activationEvents": [
     "onCommand:extension.warcraft.compile.debug",
-    "onCommand:extension.warcraft.pack",
+    "onCommand:extension.warcraft.map.pack",
     "onCommand:extension.warcraft.run.game",
     "onCommand:extension.warcraft.run.we",
     "onCommand:extension.warcraft.library.add"
@@ -30,7 +30,7 @@
         "title": "Warcraft: Compile Debug"
       },
       {
-        "command": "extension.warcraft.pack",
+        "command": "extension.warcraft.map.pack",
         "title": "Warcraft: Pack Map"
       },
       {

@@ -10,7 +10,8 @@ import * as code from "./code";
 import * as pack from "./pack";
 import * as runner from "./runner";
 import * as lib from "./lib";
-import config from "./config";
+import * as util from "./util";
+import env from "./environment";
 
 export class Project {
     private static _instance = new Project();
@@ -39,7 +40,7 @@ export class Project {
         if (descriptor.value) {
             const value = descriptor.value;
             descriptor.value = async function() {
-                await config.load();
+                await env.load();
                 return value.apply(this, arguments);
             };
         }
@@ -81,7 +82,7 @@ export class Project {
         }
 
         const ssh =
-            config.allowSshLibrary &&
+            env.allowSshLibrary &&
             (await (async () => {
                 const result = await vscode.window.showQuickPick([
                     {
@@ -100,16 +101,17 @@ export class Project {
     }
 
     private _compileDebug() {
-        return code.compileDebug(config.sourceFolder, config.scriptPath);
+        return code.compileDebug(env.sourceFolder, env.outScriptPath);
     }
 
-    private _packMap() {
-        return pack.pack(config.mapFolder, config.outMapPath);
+    private async _packMap() {
+        await util.copyFolder(env.mapFolder, env.buildMapFolder);
+        return pack.pack(env.buildMapFolder, env.outMapPath);
     }
 
     private async _runGame() {
         await this._compileDebug();
         await this._packMap();
-        await runner.runGame();
+        await runner.runGame(env.outMapPath);
     }
 }

@@ -39,7 +39,7 @@ export class Project {
         if (descriptor.value) {
             const value = descriptor.value;
             descriptor.value = async function() {
-                await this.check();
+                await config.load();
                 return value.apply(this, arguments);
             };
         }
@@ -104,16 +104,12 @@ export class Project {
     }
 
     private _packMap() {
-        return pack.pack(config.mapFolder, config.mapPath);
+        return pack.pack(config.mapFolder, config.outMapPath);
     }
 
     private async _runGame() {
         await this._compileDebug();
         await this._packMap();
         await runner.runGame();
-    }
-
-    async check() {
-        config.load();
     }
 }

@@ -45,7 +45,32 @@
         "command": "extension.warcraft.library.add",
         "title": "Warcraft: Add Library"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Warcraft",
+      "properties": {
+        "warcraft.gamePath": {
+          "type": "string",
+          "description": "Where is Warcraft III Execution?"
+        },
+        "warcraft.wePath": {
+          "type": "string",
+          "description": "Where is World Editor Execution?"
+        },
+        "warcraft.allowAddSshLibrary": {
+          "type": "boolean",
+          "description": "Whether to allow the SSH libraries?"
+        },
+        "warcraft.gameArgs": {
+          "type": "array",
+          "description": "Arguments to added to run the game."
+        },
+        "warcraft.weArgs": {
+          "type": "array",
+          "description": "Arguments to added to run the world editor"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

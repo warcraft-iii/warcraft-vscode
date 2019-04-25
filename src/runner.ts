@@ -6,6 +6,7 @@
  */
 
 import * as path from "path";
+import * as fs from "mz/fs";
 import * as cp from "mz/child_process";
 import * as util from "./util";
 import mkdirp from "mkdirp-promise";
@@ -17,11 +18,12 @@ export async function runGame() {
         throw new Error("Not found documents folder");
     }
 
-    const mapFolder = path.join(docFolder, "Warcraft III/Maps");
-    const target = path.join(mapFolder, "Test", path.basename(config.mapPath));
+    const isPtr = await fs.exists(path.join(path.dirname(config.gamePath), "../Warcraft III Public Test Launcher.exe"));
+    const mapFolder = path.join(docFolder, isPtr ? "Warcraft III Public Test" : "Warcraft III", "Maps");
+    const target = path.join(mapFolder, "Test", path.basename(config.outMapPath));
 
     await mkdirp(path.dirname(target));
-    await util.copyFile(config.mapPath, target);
+    await util.copyFile(config.outMapPath, target);
 
     cp.spawn(config.gamePath, [...config.gameArgs, "-loadfile", path.relative(mapFolder, target)], {
         detached: true

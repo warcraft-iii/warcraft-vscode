@@ -9,99 +9,103 @@ import * as path from "path";
 import * as vscode from "vscode";
 import * as fs from "mz/fs";
 
-const FOLDER_SOURCE = "src";
-const FOLDER_MAP = "map.w3x";
-
 const FILE_WARCRAFT = "warcraft.json";
 const FILE_SCRIPT = "war3map.lua";
-const FILE_MAP = "_" + FOLDER_MAP;
+const FILE_MAP = "_warcraft_vscode_test.w3x";
 
 class Config {
-    private _data: any;
-    private _prop: any = {};
+    private data: any;
 
-    static once(target: any, propertyKey: string, descriptor: any) {
-        const getter = descriptor.get;
-        const key = Symbol();
-        descriptor.get = function() {
-            return (this._prop[key] = this._prop[key] || getter.call(this));
-        };
+    private get config() {
+        return vscode.workspace.getConfiguration("warcraft");
     }
 
-    @Config.once
     get rootPath() {
         return vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : "";
     }
 
     get gamePath(): string {
-        return this._data.GAME_PATH;
+        return this.config.get("gamePath") || "";
     }
 
     get wePath(): string {
-        return this._data.WE_PATH;
+        return this.config.get("wePath") || "";
     }
 
     get allowSshLibrary(): boolean {
-        return !!this._data.ALLOW_SSH_LIBRARY;
+        return this.config.get<boolean>("allowAddSshLibrary") || false;
     }
 
-    @Config.once
     get gameArgs(): string[] {
-        return this._data.GAME_ARGS ? this._data.GAME_ARGS : [];
+        return this.config.get("gameArgs") || [];
     }
 
-    @Config.once
     get weArgs(): string[] {
-        return this._data.WE_ARGS ? this._data.WE_ARGS : [];
+        return this.config.get("weArgs") || [];
     }
 
-    @Config.once
     get sourceFolder(): string {
-        return path.join(this.rootPath, FOLDER_SOURCE);
+        return path.join(this.rootPath, this.data.sourcedir);
     }
 
-    @Config.once
     get mapFolder(): string {
-        return path.join(this.rootPath, FOLDER_MAP);
+        return path.join(this.rootPath, this.data.mapdir);
     }
 
-    @Config.once
-    get mapPath(): string {
+    get outMapPath(): string {
         return path.join(this.rootPath, FILE_MAP);
     }
 
-    @Config.once
     get scriptPath(): string {
         return path.join(this.mapFolder, FILE_SCRIPT);
     }
 
     async load() {
-        this._prop = {};
-
-        const configFile = path.join(this.rootPath, FILE_WARCRAFT);
-        const stat = await fs.stat(configFile);
-        if (!stat.isFile()) {
-            throw new Error(`Not found ${FILE_WARCRAFT}`);
-        }
-
-        const body = await fs.readFile(configFile, { encoding: "utf-8" });
-        if (!body) {
-            throw new Error("Read ${FILE_WARCRAFT} failed");
-        }
-
-        const config = JSON.parse(body);
-        if (!config) {
-            throw new Error(`Parse ${FILE_WARCRAFT} failed`);
-        }
-
-        const keys = ["GAME_PATH", "WE_PATH"];
-        for (const key of keys) {
-            if (!config[key]) {
-                throw new Error(`Lost config ${key}`);
+        const read = async () => {
+            const configFile = path.join(this.rootPath, FILE_WARCRAFT);
+            const stat = await fs.stat(configFile);
+            if (!stat.isFile()) {
+                throw new Error(`Not found ${FILE_WARCRAFT}`);
             }
-        }
 
-        this._data = config;
+            const body = await fs.readFile(configFile, { encoding: "utf-8" });
+            if (!body) {
+                throw new Error("Read ${FILE_WARCRAFT} failed");
+            }
+
+            const config = JSON.parse(body);
+            if (!config) {
+                throw new Error(`Parse ${FILE_WARCRAFT} failed`);
+            }
+
+            this.data = config;
+        };
+
+        const check = async () => {
+            const configKeys = ["sourcedir", "mapdir"];
+            for (const key of configKeys) {
+                if (!this.data[key]) {
+                    throw new Error(`Lost config ${key}`);
+                }
+            }
+
+            const settingKeys = ["gamePath", "wePath"];
+            for (const key of settingKeys) {
+                if (!this.config.get(key)) {
+                    throw new Error(`${key} not set`);
+                }
+            }
+
+            const folders = [this.sourceFolder, this.mapFolder, this.gamePath, this.wePath];
+            for (const folder of folders) {
+                if (!(await fs.exists(folder))) {
+                    throw new Error(`Not found dir: ${folder}`);
+                }
+            }
+        };
+
+        await read();
+        await check();
     }
 }
 

@@ -6,13 +6,13 @@
  */
 
 import * as vscode from "vscode";
+import * as fs from "fs-extra";
+import env from "./environment";
+
 import * as code from "./code";
 import * as pack from "./pack";
 import * as runner from "./runner";
 import * as lib from "./lib";
-import * as util from "./util";
-import env from "./environment";
-import mkdirp from "mkdirp-promise";
 
 export class Project {
     private static _instance = new Project();
@@ -30,7 +30,13 @@ export class Project {
                 try {
                     await value.apply(this, args);
                 } catch (error) {
-                    vscode.window.showErrorMessage(error.message);
+                    if (typeof error === "string") {
+                        vscode.window.showErrorMessage(error);
+                    } else if (typeof error === "object") {
+                        vscode.window.showErrorMessage(error.message);
+                    } else {
+                        vscode.window.showErrorMessage("Unknown error");
+                    }
                 }
             };
             descriptor.value.raw = value;
@@ -97,7 +103,8 @@ export class Project {
     @Project.validate
     async addLibrary() {
         const library = await vscode.window.showQuickPick(lib.getClassicLibraries(), {
-            placeHolder: "Select library to add ..."
+            placeHolder: "Select library to add ...",
+            ignoreFocusOut: true
         });
 
         if (!library) {
@@ -109,10 +116,12 @@ export class Project {
     }
 
     private async _askSsh() {
-        const result = await vscode.window.showQuickPick([
-            { label: "SSH", value: true },
-            { label: "HTTPS", value: false }
-        ]);
+        const result = await vscode.window.showQuickPick(
+            [{ label: "SSH", value: true }, { label: "HTTPS", value: false }],
+            {
+                ignoreFocusOut: true
+            }
+        );
         return result ? result.value : false;
     }
 
@@ -122,12 +131,13 @@ export class Project {
     }
 
     private _compileDebug() {
-        return code.compileDebug(env.sourceFolder, env.outScriptPath);
+        return code.compileDebug(env.sourceFolder, env.tempScriptPath);
     }
 
     private async _packMap() {
-        await mkdirp(env.buildMapFolder);
-        await util.copyFolder(env.mapFolder, env.buildMapFolder);
+        await fs.emptyDir(env.buildMapFolder);
+        await fs.copy(env.tempScriptPath, env.outScriptPath);
+        await fs.copy(env.mapFolder, env.buildMapFolder);
         await pack.pack(env.buildMapFolder, env.outMapPath);
     }
 

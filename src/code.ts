@@ -6,9 +6,8 @@
  */
 
 import * as path from "path";
-import * as fs from "mz/fs";
+import * as fs from "fs-extra";
 import * as util from "./util";
-import mkdirp from "mkdirp-promise";
 
 const LUA = ".lua";
 const LUA_REG = new RegExp(LUA + "$");
@@ -19,7 +18,7 @@ export async function compileDebug(from: string, to: string) {
         throw new Error("Not found source folder");
     }
 
-    await mkdirp(path.dirname(to));
+    await fs.mkdirp(path.dirname(to));
 
     const output = fs.createWriteStream(to, { encoding: "utf-8" });
     const files = (await util.getAllFiles(from))

@@ -8,9 +8,10 @@
 import Octokit from "@octokit/rest";
 import * as vscode from "vscode";
 import * as path from "path";
-import * as fs from "mz/fs";
-import * as cp from "mz/child_process";
+import * as fs from "fs-extra";
+import * as cp from "child_process";
 import env from "./environment";
+import { promisify } from "util";
 
 const octokit = new Octokit();
 
@@ -35,22 +36,26 @@ export async function getClassicLibraries(): Promise<ClassicLibrary[]> {
         }));
 }
 
-export async function addLibrary(library: ClassicLibrary, ssh: boolean) {
+const execFile = promisify(cp.execFile);
+
+export async function addLibrary(library: ClassicLibrary, ssh: boolean): Promise<void> {
     const target = path.posix.join("src/lib", library.label);
 
-    if (await fs.exists(path.join(env.rootPath, target))) {
+    if (await fs.pathExists(path.join(env.rootPath, target))) {
         throw new Error(`${target} already exists`);
     }
 
-    const [err, output] = await cp.execFile(
-        "git",
-        ["submodule", "add", ssh ? library.ssh_url : library.clone_url, target],
-        {
-            cwd: env.rootPath
-        }
-    );
+    try {
+        const { stdout, stderr } = await execFile(
+            "git",
+            ["submodule", "add", ssh ? library.ssh_url : library.clone_url, target],
+            {
+                cwd: env.rootPath
+            }
+        );
 
-    if (err) {
-        throw new Error(output);
+        console.log(stdout, stderr);
+    } catch (e) {
+        throw e;
     }
 }

@@ -7,7 +7,7 @@
 
 import * as path from "path";
 import * as vscode from "vscode";
-import * as fs from "mz/fs";
+import * as fs from "fs-extra";
 
 const FILE_WARCRAFT = "warcraft.json";
 const FILE_SCRIPT = "war3map.lua";
@@ -69,6 +69,10 @@ class Environment {
         return path.join(this.buildMapFolder, FILE_SCRIPT);
     }
 
+    get tempScriptPath(): string {
+        return path.join(this.buildFolder, FILE_SCRIPT);
+    }
+
     async load() {
         const read = async () => {
             const configFile = path.join(this.rootPath, FILE_WARCRAFT);
@@ -107,7 +111,7 @@ class Environment {
 
             const folders = [this.sourceFolder, this.mapFolder, this.gamePath, this.wePath];
             for (const folder of folders) {
-                if (!(await fs.exists(folder))) {
+                if (!(await fs.pathExists(folder))) {
                     throw new Error(`Not found dir: ${folder}`);
                 }
             }

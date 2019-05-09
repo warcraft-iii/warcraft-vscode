@@ -13,9 +13,15 @@ import * as code from "./code";
 import * as pack from "./pack";
 import * as runner from "./runner";
 import * as lib from "./lib";
+import { Process } from "./process";
+import { sleep } from "./util";
 
 export class Project {
     private static _instance = new Project();
+
+    private gameProcess: Process | undefined;
+    private weProcess: Process | undefined;
+    private progress: vscode.Progress<string> | undefined;
 
     private constructor() {}
 
@@ -58,14 +64,25 @@ export class Project {
             if (descriptor.value) {
                 const value = descriptor.value;
                 descriptor.value = function(...args: any[]) {
-                    return vscode.window.withProgress(
-                        {
-                            cancellable: false,
-                            location: vscode.ProgressLocation.Notification,
-                            title: "Warcraft: " + message
-                        },
-                        () => value.apply(this, args)
-                    );
+                    if (this.process) {
+                        this.process.report({ message });
+                        return value.apply(this, args);
+                    } else {
+                        return vscode.window.withProgress(
+                            {
+                                cancellable: false,
+                                location: vscode.ProgressLocation.Notification,
+                                title: "Warcraft: "
+                            },
+                            async process => {
+                                process.report({ message });
+                                this.process = process;
+
+                                await value.apply(this, args);
+                                this.process = undefined;
+                            }
+                        );
+                    }
                 };
             }
         };
@@ -73,30 +90,36 @@ export class Project {
 
     @Project.catch
     @Project.validate
-    @Project.progress("compiling scripts ...")
     compileDebug() {
         return this._compileDebug();
     }
 
     @Project.catch
     @Project.validate
-    @Project.progress("packing map ...")
     packMap() {
         return this._packMap();
     }
 
     @Project.catch
     @Project.validate
-    @Project.progress("starting game ...")
-    runGame() {
-        return this._runGame();
+    async runGame() {
+        if (this.gameProcess && this.gameProcess.isAlive()) {
+            if (await this.confirm("Warcraft III running, to terminal?")) {
+                await this.gameProcess.kill();
+            } else {
+                return;
+            }
+        }
+        this.gameProcess = await this._runGame();
     }
 
     @Project.catch
     @Project.validate
-    @Project.progress("starting world editor ...")
-    runWorldEditor() {
-        return runner.runWorldEditor();
+    async runWorldEditor() {
+        if (this.weProcess && this.weProcess.isAlive()) {
+            throw new Error("WorldEditor running...");
+        }
+        this.weProcess = await this._runWorldEditor();
     }
 
     @Project.catch
@@ -111,11 +134,23 @@ export class Project {
             return;
         }
 
-        const isSsh = env.allowSshLibrary && (await this._askSsh());
+        const isSsh = env.allowSshLibrary && (await this.askGit());
         await this._addLibrary(library, isSsh);
     }
 
-    private async _askSsh() {
+    private async confirm(info: string) {
+        return (
+            (await vscode.window.showInformationMessage(
+                info,
+                {
+                    modal: true
+                },
+                "Ok"
+            )) === "Ok"
+        );
+    }
+
+    private async askGit() {
         const result = await vscode.window.showQuickPick(
             [{ label: "SSH", value: true }, { label: "HTTPS", value: false }],
             {
@@ -125,15 +160,17 @@ export class Project {
         return result ? result.value : false;
     }
 
-    @Project.progress("checkouting submodule ...")
+    @Project.progress("Checkouting submodule ...")
     private _addLibrary(library: lib.ClassicLibrary, isSsh: boolean) {
         return lib.addLibrary(library, isSsh);
     }
 
-    private _compileDebug() {
-        return code.compileDebug(env.sourceFolder, env.tempScriptPath);
+    @Project.progress("Compiling scripts ...")
+    private async _compileDebug() {
+        return await code.compileDebug(env.sourceFolder, env.tempScriptPath);
     }
 
+    @Project.progress("Packing map ...")
     private async _packMap() {
         await fs.emptyDir(env.buildMapFolder);
         await fs.copy(env.tempScriptPath, env.outScriptPath);
@@ -141,9 +178,15 @@ export class Project {
         await pack.pack(env.buildMapFolder, env.outMapPath);
     }
 
+    @Project.progress("Starting game ...")
     private async _runGame() {
         await this._compileDebug();
         await this._packMap();
-        await runner.runGame(env.outMapPath);
+        return await runner.runGame(env.outMapPath);
+    }
+
+    @Project.progress("Starting world editor ...")
+    private async _runWorldEditor() {
+        return await runner.runWorldEditor();
     }
 }

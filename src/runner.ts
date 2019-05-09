@@ -7,8 +7,8 @@
 
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as cp from "child_process";
 import * as util from "./util";
+import { Process } from "./process";
 import env from "./environment";
 
 export async function runGame(map: string) {
@@ -25,13 +25,9 @@ export async function runGame(map: string) {
 
     await fs.copy(map, target);
 
-    cp.spawn(env.gamePath, [...env.gameArgs, "-loadfile", path.relative(mapFolder, target)], {
-        detached: true
-    });
+    return new Process(env.gamePath, [...env.gameArgs, "-loadfile", path.relative(mapFolder, target)]);
 }
 
 export async function runWorldEditor() {
-    cp.spawn(env.wePath, [...env.weArgs, "-loadfile", env.mapFolder], {
-        detached: true
-    });
+    return new Process(env.wePath, [...env.weArgs, "-loadfile", env.mapFolder]);
 }

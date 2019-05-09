@@ -7,7 +7,8 @@
 
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as util from "./util";
+
+import { getAllFiles } from "./util";
 
 const LUA = ".lua";
 const LUA_REG = new RegExp(LUA + "$");
@@ -21,7 +22,7 @@ export async function compileDebug(from: string, to: string) {
     await fs.mkdirp(path.dirname(to));
 
     const output = fs.createWriteStream(to, { encoding: "utf-8" });
-    const files = (await util.getAllFiles(from))
+    const files = (await getAllFiles(from))
         .filter(file => !path.basename(file).startsWith(".") && !path.basename(file).startsWith("@"))
         .filter(file => path.extname(file).toLowerCase() === LUA);
 

@@ -4,6 +4,8 @@ import { Project } from "./project";
 export async function activate(context: vscode.ExtensionContext) {
     const project = Project.get();
 
+    await project.init();
+
     let disposables = [
         vscode.commands.registerCommand("extension.warcraft.compile.debug", () => project.compileDebug()),
         vscode.commands.registerCommand("extension.warcraft.map.pack", () => project.packMap()),

@@ -5,15 +5,15 @@
  * @Date   : 4/24/2019, 11:20:43 AM
  */
 
-import Octokit from "@octokit/rest";
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as cp from "child_process";
-import env from "./environment";
-import { promisify } from "util";
 
-const octokit = new Octokit();
+import Octokit from "@octokit/rest";
+import env from "./environment";
+
+import { promisify } from "util";
 
 export interface ClassicLibrary extends vscode.QuickPickItem {
     clone_url: string;
@@ -21,6 +21,8 @@ export interface ClassicLibrary extends vscode.QuickPickItem {
 }
 
 export async function getClassicLibraries(): Promise<ClassicLibrary[]> {
+    const octokit = new Octokit();
+
     const repos = await octokit.repos.listForOrg({
         org: "warcraft-iii",
         type: "public"

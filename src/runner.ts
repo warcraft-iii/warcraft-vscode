@@ -7,20 +7,20 @@
 
 import * as path from "path";
 import * as fs from "fs-extra";
-import * as util from "./util";
+
 import { Process } from "./process";
+
 import env from "./environment";
 
 export async function runGame(map: string) {
-    const docFolder = await util.getDocumentFolder();
-    if (!docFolder) {
+    if (!env.documentFolder) {
         throw new Error("Not found documents folder");
     }
 
     const isPtr = await fs.pathExists(
         path.join(path.dirname(env.gamePath), "../Warcraft III Public Test Launcher.exe")
     );
-    const mapFolder = path.join(docFolder, isPtr ? "Warcraft III Public Test" : "Warcraft III", "Maps");
+    const mapFolder = path.join(env.documentFolder, isPtr ? "Warcraft III Public Test" : "Warcraft III", "Maps");
     const target = path.join(mapFolder, "Test", path.basename(map));
 
     await fs.copy(map, target);

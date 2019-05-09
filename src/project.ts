@@ -7,14 +7,16 @@
 
 import * as vscode from "vscode";
 import * as fs from "fs-extra";
-import env from "./environment";
 
 import * as code from "./code";
 import * as pack from "./pack";
 import * as runner from "./runner";
 import * as lib from "./lib";
-import { Process } from "./process";
+
 import { sleep } from "./util";
+import { Process } from "./process";
+
+import env from "./environment";
 
 export class Project {
     private static _instance = new Project();
@@ -53,7 +55,7 @@ export class Project {
         if (descriptor.value) {
             const value = descriptor.value;
             descriptor.value = async function(...args: any[]) {
-                await env.load();
+                await env.verifyProjectConfig();
                 return await value.apply(this, args);
             };
         }
@@ -92,6 +94,10 @@ export class Project {
                 this.progress = undefined;
             }
         );
+    }
+
+    async init() {
+        await env.init();
     }
 
     @Project.catch

@@ -1,6 +1,6 @@
 # warcraft-vscode
 
-This extension is a Warcraft III map development tool set.
+This extension is a Warcraft III map development tool set of Lua.
 
 ## Features
 
@@ -23,6 +23,12 @@ This extension is a Warcraft III map development tool set.
 2. `Input warcraft`
 
 ## Known Issues
+
+## TODOs
+
+- Support compile time
+- Compile script for Release
+- Support for macOS
 
 ### For more information
 

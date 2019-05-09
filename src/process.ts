@@ -15,12 +15,11 @@ export class Process {
         this.process = cp.spawn(command, args, {
             detached: true
         });
-        this.process.on("exit", () => {
-            this.process = undefined;
-        });
-        this.process.on("close", () => {
-            this.process = undefined;
-        });
+
+        const onExit = () => (this.process = undefined);
+
+        this.process.on("exit", onExit);
+        this.process.on("close", onExit);
     }
 
     async kill(): Promise<void> {

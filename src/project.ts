@@ -25,56 +25,69 @@ export class Project {
     private weProcess?: Process;
     private progress?: vscode.Progress<{ message?: string; increment?: number }>;
 
+    static catch(target: any, key: any, descriptor: any) {
+        if (!descriptor.value) {
+            return;
+        }
+        const orig = descriptor.value;
+        descriptor.value = async function(...args: any[]) {
+            try {
+                return await orig.apply(this, args);
+            } catch (error) {
+                let message;
+                if (typeof error === "string") {
+                    message = error;
+                } else if (typeof error === "object") {
+                    message = error.message;
+                } else {
+                    message = "Unknown error";
+                }
+                vscode.window.showErrorMessage("Warcraft: " + message);
+            }
+        };
+    }
+
+    static validate(target: any, key: any, descriptor: any) {
+        if (!descriptor.value) {
+            return;
+        }
+        const orig = descriptor.value;
+        descriptor.value = async function(...args: any[]) {
+            await env.verifyProjectConfig();
+            return await orig.apply(this, args);
+        };
+    }
+
+    static single(target: any, key: any, descriptor: any) {
+        if (!descriptor.value) {
+            return;
+        }
+        const orig = descriptor.value;
+        descriptor.value = function(...args: any[]) {
+            return this.withProgress(() => orig.apply(this, args));
+        };
+    }
+
+    static task(message: string) {
+        return function(target: any, key: string, descriptor: any) {
+            if (!descriptor.value) {
+                return;
+            }
+            const orig = descriptor.value;
+            descriptor.value = async function(...args: any[]) {
+                if (this.progress) {
+                    this.progress.report({ message });
+                    await sleep(100);
+                }
+                return await orig.apply(this, args);
+            };
+        };
+    }
+
     private constructor() {}
 
     static get() {
         return Project._instance;
-    }
-
-    static catch(target: any, key: string, descriptor: any) {
-        if (descriptor.value) {
-            const value = descriptor.value;
-            descriptor.value = async function(...args: any[]) {
-                try {
-                    await value.apply(this, args);
-                } catch (error) {
-                    if (typeof error === "string") {
-                        vscode.window.showErrorMessage(error);
-                    } else if (typeof error === "object") {
-                        vscode.window.showErrorMessage(error.message);
-                    } else {
-                        vscode.window.showErrorMessage("Unknown error");
-                    }
-                }
-            };
-            descriptor.value.raw = value;
-        }
-    }
-
-    static validate(target: any, key: string, descriptor: any) {
-        if (descriptor.value) {
-            const value = descriptor.value;
-            descriptor.value = async function(...args: any[]) {
-                await env.verifyProjectConfig();
-                return await value.apply(this, args);
-            };
-        }
-    }
-
-    static progress(message: string) {
-        return function(target: any, key: string, descriptor: any) {
-            if (descriptor.value) {
-                const orig = descriptor.value;
-
-                descriptor.value = async function(...args: any[]) {
-                    if (this.progress) {
-                        this.progress.report({ message });
-                        await sleep(100);
-                    }
-                    return await orig.apply(this, args);
-                };
-            }
-        };
     }
 
     private withProgress(...tasks: (() => void)[]) {
@@ -102,19 +115,20 @@ export class Project {
 
     @Project.catch
     @Project.validate
-    compileDebug() {
-        return this.withProgress(() => this._compileDebug());
+    @Project.single
+    commandCompileDebug() {
+        return this.compileDebug();
     }
 
     @Project.catch
     @Project.validate
-    packMap() {
-        return this.withProgress(() => this._packMap());
+    async commandPackMap() {
+        this.withProgress(() => this.compileDebug(), () => this.packMap());
     }
 
     @Project.catch
     @Project.validate
-    async runGame() {
+    async commandRunGame() {
         if (this.gameProcess && this.gameProcess.isAlive()) {
             if (await this.confirm("Warcraft III running, to terminal?")) {
                 await this.gameProcess.kill();
@@ -124,25 +138,33 @@ export class Project {
         }
 
         return this.withProgress(
-            () => this._compileDebug(),
-            () => this._packMap(),
-            async () => (this.gameProcess = await this._runGame())
+            () => this.compileDebug(),
+            () => this.packMap(),
+            async () => (this.gameProcess = await this.runGame())
         );
     }
 
     @Project.catch
     @Project.validate
-    runWorldEditor() {
+    commandRunWorldEditor() {
         if (this.weProcess && this.weProcess.isAlive()) {
-            throw new Error("WorldEditor running...");
+            throw new Error("World Editor is running.");
         }
 
-        return this.withProgress(async () => (this.weProcess = await this._runWorldEditor()));
+        return this.withProgress(async () => (this.weProcess = await this.runWorldEditor()));
     }
 
     @Project.catch
     @Project.validate
-    async addLibrary() {
+    @Project.single
+    @Project.task("Cleaning project ...")
+    commandClean() {
+        return fs.remove(env.buildFolder);
+    }
+
+    @Project.catch
+    @Project.validate
+    async commandAddLibrary() {
         const library = await vscode.window.showQuickPick(lib.getClassicLibraries(), {
             placeHolder: "Select library to add ...",
             ignoreFocusOut: true
@@ -153,7 +175,35 @@ export class Project {
         }
 
         const isSsh = env.allowSshLibrary && (await this.askGit());
-        await this._addLibrary(library, isSsh);
+        await this.addLibrary(library, isSsh);
+    }
+
+    @Project.task("Checkouting Submodule ...")
+    private addLibrary(library: lib.ClassicLibrary, isSsh: boolean) {
+        return lib.addLibrary(library, isSsh);
+    }
+
+    @Project.task("Compiling Scripts ...")
+    private compileDebug() {
+        return code.compileDebug(env.sourceFolder, env.tempScriptPath);
+    }
+
+    @Project.task("Packing Map ...")
+    private async packMap() {
+        await fs.emptyDir(env.buildMapFolder);
+        await fs.copy(env.tempScriptPath, env.outScriptPath);
+        await fs.copy(env.mapFolder, env.buildMapFolder);
+        await pack.pack(env.buildMapFolder, env.outMapPath);
+    }
+
+    @Project.task("Starting Game ...")
+    runGame() {
+        return runner.runGame(env.outMapPath);
+    }
+
+    @Project.task("Starting World Editor ...")
+    private runWorldEditor() {
+        return runner.runWorldEditor();
     }
 
     private async confirm(info: string) {
@@ -176,33 +226,5 @@ export class Project {
             }
         );
         return result ? result.value : false;
-    }
-
-    @Project.progress("Checkouting submodule ...")
-    private _addLibrary(library: lib.ClassicLibrary, isSsh: boolean) {
-        return lib.addLibrary(library, isSsh);
-    }
-
-    @Project.progress("Compiling scripts ...")
-    private _compileDebug() {
-        return code.compileDebug(env.sourceFolder, env.tempScriptPath);
-    }
-
-    @Project.progress("Packing map ...")
-    private async _packMap() {
-        await fs.emptyDir(env.buildMapFolder);
-        await fs.copy(env.tempScriptPath, env.outScriptPath);
-        await fs.copy(env.mapFolder, env.buildMapFolder);
-        await pack.pack(env.buildMapFolder, env.outMapPath);
-    }
-
-    @Project.progress("Starting game ...")
-    private _runGame() {
-        return runner.runGame(env.outMapPath);
-    }
-
-    @Project.progress("Starting world editor ...")
-    private _runWorldEditor() {
-        return runner.runWorldEditor();
     }
 }

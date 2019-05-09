@@ -16,6 +16,8 @@ const FILE_WARCRAFT = "warcraft.json";
 const FILE_SCRIPT = "war3map.lua";
 const FILE_MAP = "_warcraft_vscode_test.w3x";
 const FOLDER_BUILD = ".build";
+const REQUIRED_CONFIG_KEYS = ["sourcedir", "mapdir"];
+const REQUIRED_SETTING_KEYS = ["gamePath", "wePath"];
 
 class Environment {
     private data: any;
@@ -83,17 +85,15 @@ class Environment {
 
     private async loadProjectConfig() {
         const configFile = path.join(this.rootPath, FILE_WARCRAFT);
+        if (!(await fs.pathExists(configFile))) {
+            throw new Error(`Not found ${FILE_WARCRAFT}`);
+        }
         const stat = await fs.stat(configFile);
         if (!stat.isFile()) {
             throw new Error(`Not found ${FILE_WARCRAFT}`);
         }
 
-        const body = await fs.readFile(configFile, { encoding: "utf-8" });
-        if (!body) {
-            throw new Error("Read ${FILE_WARCRAFT} failed");
-        }
-
-        const config = JSON.parse(body);
+        const config = await fs.readJson(configFile, { encoding: "utf-8" });
         if (!config) {
             throw new Error(`Parse ${FILE_WARCRAFT} failed`);
         }
@@ -102,15 +102,13 @@ class Environment {
     }
 
     private async checkProjectConfig() {
-        const configKeys = ["sourcedir", "mapdir"];
-        for (const key of configKeys) {
+        for (const key of REQUIRED_CONFIG_KEYS) {
             if (!this.data[key]) {
                 throw new Error(`Lost config ${key}`);
             }
         }
 
-        const settingKeys = ["gamePath", "wePath"];
-        for (const key of settingKeys) {
+        for (const key of REQUIRED_SETTING_KEYS) {
             if (!this.config.get(key)) {
                 throw new Error(`${key} not set`);
             }

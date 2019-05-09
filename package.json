@@ -20,7 +20,9 @@
     "onCommand:extension.warcraft.map.pack",
     "onCommand:extension.warcraft.run.game",
     "onCommand:extension.warcraft.run.we",
-    "onCommand:extension.warcraft.library.add"
+    "onCommand:extension.warcraft.library.add",
+    "onCommand:extension.warcraft.option.open",
+    "onCommand:extension.warcraft.project.clean"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -44,6 +46,14 @@
       {
         "command": "extension.warcraft.library.add",
         "title": "Warcraft: Add Library"
+      },
+      {
+        "command": "extension.warcraft.project.clean",
+        "title": "Warcraft: Clean"
+      },
+      {
+        "command": "extension.warcraft.option.open",
+        "title": "Warcraft: Advance options"
       }
     ],
     "configuration": {

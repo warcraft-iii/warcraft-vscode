@@ -5,6 +5,7 @@
   "version": "0.0.9",
   "publisher": "DengSir",
   "license": "SEE LICENSE IN LICENSE.md",
+  "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/warcraft-iii/warcraft-vscode.git"
@@ -83,18 +84,21 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "webpack --mode production",
+    "compile": "webpack --mode none",
+    "watch": "webpack --mode none --watch",
     "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "devDependencies": {
     "@types/fs-extra": "^5.1.0",
     "@types/mocha": "^2.2.42",
     "@types/node": "^10.12.21",
+    "ts-loader": "^6.0.0",
     "tslint": "^5.12.1",
     "typescript": "^3.3.1",
-    "vscode": "^1.1.28"
+    "vscode": "^1.1.28",
+    "webpack": "^4.31.0",
+    "webpack-cli": "^3.3.2"
   },
   "dependencies": {
     "@octokit/rest": "^16.25.0",

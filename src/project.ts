@@ -109,8 +109,8 @@ export class Project {
         );
     }
 
-    async init() {
-        await env.init();
+    async init(context: vscode.ExtensionContext) {
+        await env.init(context);
     }
 
     @Project.catch
@@ -191,8 +191,8 @@ export class Project {
     @Project.task("Packing Map ...")
     private async packMap() {
         await fs.emptyDir(env.buildMapFolder);
-        await fs.copy(env.tempScriptPath, env.outScriptPath);
         await fs.copy(env.mapFolder, env.buildMapFolder);
+        await fs.copy(env.tempScriptPath, env.outScriptPath);
         await pack.pack(env.buildMapFolder, env.outMapPath);
     }
 

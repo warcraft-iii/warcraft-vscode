@@ -8,9 +8,11 @@
 import * as path from "path";
 import * as cp from "child_process";
 
+import env from "./environment";
+
 export function pack(from: string, to: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        const exec = path.join(__dirname, "../bin/MopaqPack.exe");
+        const exec = path.join(env.extensionFolder, "bin/MopaqPack.exe");
 
         const p = cp.spawn(exec, ["-o", to, from]);
         const chunks: any[] = [];

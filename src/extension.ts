@@ -6,7 +6,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const project = Project.get();
     const option = Option.get();
 
-    await project.init();
+    await project.init(context);
 
     context.subscriptions.push(
         vscode.commands.registerCommand("extension.warcraft.compile.debug", () => project.commandCompileDebug()),

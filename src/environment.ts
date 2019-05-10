@@ -20,11 +20,16 @@ const REQUIRED_CONFIG_KEYS = ["sourcedir", "mapdir"];
 const REQUIRED_SETTING_KEYS = ["gamePath", "wePath"];
 
 class Environment {
+    private context?: vscode.ExtensionContext;
     private data: any;
     private _documentFolder?: string;
 
     private get config() {
         return vscode.workspace.getConfiguration("warcraft");
+    }
+
+    get extensionFolder() {
+        return this.context ? this.context.extensionPath : "";
     }
 
     get documentFolder() {
@@ -145,7 +150,8 @@ class Environment {
         } catch (error) {}
     }
 
-    async init() {
+    async init(context: vscode.ExtensionContext) {
+        this.context = context;
         await this.initDocumentFolder();
     }
 

@@ -8,11 +8,12 @@
 import * as path from "path";
 import * as fs from "fs-extra";
 
+import env from "./environment";
+
 import { getAllFiles } from "./util";
 
 const LUA = ".lua";
 const LUA_REG = new RegExp(LUA + "$");
-const DEBUG_TEMPLATE = path.join(__dirname, "../resources/debug.lua");
 
 export async function compileDebug(from: string, to: string) {
     if (!(await fs.stat(from)).isDirectory()) {
@@ -44,7 +45,7 @@ export async function compileDebug(from: string, to: string) {
         });
     };
 
-    await pipe(DEBUG_TEMPLATE);
+    await pipe(path.join(env.extensionFolder, "resources/debug.lua"));
 
     for (const file of files) {
         const name = path

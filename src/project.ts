@@ -58,7 +58,7 @@ export class Project {
         };
     }
 
-    static single(target: any, key: any, descriptor: any) {
+    static progress(target: any, key: any, descriptor: any) {
         if (!descriptor.value) {
             return;
         }
@@ -68,7 +68,7 @@ export class Project {
         };
     }
 
-    static task(message: string) {
+    static report(message: string) {
         return function(target: any, key: string, descriptor: any) {
             if (!descriptor.value) {
                 return;
@@ -78,6 +78,8 @@ export class Project {
                 if (this.progress) {
                     this.progress.report({ message });
                     await sleep(100);
+                } else {
+                    console.warn(`it's outside withProgress (${key})`);
                 }
                 return await orig.apply(this, args);
             };
@@ -90,7 +92,7 @@ export class Project {
         return Project._instance;
     }
 
-    private withProgress(...tasks: (() => void)[]) {
+    private withProgress(task: () => Promise<void>) {
         return vscode.window.withProgress(
             {
                 cancellable: false,
@@ -99,11 +101,7 @@ export class Project {
             },
             async progress => {
                 this.progress = progress;
-
-                for (const task of tasks) {
-                    await task();
-                }
-
+                await task();
                 this.progress = undefined;
             }
         );
@@ -115,15 +113,17 @@ export class Project {
 
     @Project.catch
     @Project.validate
-    @Project.single
+    @Project.progress
     commandCompileDebug() {
         return this.compileDebug();
     }
 
     @Project.catch
     @Project.validate
+    @Project.progress
     async commandPackMap() {
-        this.withProgress(() => this.compileDebug(), () => this.packMap());
+        await this.compileDebug();
+        await this.packMap();
     }
 
     @Project.catch
@@ -137,11 +137,11 @@ export class Project {
             }
         }
 
-        return this.withProgress(
-            () => this.compileDebug(),
-            () => this.packMap(),
-            async () => (this.gameProcess = await this.runGame())
-        );
+        return this.withProgress(async () => {
+            await this.compileDebug();
+            await this.packMap();
+            await this.runGame();
+        });
     }
 
     @Project.catch
@@ -151,13 +151,13 @@ export class Project {
             throw new Error("World Editor is running.");
         }
 
-        return this.withProgress(async () => (this.weProcess = await this.runWorldEditor()));
+        return this.withProgress(() => this.runWorldEditor());
     }
 
     @Project.catch
     @Project.validate
-    @Project.single
-    @Project.task("Cleaning project ...")
+    @Project.progress
+    @Project.report("Cleaning project ...")
     commandClean() {
         return fs.remove(env.buildFolder);
     }
@@ -175,20 +175,20 @@ export class Project {
         }
 
         const isSsh = env.allowSshLibrary && (await this.askGit());
-        await this.addLibrary(library, isSsh);
+        await this.withProgress(() => this.addLibrary(library, isSsh));
     }
 
-    @Project.task("Checkouting Submodule ...")
+    @Project.report("Checkouting Submodule ...")
     private addLibrary(library: lib.ClassicLibrary, isSsh: boolean) {
         return lib.addLibrary(library, isSsh);
     }
 
-    @Project.task("Compiling Scripts ...")
+    @Project.report("Compiling Scripts ...")
     private compileDebug() {
         return code.compileDebug(env.sourceFolder, env.tempScriptPath);
     }
 
-    @Project.task("Packing Map ...")
+    @Project.report("Packing Map ...")
     private async packMap() {
         await fs.emptyDir(env.buildMapFolder);
         await fs.copy(env.mapFolder, env.buildMapFolder);
@@ -196,14 +196,14 @@ export class Project {
         await pack.pack(env.buildMapFolder, env.outMapPath);
     }
 
-    @Project.task("Starting Game ...")
-    runGame() {
-        return runner.runGame(env.outMapPath);
+    @Project.report("Starting Game ...")
+    private async runGame() {
+        this.gameProcess = await runner.runGame(env.outMapPath);
     }
 
-    @Project.task("Starting World Editor ...")
-    private runWorldEditor() {
-        return runner.runWorldEditor();
+    @Project.report("Starting World Editor ...")
+    private async runWorldEditor() {
+        this.weProcess = await runner.runWorldEditor();
     }
 
     private async confirm(info: string) {

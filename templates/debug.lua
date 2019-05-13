@@ -1,12 +1,9 @@
 --[[%= war3map %]]
 
 do
-
 local _PRELOADED = {}
 
 --[[%= code %]]
-
-local _LOADED = {}
 
 local function findfile(module)
     if _PRELOADED[module] then
@@ -37,7 +34,7 @@ local function loadfile(k)
     return r or true
 end
 
-setmetatable(_LOADED, { __index = function(t, k)
+local _LOADED = setmetatable({}, { __index = function(t, k)
     t[k] = loadfile(k)
     return t[k]
 end })
@@ -45,7 +42,6 @@ end })
 function require(module)
     return _LOADED[module]
 end
-
 end
 
 local orig_main = main

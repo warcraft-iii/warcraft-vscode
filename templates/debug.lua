@@ -15,7 +15,7 @@ local function findfile(module)
         return _PRELOADED[module]
     end
 
-    error('not found ' .. module, 4)
+    error('not found ' .. module, 5)
 end
 
 local function loadfile(k)

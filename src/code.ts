@@ -32,7 +32,7 @@ export async function compileDebug(from: string, to: string) {
             .map(async file => {
                 const body = await fs.readFile(file, { encoding: "utf-8" });
                 const comment = (() => {
-                    const m = body.match(/\[(=*)\[/g);
+                    const m = body.match(/\[(=*)\[|\](=*)\]/g);
                     const exists = new Set(m ? m.map(x => x.length - 2) : []);
 
                     let length = 0;

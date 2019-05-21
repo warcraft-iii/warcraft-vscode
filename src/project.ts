@@ -198,6 +198,7 @@ export class Project {
     private async packMap() {
         await fs.emptyDir(env.buildMapFolder);
         await fs.copy(env.mapFolder, env.buildMapFolder);
+        await fs.copy(env.importsFolder, env.buildMapFolder);
         await fs.copy(env.tempScriptPath, env.outScriptPath);
         await pack.pack(env.buildMapFolder, env.outMapPath);
     }

@@ -16,6 +16,7 @@ const FILE_WARCRAFT = "warcraft.json";
 const FILE_SCRIPT = "war3map.lua";
 const FILE_MAP = "_warcraft_vscode_test.w3x";
 const FOLDER_BUILD = ".build";
+const FOLDER_IMPORTS = "imports";
 const REQUIRED_CONFIG_KEYS = ["sourcedir", "mapdir"];
 const REQUIRED_SETTING_KEYS = ["gamePath", "wePath"];
 
@@ -82,6 +83,10 @@ class Environment {
 
     get buildMapFolder(): string {
         return path.join(this.buildFolder, this.data.mapdir);
+    }
+
+    get importsFolder(): string {
+        return path.join(this.rootPath, FOLDER_IMPORTS);
     }
 
     get outMapPath(): string {

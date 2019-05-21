@@ -5,20 +5,20 @@
  * @Date   : 4/22/2019, 11:18:19 AM
  */
 
-import * as path from "path";
-import * as vscode from "vscode";
-import * as fs from "fs-extra";
-import * as cp from "child_process";
+import * as path from 'path';
+import * as vscode from 'vscode';
+import * as fs from 'fs-extra';
+import * as cp from 'child_process';
 
-import { promisify } from "util";
+import { promisify } from 'util';
 
-const FILE_WARCRAFT = "warcraft.json";
-const FILE_SCRIPT = "war3map.lua";
-const FILE_MAP = "_warcraft_vscode_test.w3x";
-const FOLDER_BUILD = ".build";
-const FOLDER_IMPORTS = "imports";
-const REQUIRED_CONFIG_KEYS = ["sourcedir", "mapdir"];
-const REQUIRED_SETTING_KEYS = ["gamePath", "wePath"];
+const FILE_WARCRAFT = 'warcraft.json';
+const FILE_SCRIPT = 'war3map.lua';
+const FILE_MAP = '_warcraft_vscode_test.w3x';
+const FOLDER_BUILD = '.build';
+const FOLDER_IMPORTS = 'imports';
+const REQUIRED_CONFIG_KEYS = ['sourcedir', 'mapdir'];
+const REQUIRED_SETTING_KEYS = ['gamePath', 'wePath'];
 
 class Environment {
     private context?: vscode.ExtensionContext;
@@ -26,11 +26,23 @@ class Environment {
     private _documentFolder?: string;
 
     private get config() {
-        return vscode.workspace.getConfiguration("warcraft");
+        return vscode.workspace.getConfiguration('warcraft');
+    }
+
+    asExetensionPath(...args: string[]) {
+        return path.join(this.extensionFolder, ...args);
+    }
+
+    asMapPath(...args: string[]) {
+        return path.join(this.mapFolder, ...args);
+    }
+
+    asBuildPath(...args: string[]) {
+        return path.join(this.buildFolder, ...args);
     }
 
     get extensionFolder() {
-        return this.context ? this.context.extensionPath : "";
+        return this.context ? this.context.extensionPath : '';
     }
 
     get documentFolder() {
@@ -38,35 +50,35 @@ class Environment {
     }
 
     get rootPath() {
-        return vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : "";
+        return vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : '';
     }
 
     get gamePath(): string {
-        return this.config.get("gamePath") || "";
+        return this.config.get('gamePath') || '';
     }
 
     get wePath(): string {
-        return this.config.get("wePath") || "";
+        return this.config.get('wePath') || '';
     }
 
     get allowSshLibrary(): boolean {
-        return this.config.get<boolean>("allowAddSshLibrary") || false;
+        return this.config.get<boolean>('allowAddSshLibrary') || false;
     }
 
     get gameArgs(): string[] {
-        return this.config.get("gameArgs") || [];
+        return this.config.get('gameArgs') || [];
     }
 
     get weArgs(): string[] {
-        return this.config.get("weArgs") || [];
+        return this.config.get('weArgs') || [];
     }
 
     get autoCloseClient(): boolean {
-        return this.config.get<boolean>("autoCloseClient") || false;
+        return this.config.get<boolean>('autoCloseClient') || false;
     }
 
     set autoCloseClient(flag: boolean) {
-        this.config.update("autoCloseClient", flag, vscode.ConfigurationTarget.Global);
+        this.config.update('autoCloseClient', flag, vscode.ConfigurationTarget.Global);
     }
 
     get sourceFolder(): string {
@@ -111,7 +123,7 @@ class Environment {
             throw new Error(`Not found ${FILE_WARCRAFT}`);
         }
 
-        const config = await fs.readJson(configFile, { encoding: "utf-8" });
+        const config = await fs.readJson(configFile, { encoding: 'utf-8' });
         if (!config) {
             throw new Error(`Parse ${FILE_WARCRAFT} failed`);
         }
@@ -141,15 +153,18 @@ class Environment {
     }
 
     private async initDocumentFolder() {
-        const exec = promisify(cp.exec);
+        const execFile = promisify(cp.execFile);
 
         type Env = Map<string, string>;
-        const env: Env = new Map(Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])) as Env;
+        const sys: Env = new Map(Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])) as Env;
 
         try {
-            const { stdout } = await exec(
-                `reg query "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders" /v Personal`
-            );
+            const { stdout } = await execFile('reg', [
+                'query',
+                'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
+                '/v',
+                'Personal'
+            ]);
 
             const m = stdout.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
             if (!m) {
@@ -157,7 +172,7 @@ class Environment {
             } else {
                 this._documentFolder = m[1].replace(/%([^%]+)%/g, (_, x) => {
                     x = x.toLowerCase();
-                    return env.has(x) ? env.get(x) : x;
+                    return sys.has(x) ? sys.get(x) : x;
                 });
             }
         } catch (error) {}
@@ -174,4 +189,4 @@ class Environment {
     }
 }
 
-export default new Environment();
+export const env = new Environment();

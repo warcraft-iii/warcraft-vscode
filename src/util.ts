@@ -5,8 +5,8 @@
  * @Date   : 4/18/2019, 6:05:31 PM
  */
 
-import * as fs from "fs-extra";
-import * as path from "path";
+import * as fs from 'fs-extra';
+import * as path from 'path';
 
 async function _getAllFiles(root: string, r: string[]) {
     const files = (await fs.readdir(root)).map(file => path.join(root, file));
@@ -27,6 +27,6 @@ export function getAllFiles(root: string) {
     return _getAllFiles(root, []);
 }
 
-export function sleep(n: number) {
+export function sleep(n: number): Promise<void> {
     return new Promise(resolve => setTimeout(() => resolve(), n));
 }

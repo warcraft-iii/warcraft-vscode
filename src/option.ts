@@ -5,7 +5,7 @@
  * @Date   : 5/9/2019, 11:19:44 PM
  */
 
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 
 export class Option {
     private static instance = new Option();
@@ -17,13 +17,13 @@ export class Option {
     private constructor() {}
 
     async setPath(key: string) {
-        vscode.workspace.getConfiguration("warcraft").update(key, await this.askPath(), true);
+        vscode.workspace.getConfiguration('warcraft').update(key, await this.askPath(), true);
     }
 
     async askPath() {
         const value = await vscode.window.showOpenDialog({
-            openLabel: "Select Warcraft III execution",
-            filters: { "Warcraft III.exe": ["exe"] }
+            openLabel: 'Select Warcraft III execution',
+            filters: { 'Warcraft III.exe': ['exe'] }
         });
 
         if (!value || value.length < 1) {
@@ -36,12 +36,12 @@ export class Option {
     async open() {
         const choice = await vscode.window.showQuickPick([
             {
-                label: "Set Warcraft III execution path",
-                func: async () => this.setPath("gamePath")
+                label: 'Set Warcraft III execution path',
+                func: async () => this.setPath('gamePath')
             },
             {
-                label: "Set World Editor execution path",
-                func: async () => this.setPath("wePath")
+                label: 'Set World Editor execution path',
+                func: async () => this.setPath('wePath')
             }
         ]);
 

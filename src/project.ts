@@ -5,27 +5,34 @@
  * @Date   : 4/18/2019, 5:43:52 PM
  */
 
-import * as vscode from "vscode";
-import * as fs from "fs-extra";
+import * as vscode from 'vscode';
+import * as fs from 'fs-extra';
 
-import * as code from "./code";
-import * as pack from "./pack";
-import * as runner from "./runner";
-import * as lib from "./lib";
+import * as pack from './pack';
+import * as runner from './runner';
+import * as lib from './lib';
 
-import { sleep } from "./util";
-import { Process } from "./process";
+import { sleep } from './util';
+import { Process } from './process';
 
-import env from "./environment";
+import { env } from './environment';
+import { Compiler } from './compiler';
 
 export class Project {
-    private static _instance = new Project();
-
     private gameProcess?: Process;
     private weProcess?: Process;
     private progress?: vscode.Progress<{ message?: string; increment?: number }>;
 
-    static catch(target: any, key: any, descriptor: any) {
+    private compiler = new Compiler();
+
+    constructor() {}
+
+    async init(context: vscode.ExtensionContext) {
+        await env.init(context);
+        await this.compiler.init();
+    }
+
+    static catch(_target: any, _key: any, descriptor: any) {
         if (!descriptor.value) {
             return;
         }
@@ -35,19 +42,19 @@ export class Project {
                 return await orig.apply(this, args);
             } catch (error) {
                 let message;
-                if (typeof error === "string") {
+                if (typeof error === 'string') {
                     message = error;
-                } else if (typeof error === "object") {
+                } else if (typeof error === 'object') {
                     message = error.message;
                 } else {
-                    message = "Unknown error";
+                    message = 'Unknown error';
                 }
-                vscode.window.showErrorMessage("Warcraft: " + message);
+                vscode.window.showErrorMessage('Warcraft: ' + message);
             }
         };
     }
 
-    static validate(target: any, key: any, descriptor: any) {
+    static validate(_target: any, _key: any, descriptor: any) {
         if (!descriptor.value) {
             return;
         }
@@ -58,7 +65,7 @@ export class Project {
         };
     }
 
-    static progress(target: any, key: any, descriptor: any) {
+    static progress(_target: any, _key: any, descriptor: any) {
         if (!descriptor.value) {
             return;
         }
@@ -69,7 +76,7 @@ export class Project {
     }
 
     static report(message: string) {
-        return function(target: any, key: string, descriptor: any) {
+        return function(_target: any, key: string, descriptor: any) {
             if (!descriptor.value) {
                 return;
             }
@@ -86,29 +93,20 @@ export class Project {
         };
     }
 
-    private constructor() {}
-
-    static get() {
-        return Project._instance;
-    }
-
     private withProgress(task: () => Promise<void>) {
         return vscode.window.withProgress(
             {
                 cancellable: false,
                 location: vscode.ProgressLocation.Notification,
-                title: "Warcraft: "
+                title: 'Warcraft: '
             },
             async progress => {
                 this.progress = progress;
+                this.progress.report({ message: 'haha' });
                 await task();
                 this.progress = undefined;
             }
         );
-    }
-
-    async init(context: vscode.ExtensionContext) {
-        await env.init(context);
     }
 
     @Project.catch
@@ -133,9 +131,9 @@ export class Project {
             if (env.autoCloseClient) {
                 await this.gameProcess.kill();
             } else {
-                let confirm = await this.confirmKillWar3("Warcraft III running, to terminal?");
+                let confirm = await this.confirmKillWar3('Warcraft III running, to terminal?');
                 if (confirm) {
-                    if (confirm === "Auto Close") {
+                    if (confirm === 'Auto Close') {
                         env.autoCloseClient = true;
                     }
                     await this.gameProcess.kill();
@@ -154,7 +152,7 @@ export class Project {
     @Project.validate
     commandRunWorldEditor() {
         if (this.weProcess && this.weProcess.isAlive()) {
-            throw new Error("World Editor is running.");
+            throw new Error('World Editor is running.');
         }
 
         return this.withProgress(() => this.runWorldEditor());
@@ -163,7 +161,7 @@ export class Project {
     @Project.catch
     @Project.validate
     @Project.progress
-    @Project.report("Cleaning project ...")
+    @Project.report('Cleaning project ...')
     commandClean() {
         return fs.remove(env.buildFolder);
     }
@@ -172,7 +170,7 @@ export class Project {
     @Project.validate
     async commandAddLibrary() {
         const library = await vscode.window.showQuickPick(lib.getClassicLibraries(), {
-            placeHolder: "Select library to add ...",
+            placeHolder: 'Select library to add ...',
             ignoreFocusOut: true
         });
 
@@ -184,17 +182,17 @@ export class Project {
         await this.withProgress(() => this.addLibrary(library, isSsh));
     }
 
-    @Project.report("Checkouting Submodule ...")
+    @Project.report('Checkouting Submodule ...')
     private addLibrary(library: lib.ClassicLibrary, isSsh: boolean) {
         return lib.addLibrary(library, isSsh);
     }
 
-    @Project.report("Compiling Scripts ...")
+    @Project.report('Compiling Scripts ...')
     private compileDebug() {
-        return code.compileDebug(env.sourceFolder, env.tempScriptPath);
+        return this.compiler.debug();
     }
 
-    @Project.report("Packing Map ...")
+    @Project.report('Packing Map ...')
     private async packMap() {
         await fs.emptyDir(env.buildMapFolder);
         await fs.copy(env.mapFolder, env.buildMapFolder);
@@ -203,12 +201,12 @@ export class Project {
         await pack.pack(env.buildMapFolder, env.outMapPath);
     }
 
-    @Project.report("Starting Game ...")
+    @Project.report('Starting Game ...')
     private async runGame() {
         this.gameProcess = await runner.runGame(env.outMapPath);
     }
 
-    @Project.report("Starting World Editor ...")
+    @Project.report('Starting World Editor ...')
     private async runWorldEditor() {
         this.weProcess = await runner.runWorldEditor();
     }
@@ -219,14 +217,14 @@ export class Project {
             {
                 modal: true
             },
-            "Ok",
-            "Auto Close"
+            'Ok',
+            'Auto Close'
         );
     }
 
     private async askGit() {
         const result = await vscode.window.showQuickPick(
-            [{ label: "SSH", value: true }, { label: "HTTPS", value: false }],
+            [{ label: 'SSH', value: true }, { label: 'HTTPS', value: false }],
             {
                 ignoreFocusOut: true
             }

@@ -5,9 +5,9 @@
  * @Date   : 5/9/2019, 6:27:50 PM
  */
 
-import * as cp from "child_process";
+import * as cp from 'child_process';
 
-import { sleep } from "./util";
+import { sleep } from './util';
 export class Process {
     private process: cp.ChildProcess | undefined;
 
@@ -18,8 +18,8 @@ export class Process {
 
         const onExit = () => (this.process = undefined);
 
-        this.process.on("exit", onExit);
-        this.process.on("close", onExit);
+        this.process.on('exit', onExit);
+        this.process.on('close', onExit);
     }
 
     async kill(): Promise<void> {

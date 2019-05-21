@@ -130,10 +130,16 @@ export class Project {
     @Project.validate
     async commandRunGame() {
         if (this.gameProcess && this.gameProcess.isAlive()) {
-            if (await this.confirm("Warcraft III running, to terminal?")) {
+            if (env.autoCloseClient) {
                 await this.gameProcess.kill();
             } else {
-                return;
+                let confirm = await this.confirmKillWar3("Warcraft III running, to terminal?");
+                if (confirm) {
+                    if (confirm === "Auto Close") {
+                        env.autoCloseClient = true;
+                    }
+                    await this.gameProcess.kill();
+                }
             }
         }
 
@@ -206,15 +212,14 @@ export class Project {
         this.weProcess = await runner.runWorldEditor();
     }
 
-    private async confirm(info: string) {
-        return (
-            (await vscode.window.showInformationMessage(
-                info,
-                {
-                    modal: true
-                },
-                "Ok"
-            )) === "Ok"
+    private async confirmKillWar3(info: string) {
+        return await vscode.window.showInformationMessage(
+            info,
+            {
+                modal: true
+            },
+            "Ok",
+            "Auto Close"
         );
     }
 

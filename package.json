@@ -79,6 +79,10 @@
         "warcraft.weArgs": {
           "type": "array",
           "description": "Arguments to added to run the world editor"
+        },
+        "warcraft.autoCloseClient": {
+          "type": "boolean",
+          "description": "Automatically close the client?"
         }
       }
     }

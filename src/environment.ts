@@ -60,6 +60,14 @@ class Environment {
         return this.config.get("weArgs") || [];
     }
 
+    get autoCloseClient(): boolean {
+        return this.config.get<boolean>("autoCloseClient") || false;
+    }
+
+    set autoCloseClient(flag: boolean) {
+        this.config.update("autoCloseClient", flag, vscode.ConfigurationTarget.Global);
+    }
+
     get sourceFolder(): string {
         return path.join(this.rootPath, this.data.sourcedir);
     }

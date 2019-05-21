@@ -7,6 +7,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as cp from 'child_process';
 
 async function _getAllFiles(root: string, r: string[]) {
     const files = (await fs.readdir(root)).map(file => path.join(root, file));
@@ -29,4 +30,21 @@ export function getAllFiles(root: string) {
 
 export function sleep(n: number): Promise<void> {
     return new Promise(resolve => setTimeout(() => resolve(), n));
+}
+
+export function exec(command: string, args: string[]) {
+    return new Promise((resolve, reject) => {
+        const p = cp.spawn(command, args);
+        const chunks: any[] = [];
+        p.stdout.on('data', chunk => {
+            chunks.push(chunk.toString());
+        });
+        p.on('close', code => {
+            if (code !== 0) {
+                reject(new Error(chunks.join()));
+            } else {
+                resolve(chunks.join());
+            }
+        });
+    });
 }

@@ -8,7 +8,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 
-import * as pack from './pack';
+// import * as pack from './pack';
 import * as runner from './runner';
 import * as lib from './lib';
 
@@ -17,6 +17,7 @@ import { Process } from './process';
 
 import { env } from './environment';
 import { Compiler } from './compiler';
+import { Packer } from './packer';
 
 export class Project {
     private gameProcess?: Process;
@@ -24,6 +25,7 @@ export class Project {
     private progress?: vscode.Progress<{ message?: string; increment?: number }>;
 
     private compiler = new Compiler();
+    private packer = new Packer();
 
     constructor() {}
 
@@ -194,11 +196,12 @@ export class Project {
 
     @Project.report('Packing Map ...')
     private async packMap() {
-        await fs.emptyDir(env.buildMapFolder);
-        await fs.copy(env.mapFolder, env.buildMapFolder);
-        await fs.copy(env.importsFolder, env.buildMapFolder);
-        await fs.copy(env.tempScriptPath, env.outScriptPath);
-        await pack.pack(env.buildMapFolder, env.outMapPath);
+        await this.packer.pack();
+        // await fs.emptyDir(env.buildMapFolder);
+        // await fs.copy(env.mapFolder, env.buildMapFolder);
+        // await fs.copy(env.importsFolder, env.buildMapFolder);
+        // await fs.copy(env.tempScriptPath, env.outScriptPath);
+        // await pack.pack(env.buildMapFolder, env.outMapPath);
     }
 
     @Project.report('Starting Game ...')

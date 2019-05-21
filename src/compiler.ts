@@ -11,7 +11,7 @@ import * as fs from 'fs-extra';
 import { template, templateSettings, TemplateExecutor } from 'lodash';
 import { env } from './environment';
 import { getAllFiles } from './util';
-import { LUA, LUA_REG } from './globals';
+import { LUA, LUA_REG, ENTRY_FILE } from './globals';
 
 export enum CompileType {
     Debug,
@@ -44,7 +44,7 @@ export class Compiler {
             throw new Error('template not exists');
         }
 
-        const war3map = await fs.readFile(env.asMapPath('war3map.lua'), { encoding: 'utf-8' });
+        const war3map = await fs.readFile(env.asMapPath(ENTRY_FILE), { encoding: 'utf-8' });
         const code = (await Promise.all(
             (await getAllFiles(env.sourceFolder))
                 .filter(file => !path.basename(file).startsWith('.') && !path.basename(file).startsWith('@'))
@@ -58,7 +58,7 @@ export class Compiler {
         )).join('\n\n');
 
         const out = executor({ war3map, code });
-        await fs.writeFile(env.asBuildPath('war3map.lua'), out);
+        await fs.writeFile(env.asBuildPath(ENTRY_FILE), out);
     }
 
     getCommentExpr(code: string) {

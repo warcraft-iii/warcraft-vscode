@@ -7,11 +7,11 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import * as cp from 'child_process';
-import * as utils from './utils';
+import * as proc from './proc';
 
 import { env } from './environment';
 import { DEBUG_MAP_FILE } from './globals';
+import { Report } from './report';
 
 export enum ProcessType {
     Game,
@@ -19,14 +19,16 @@ export enum ProcessType {
 }
 
 export class Runner {
-    private processes = new Map<ProcessType, cp.ChildProcess>();
+    private processes = new Map<ProcessType, proc.Process>();
 
     constructor() {}
 
     hasProcess(type: ProcessType) {
-        return this.processes.has(type);
+        const process = this.processes.get(type);
+        return process && process.isAlive();
     }
 
+    @Report('Starting Game ...')
     async runGame() {
         const mapPath = env.asBuildPath(DEBUG_MAP_FILE);
         const isPtr = await fs.pathExists(
@@ -36,14 +38,19 @@ export class Runner {
         const targetPath = path.join(docMapFolder, 'Test', path.basename(mapPath));
         await fs.copy(mapPath, targetPath);
 
-        const process = cp.spawn(env.gamePath, [...env.gameArgs, '-loadfile', path.relative(docMapFolder, targetPath)]);
+        const process = proc.spawn(env.gamePath, [
+            ...env.gameArgs,
+            '-loadfile',
+            path.relative(docMapFolder, targetPath)
+        ]);
 
-        this.saveProcess(process, ProcessType.Game);
+        this.processes.set(ProcessType.Game, process);
     }
 
+    @Report('Starting World Editor ...')
     async runEditor() {
-        const process = cp.spawn(env.wePath, [...env.weArgs, '-loadfile', env.mapFolder]);
-        this.saveProcess(process, ProcessType.Editor);
+        const process = proc.spawn(env.wePath, [...env.weArgs, '-loadfile', env.mapFolder]);
+        this.processes.set(ProcessType.Editor, process);
     }
 
     async kill(type: ProcessType) {
@@ -52,21 +59,6 @@ export class Runner {
             return;
         }
 
-        p.kill();
-
-        while (this.processes.has(type)) {
-            await utils.sleep(100);
-        }
-    }
-
-    private saveProcess(process: cp.ChildProcess, type: ProcessType) {
-        process.on('close', () => this.removeProcess(process, type));
-        process.on('exit', () => this.removeProcess(process, type));
-        this.processes.set(type, process);
-    }
-
-    private removeProcess(process: cp.ChildProcess, type: ProcessType) {
-        process.removeAllListeners();
-        this.processes.delete(type);
+        await p.kill();
     }
 }

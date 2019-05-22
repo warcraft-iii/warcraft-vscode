@@ -8,8 +8,10 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as utils from './utils';
+import * as proc from './proc';
 
 import { env } from './environment';
+import { Report } from './report';
 import { ENTRY_FILE, PACKLIST_FILE, DEBUG_MAP_FILE } from './globals';
 
 type PackItem = [string, string];
@@ -24,14 +26,15 @@ export class Packer {
         await fs.writeFile(env.asBuildPath(PACKLIST_FILE), JSON.stringify(packList));
     }
 
-    packByPackList() {
-        return utils.exec(env.asExetensionPath('bin/MopaqPack.exe'), [
+    async packByPackList() {
+        await proc.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
             '-o',
             env.asBuildPath(DEBUG_MAP_FILE),
             env.asBuildPath(PACKLIST_FILE)
         ]);
     }
 
+    @Report('Packing Map ...')
     async pack() {
         await this.generatePackList();
         await this.packByPackList();

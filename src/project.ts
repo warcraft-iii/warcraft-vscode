@@ -7,7 +7,6 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
-import * as utils from './utils';
 
 import * as lib from './lib';
 
@@ -16,10 +15,9 @@ import { Compiler } from './compiler';
 import { Packer } from './packer';
 import { Runner, ProcessType } from './runner';
 import { App } from './app';
+import { Report, Progress } from './report';
 
 export class Project {
-    private progress?: vscode.Progress<{ message?: string; increment?: number }>;
-
     private compiler = new Compiler();
     private packer = new Packer();
     private runner = new Runner();
@@ -42,6 +40,7 @@ export class Project {
             try {
                 return await orig.apply(this, args);
             } catch (error) {
+                console.error(error);
                 let message;
                 if (typeof error === 'string') {
                     message = error;
@@ -66,67 +65,24 @@ export class Project {
         };
     }
 
-    static progress(_target: any, _key: any, descriptor: any) {
-        if (!descriptor.value) {
-            return;
-        }
-        const orig = descriptor.value;
-        descriptor.value = function(...args: any[]) {
-            return this.withProgress(() => orig.apply(this, args));
-        };
-    }
-
-    static report(message: string) {
-        return (_target: any, key: string, descriptor: any) => {
-            if (!descriptor.value) {
-                return;
-            }
-            const orig = descriptor.value;
-            descriptor.value = async function(...args: any[]) {
-                if (this.progress) {
-                    this.progress.report({ message });
-                    await utils.sleep(100);
-                } else {
-                    console.warn(`it's outside withProgress (${key})`);
-                }
-                return await orig.apply(this, args);
-            };
-        };
-    }
-
-    private withProgress(task: () => Promise<void>) {
-        return vscode.window.withProgress(
-            {
-                cancellable: false,
-                location: vscode.ProgressLocation.Notification,
-                title: 'Warcraft: '
-            },
-            async progress => {
-                this.progress = progress;
-                this.progress.report({ message: 'haha' });
-                await task();
-                this.progress = undefined;
-            }
-        );
-    }
-
     @Project.catch
     @Project.validate
-    @Project.progress
+    @Progress
     commandCompileDebug() {
-        return this.compileDebug();
+        return this.compiler.debug();
     }
 
     @Project.catch
     @Project.validate
-    @Project.progress
+    @Progress
     async commandPackMap() {
-        await this.compileDebug();
-        await this.packMap();
+        await this.compiler.debug();
+        await this.packer.pack();
     }
 
     @Project.catch
     @Project.validate
+    @Progress
     async commandRunGame() {
         if (this.runner.hasProcess(ProcessType.Game)) {
             if (env.autoCloseClient) {
@@ -142,27 +98,25 @@ export class Project {
             }
         }
 
-        return this.withProgress(async () => {
-            await this.compileDebug();
-            await this.packMap();
-            await this.runGame();
-        });
+        await this.compiler.debug();
+        await this.packer.pack();
+        await this.runner.runGame();
     }
 
     @Project.catch
     @Project.validate
+    @Progress
     commandRunWorldEditor() {
         if (this.runner.hasProcess(ProcessType.Editor)) {
             throw new Error('World Editor is running.');
         }
-
-        return this.withProgress(() => this.runWorldEditor());
+        return this.runner.runEditor();
     }
 
     @Project.catch
     @Project.validate
-    @Project.progress
-    @Project.report('Cleaning project ...')
+    @Progress
+    @Report('Cleaning project ...')
     commandClean() {
         return fs.remove(env.buildFolder);
     }
@@ -180,32 +134,12 @@ export class Project {
         }
 
         const isSsh = env.allowSshLibrary && (await this.askGit());
-        await this.withProgress(() => this.addLibrary(library, isSsh));
+        await this.addLibrary(library, isSsh);
     }
 
-    @Project.report('Checkouting Submodule ...')
+    @Report('Checkouting Submodule ...')
     private addLibrary(library: lib.ClassicLibrary, isSsh: boolean) {
         return lib.addLibrary(library, isSsh);
-    }
-
-    @Project.report('Compiling Scripts ...')
-    private compileDebug() {
-        return this.compiler.debug();
-    }
-
-    @Project.report('Packing Map ...')
-    private async packMap() {
-        await this.packer.pack();
-    }
-
-    @Project.report('Starting Game ...')
-    private runGame() {
-        return this.runner.runGame();
-    }
-
-    @Project.report('Starting World Editor ...')
-    private runWorldEditor() {
-        return this.runner.runEditor();
     }
 
     private async confirmKillWar3(info: string) {

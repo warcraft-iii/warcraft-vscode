@@ -4,6 +4,7 @@
  * @Link   : https://dengsir.github.io
  * @Date   : 5/22/2019, 1:40:29 PM
  */
+
 import { workspace } from 'vscode';
 
 export class App {

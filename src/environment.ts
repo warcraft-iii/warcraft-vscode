@@ -8,14 +8,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
-import * as cp from 'child_process';
+import * as proc from './proc';
 
 import { PROJECT_FILE } from './globals';
-import { promisify } from 'util';
 
-const execFile = promisify(cp.execFile);
-
-const FILE_MAP = '_warcraft_vscode_test.w3x';
 const FOLDER_BUILD = '.build';
 const FOLDER_IMPORTS = 'imports';
 const REQUIRED_CONFIG_KEYS = ['sourcedir', 'mapdir'];
@@ -119,10 +115,6 @@ class Environment {
         return path.join(this.rootPath, FOLDER_IMPORTS);
     }
 
-    get outMapPath(): string {
-        return path.join(this.buildFolder, FILE_MAP);
-    }
-
     private async loadProjectConfig() {
         const configFile = path.join(this.rootPath, PROJECT_FILE);
         if (!(await fs.pathExists(configFile))) {
@@ -163,26 +155,20 @@ class Environment {
     }
 
     private async initDocumentFolder() {
-        type Env = Map<string, string>;
-        const sys: Env = new Map(Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])) as Env;
+        const output = await proc.execFile('reg', [
+            'query',
+            'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
+            '/v',
+            'Personal'
+        ]);
 
-        let stdout: string;
-        try {
-            const result = await execFile('reg', [
-                'query',
-                'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
-                '/v',
-                'Personal'
-            ]);
-            stdout = result.stdout;
-        } catch (error) {
-            throw new Error('Not found documents folder');
-        }
-
-        const m = stdout.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
+        const m = output.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
         if (!m) {
             throw new Error('Not found documents folder');
         } else {
+            type SysEnv = Map<string, string>;
+            const sys = new Map(Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])) as SysEnv;
+
             this.documentFolder = m[1].replace(/%([^%]+)%/g, (_, x) => {
                 x = x.toLowerCase();
                 return sys.has(x) ? sys.get(x) : x;

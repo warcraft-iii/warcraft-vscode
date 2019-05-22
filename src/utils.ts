@@ -7,7 +7,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as cp from 'child_process';
+
 import { LUA } from './globals';
 
 async function _getAllFiles(root: string, r: string[]) {
@@ -31,23 +31,6 @@ export function getAllFiles(root: string) {
 
 export function sleep(n: number): Promise<void> {
     return new Promise(resolve => setTimeout(() => resolve(), n));
-}
-
-export function exec(command: string, args: string[]): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const p = cp.spawn(command, args);
-        const chunks: any[] = [];
-        p.stdout.on('data', chunk => {
-            chunks.push(chunk.toString());
-        });
-        p.on('close', code => {
-            if (code !== 0) {
-                reject(new Error(chunks.join()));
-            } else {
-                resolve(chunks.join());
-            }
-        });
-    });
 }
 
 export function isLuaFile(file: string) {

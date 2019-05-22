@@ -13,6 +13,7 @@ import { template, templateSettings, TemplateExecutor } from 'lodash';
 
 import { env } from './environment';
 import { LUA_REG, ENTRY_FILE } from './globals';
+import { Report } from './report';
 
 interface CompilerExecutor {
     main: TemplateExecutor;
@@ -36,6 +37,7 @@ export class Compiler {
         await this.loadTemplate(CompileType.Debug);
     }
 
+    @Report('Compiling Scripts ...')
     async debug() {
         if (!(await fs.stat(env.sourceFolder)).isDirectory()) {
             throw new Error('Not found source folder');

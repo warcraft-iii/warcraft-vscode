@@ -8,9 +8,12 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
-import * as utils from './utils';
+import * as cp from 'child_process';
 
 import { PROJECT_FILE } from './globals';
+import { promisify } from 'util';
+
+const execFile = promisify(cp.execFile);
 
 const FILE_MAP = '_warcraft_vscode_test.w3x';
 const FOLDER_BUILD = '.build';
@@ -165,12 +168,13 @@ class Environment {
 
         let stdout: string;
         try {
-            stdout = await utils.exec('reg', [
+            const result = await execFile('reg', [
                 'query',
                 'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
                 '/v',
                 'Personal'
             ]);
+            stdout = result.stdout;
         } catch (error) {
             throw new Error('Not found documents folder');
         }

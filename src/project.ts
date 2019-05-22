@@ -9,23 +9,20 @@ import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as utils from './utils';
 
-import * as runner from './runner';
 import * as lib from './lib';
-
-import { Process } from './process';
 
 import { env } from './environment';
 import { Compiler } from './compiler';
 import { Packer } from './packer';
+import { Runner, ProcessType } from './runner';
 import { App } from './app';
 
 export class Project {
-    private gameProcess?: Process;
-    private weProcess?: Process;
     private progress?: vscode.Progress<{ message?: string; increment?: number }>;
 
     private compiler = new Compiler();
     private packer = new Packer();
+    private runner = new Runner();
     private app = new App();
 
     constructor() {}
@@ -131,16 +128,16 @@ export class Project {
     @Project.catch
     @Project.validate
     async commandRunGame() {
-        if (this.gameProcess && this.gameProcess.isAlive()) {
+        if (this.runner.hasProcess(ProcessType.Game)) {
             if (env.autoCloseClient) {
-                await this.gameProcess.kill();
+                await this.runner.kill(ProcessType.Game);
             } else {
                 const confirm = await this.confirmKillWar3('Warcraft III running, to terminal?');
                 if (confirm) {
                     if (confirm === 'Auto Close') {
                         env.autoCloseClient = true;
                     }
-                    await this.gameProcess.kill();
+                    await this.runner.kill(ProcessType.Game);
                 }
             }
         }
@@ -155,7 +152,7 @@ export class Project {
     @Project.catch
     @Project.validate
     commandRunWorldEditor() {
-        if (this.weProcess && this.weProcess.isAlive()) {
+        if (this.runner.hasProcess(ProcessType.Editor)) {
             throw new Error('World Editor is running.');
         }
 
@@ -202,13 +199,13 @@ export class Project {
     }
 
     @Project.report('Starting Game ...')
-    private async runGame() {
-        this.gameProcess = await runner.runGame(env.outMapPath);
+    private runGame() {
+        return this.runner.runGame();
     }
 
     @Project.report('Starting World Editor ...')
-    private async runWorldEditor() {
-        this.weProcess = await runner.runWorldEditor();
+    private runWorldEditor() {
+        return this.runner.runEditor();
     }
 
     private async confirmKillWar3(info: string) {

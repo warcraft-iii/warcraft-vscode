@@ -14,7 +14,7 @@ import { template, templateSettings, TemplateExecutor } from 'lodash';
 import { env } from './environment';
 import { LUA_REG, ENTRY_FILE } from './globals';
 
-interface CompilerTemplate {
+interface CompilerExecutor {
     main: TemplateExecutor;
     file: TemplateExecutor;
 }
@@ -25,7 +25,7 @@ export enum CompileType {
 }
 
 export class Compiler {
-    private executors = new Map<CompileType, CompilerTemplate>();
+    private executors = new Map<CompileType, CompilerExecutor>();
 
     constructor() {
         templateSettings.interpolate = /\-\-\[\[%\=([\s\S]+?)%\]\]/g;
@@ -49,12 +49,12 @@ export class Compiler {
             throw new Error('template not exists');
         }
 
-        const war3map = await fs.readFile(env.asMapPath(ENTRY_FILE), { encoding: 'utf-8' });
+        const war3map = await utils.readFile(env.asMapPath(ENTRY_FILE));
         const code = (await Promise.all(
             (await utils.getAllFiles(env.sourceFolder))
                 .filter(file => !utils.isHiddenFile(file) && utils.isLuaFile(file))
                 .map(async file => {
-                    const body = await fs.readFile(file, { encoding: 'utf-8' });
+                    const body = await utils.readFile(file);
                     const comment = this.getCommentExpr(body);
                     const name = this.getRequireName(file);
                     return executor.file({ name, comment, body });

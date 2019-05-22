@@ -6,8 +6,8 @@
  */
 
 import * as cp from 'child_process';
+import * as utils from './utils';
 
-import { sleep } from './util';
 export class Process {
     private process: cp.ChildProcess | undefined;
 
@@ -26,7 +26,7 @@ export class Process {
         if (this.process) {
             this.process.kill();
             while (this.process) {
-                await sleep(100);
+                await utils.sleep(100);
             }
         }
     }

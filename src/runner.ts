@@ -13,16 +13,11 @@ import { Process } from './process';
 import { env } from './environment';
 
 export async function runGame(map: string) {
-    if (!env.documentFolder) {
-        throw new Error('Not found documents folder');
-    }
-
     const isPtr = await fs.pathExists(
         path.join(path.dirname(env.gamePath), '../Warcraft III Public Test Launcher.exe')
     );
-    const mapFolder = path.join(env.documentFolder, isPtr ? 'Warcraft III Public Test' : 'Warcraft III', 'Maps');
+    const mapFolder = env.asDocumentPath(isPtr ? 'Warcraft III Public Test' : 'Warcraft III', 'Maps');
     const target = path.join(mapFolder, 'Test', path.basename(map));
-
     await fs.copy(map, target);
 
     return new Process(env.gamePath, [...env.gameArgs, '-loadfile', path.relative(mapFolder, target)]);
@@ -30,4 +25,10 @@ export async function runGame(map: string) {
 
 export async function runWorldEditor() {
     return new Process(env.wePath, [...env.weArgs, '-loadfile', env.mapFolder]);
+}
+
+export class Runner {
+    constructor() {}
+
+    runGame() {}
 }

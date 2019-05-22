@@ -7,17 +7,17 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
+import * as utils from './utils';
 
-// import * as pack from './pack';
 import * as runner from './runner';
 import * as lib from './lib';
 
-import { sleep } from './util';
 import { Process } from './process';
 
 import { env } from './environment';
 import { Compiler } from './compiler';
 import { Packer } from './packer';
+import { App } from './app';
 
 export class Project {
     private gameProcess?: Process;
@@ -26,11 +26,13 @@ export class Project {
 
     private compiler = new Compiler();
     private packer = new Packer();
+    private app = new App();
 
     constructor() {}
 
     async init(context: vscode.ExtensionContext) {
         await env.init(context);
+        await this.app.init();
         await this.compiler.init();
     }
 
@@ -78,7 +80,7 @@ export class Project {
     }
 
     static report(message: string) {
-        return function(_target: any, key: string, descriptor: any) {
+        return (_target: any, key: string, descriptor: any) => {
             if (!descriptor.value) {
                 return;
             }
@@ -86,7 +88,7 @@ export class Project {
             descriptor.value = async function(...args: any[]) {
                 if (this.progress) {
                     this.progress.report({ message });
-                    await sleep(100);
+                    await utils.sleep(100);
                 } else {
                     console.warn(`it's outside withProgress (${key})`);
                 }
@@ -133,7 +135,7 @@ export class Project {
             if (env.autoCloseClient) {
                 await this.gameProcess.kill();
             } else {
-                let confirm = await this.confirmKillWar3('Warcraft III running, to terminal?');
+                const confirm = await this.confirmKillWar3('Warcraft III running, to terminal?');
                 if (confirm) {
                     if (confirm === 'Auto Close') {
                         env.autoCloseClient = true;
@@ -197,11 +199,6 @@ export class Project {
     @Project.report('Packing Map ...')
     private async packMap() {
         await this.packer.pack();
-        // await fs.emptyDir(env.buildMapFolder);
-        // await fs.copy(env.mapFolder, env.buildMapFolder);
-        // await fs.copy(env.importsFolder, env.buildMapFolder);
-        // await fs.copy(env.tempScriptPath, env.outScriptPath);
-        // await pack.pack(env.buildMapFolder, env.outMapPath);
     }
 
     @Project.report('Starting Game ...')

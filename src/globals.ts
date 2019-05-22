@@ -10,3 +10,4 @@ export const LUA_REG = new RegExp(LUA + '$');
 export const ENTRY_FILE = 'war3map.lua';
 export const PACKLIST_FILE = 'packlist.json';
 export const DEBUG_MAP_FILE = '_warcraft_vscode_test.w3x';
+export const PROJECT_FILE = 'warcraft.json';

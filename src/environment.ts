@@ -8,22 +8,25 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
-import * as cp from 'child_process';
+import * as utils from './utils';
 
-import { promisify } from 'util';
+import { PROJECT_FILE } from './globals';
 
-const FILE_WARCRAFT = 'warcraft.json';
-const FILE_SCRIPT = 'war3map.lua';
 const FILE_MAP = '_warcraft_vscode_test.w3x';
 const FOLDER_BUILD = '.build';
 const FOLDER_IMPORTS = 'imports';
 const REQUIRED_CONFIG_KEYS = ['sourcedir', 'mapdir'];
 const REQUIRED_SETTING_KEYS = ['gamePath', 'wePath'];
 
+interface WarcraftJson {
+    mapdir?: string;
+    sourcedir?: string;
+}
+
 class Environment {
+    private data: WarcraftJson;
     private context?: vscode.ExtensionContext;
-    private data: any;
-    private _documentFolder?: string;
+    private documentFolder?: string;
 
     private get config() {
         return vscode.workspace.getConfiguration('warcraft');
@@ -41,16 +44,26 @@ class Environment {
         return path.join(this.buildFolder, ...args);
     }
 
+    asGamePath(...args: string[]) {
+        return path.join(path.dirname(this.gamePath), ...args);
+    }
+
+    asDocumentPath(...args: string[]) {
+        if (!this.documentFolder) {
+            throw new Error('Not found documents folder');
+        }
+        return path.join(this.documentFolder, ...args);
+    }
+
     get extensionFolder() {
         return this.context ? this.context.extensionPath : '';
     }
 
-    get documentFolder() {
-        return this._documentFolder;
-    }
-
     get rootPath() {
-        return vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.fsPath : '';
+        if (!vscode.workspace.workspaceFolders) {
+            throw Error('Not warcraft III map project');
+        }
+        return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
 
     get gamePath(): string {
@@ -82,19 +95,21 @@ class Environment {
     }
 
     get sourceFolder(): string {
+        if (!this.data.sourcedir) {
+            throw new Error('sourcedir not set in warcraft.json');
+        }
         return path.join(this.rootPath, this.data.sourcedir);
     }
 
     get mapFolder(): string {
+        if (!this.data.mapdir) {
+            throw new Error('mapdir not set in warcraft.json');
+        }
         return path.join(this.rootPath, this.data.mapdir);
     }
 
     get buildFolder(): string {
         return path.join(this.rootPath, FOLDER_BUILD);
-    }
-
-    get buildMapFolder(): string {
-        return path.join(this.buildFolder, this.data.mapdir);
     }
 
     get importsFolder(): string {
@@ -105,27 +120,19 @@ class Environment {
         return path.join(this.buildFolder, FILE_MAP);
     }
 
-    get outScriptPath(): string {
-        return path.join(this.buildMapFolder, FILE_SCRIPT);
-    }
-
-    get tempScriptPath(): string {
-        return path.join(this.buildFolder, FILE_SCRIPT);
-    }
-
     private async loadProjectConfig() {
-        const configFile = path.join(this.rootPath, FILE_WARCRAFT);
+        const configFile = path.join(this.rootPath, PROJECT_FILE);
         if (!(await fs.pathExists(configFile))) {
-            throw new Error(`Not found ${FILE_WARCRAFT}`);
+            throw new Error(`Not found ${PROJECT_FILE}`);
         }
         const stat = await fs.stat(configFile);
         if (!stat.isFile()) {
-            throw new Error(`Not found ${FILE_WARCRAFT}`);
+            throw new Error(`Not found ${PROJECT_FILE}`);
         }
 
         const config = await fs.readJson(configFile, { encoding: 'utf-8' });
         if (!config) {
-            throw new Error(`Parse ${FILE_WARCRAFT} failed`);
+            throw new Error(`Parse ${PROJECT_FILE} failed`);
         }
 
         this.data = config;
@@ -153,29 +160,30 @@ class Environment {
     }
 
     private async initDocumentFolder() {
-        const execFile = promisify(cp.execFile);
-
         type Env = Map<string, string>;
         const sys: Env = new Map(Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])) as Env;
 
+        let stdout: string;
         try {
-            const { stdout } = await execFile('reg', [
+            stdout = await utils.exec('reg', [
                 'query',
                 'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
                 '/v',
                 'Personal'
             ]);
+        } catch (error) {
+            throw new Error('Not found documents folder');
+        }
 
-            const m = stdout.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
-            if (!m) {
-                return;
-            } else {
-                this._documentFolder = m[1].replace(/%([^%]+)%/g, (_, x) => {
-                    x = x.toLowerCase();
-                    return sys.has(x) ? sys.get(x) : x;
-                });
-            }
-        } catch (error) {}
+        const m = stdout.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
+        if (!m) {
+            throw new Error('Not found documents folder');
+        } else {
+            this.documentFolder = m[1].replace(/%([^%]+)%/g, (_, x) => {
+                x = x.toLowerCase();
+                return sys.has(x) ? sys.get(x) : x;
+            });
+        }
     }
 
     async init(context: vscode.ExtensionContext) {

@@ -7,27 +7,25 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import * as utils from './utils';
 
-import { getAllFiles, exec } from './util';
 import { env } from './environment';
-import { LUA, ENTRY_FILE, PACKLIST_FILE, DEBUG_MAP_FILE } from './globals';
+import { ENTRY_FILE, PACKLIST_FILE, DEBUG_MAP_FILE } from './globals';
+
+type PackItem = [string, string];
 
 export class Packer {
-    async generateFileList() {
-        const maps = (await getAllFiles(env.mapFolder))
-            .filter(file => path.extname(file).toLowerCase() !== LUA)
-            .map(file => [path.relative(env.mapFolder, file), file]);
-
-        const imports = (await fs.pathExists(env.importsFolder))
-            ? (await getAllFiles(env.importsFolder)).map(file => [path.relative(env.mapFolder, file), file])
-            : [];
-
-        const files = [...maps, ...imports, [ENTRY_FILE, env.asBuildPath(ENTRY_FILE)]];
-        await fs.writeFile(env.asBuildPath(PACKLIST_FILE), JSON.stringify(files));
+    async generatePackList() {
+        const packList = [
+            ...(await this.generatePackItems(env.mapFolder, file => !utils.isLuaFile(file))),
+            ...(await this.generatePackItems(env.importsFolder)),
+            [ENTRY_FILE, env.asBuildPath(ENTRY_FILE)]
+        ];
+        await fs.writeFile(env.asBuildPath(PACKLIST_FILE), JSON.stringify(packList));
     }
 
-    packByFileList() {
-        return exec(env.asExetensionPath('bin/MopaqPack.exe'), [
+    packByPackList() {
+        return utils.exec(env.asExetensionPath('bin/MopaqPack.exe'), [
             '-o',
             env.asBuildPath(DEBUG_MAP_FILE),
             env.asBuildPath(PACKLIST_FILE)
@@ -35,7 +33,22 @@ export class Packer {
     }
 
     async pack() {
-        await this.generateFileList();
-        await this.packByFileList();
+        await this.generatePackList();
+        await this.packByPackList();
+    }
+
+    private async generatePackItems(root: string, filter?: (file: string) => boolean) {
+        if (!(await fs.pathExists(root)) || !(await fs.stat(root)).isDirectory()) {
+            return [];
+        }
+        let files = await utils.getAllFiles(root);
+        if (filter) {
+            files = files.filter(filter);
+        }
+        return files.map(file => this.generatePackItem(file, root));
+    }
+
+    private generatePackItem(file: string, root: string): PackItem {
+        return [path.relative(root, file), file];
     }
 }

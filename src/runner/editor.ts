@@ -9,14 +9,14 @@ import * as proc from '../proc';
 import { env } from '../environment';
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
-import { Report } from '../report';
+import { report } from '../report';
 
 class EditorRunner extends BaseRunner {
     type() {
         return RunnerType.Editor;
     }
 
-    @Report('Starting World Editor: ')
+    @report('Starting World Editor: ')
     async execute() {
         if (this.isAlive()) {
             throw new Error('World Editor is running');

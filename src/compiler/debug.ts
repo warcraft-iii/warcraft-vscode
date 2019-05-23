@@ -12,14 +12,14 @@ import * as globals from '../globals';
 
 import { env } from '../environment';
 
-import { Report } from '../report';
+import { report } from '../report';
 
 import { Compiler, CompilerType } from './compiler';
-import { TemplateExecutor, readCompilerTemplate } from './private';
+import { readCompilerTemplate } from './private';
 
 export class DebugCompiler implements Compiler {
-    private main: TemplateExecutor;
-    private file: TemplateExecutor;
+    private main: any;
+    private file: any;
 
     constructor() {}
 
@@ -32,7 +32,7 @@ export class DebugCompiler implements Compiler {
         this.file = await readCompilerTemplate(CompilerType.Debug, 'file.lua');
     }
 
-    @Report('Compiling Scripts ...')
+    @report('Compiling Scripts ...')
     async execute() {
         if (!(await fs.stat(env.sourceFolder)).isDirectory()) {
             throw new Error('Not found source folder');

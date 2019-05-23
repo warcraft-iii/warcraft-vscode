@@ -8,7 +8,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await env.init(context);
     await debugCompiler.init();
 
-    context.subscriptions.push(registerCommands());
+    context.subscriptions.push(...registerCommands());
 }
 
 export function deactivate() {}

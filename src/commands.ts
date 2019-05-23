@@ -14,13 +14,14 @@ import { gameRunner, editorRunner } from './runner';
 
 import { withReport } from './report';
 import { env } from './environment';
+import { project } from './project';
 
 function registerCommand(name: string, task: () => Promise<void>) {
     return vscode.commands.registerCommand('extension.warcraft.' + name, async () => withReport(task));
 }
 
 export function registerCommands() {
-    return vscode.Disposable.from(
+    return [
         registerCommand('compile.debug', () => debugCompiler.execute()),
         registerCommand('pack.debug', async () => {
             await debugCompiler.execute();
@@ -54,6 +55,9 @@ export function registerCommands() {
             await debugPacker.execute();
             await gameRunner.execute();
         }),
-        registerCommand('run.editor', () => editorRunner.execute())
-    );
+        registerCommand('run.editor', () => editorRunner.execute()),
+        registerCommand('project.create', () => project.create()),
+        registerCommand('project.clean', () => project.clean()),
+        registerCommand('project.addlibrary', async () => {})
+    ];
 }

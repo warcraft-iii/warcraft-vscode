@@ -67,7 +67,7 @@ class Context {
 
 const context = new Context();
 
-export function Report(message: string) {
+export function report(message: string) {
     return (_target: any, _key: string, descriptor: any) => {
         const orig = descriptor.value;
         descriptor.value = async function(...args: any[]) {

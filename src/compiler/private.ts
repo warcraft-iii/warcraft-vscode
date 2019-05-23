@@ -7,11 +7,11 @@
 
 import * as utils from '../utils';
 
-import { templateSettings, template } from 'lodash';
+import template from 'lodash-es/template';
+import templateSettings from 'lodash-es/templateSettings';
+
 import { env } from '../environment';
 import { CompilerType } from './compiler';
-
-export { TemplateExecutor } from 'lodash';
 
 templateSettings.interpolate = /\-\-\[\[%\=([\s\S]+?)%\]\]/g;
 templateSettings.evaluate = /\-\-\[\[%\>([\s\S]+?)%\]\]/g;

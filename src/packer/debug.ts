@@ -12,7 +12,7 @@ import * as proc from '../proc';
 import * as globals from '../globals';
 
 import { env } from '../environment';
-import { Report } from '../report';
+import { report } from '../report';
 import { Packer } from '../packer';
 
 import { PackerType } from './packer';
@@ -26,8 +26,11 @@ export class DebugPacker implements Packer {
 
     async generatePackList() {
         const packList = [
-            ...(await this.generatePackItems(env.mapFolder, file => !utils.isLuaFile(file))),
-            ...(await this.generatePackItems(env.importsFolder)),
+            ...(await this.generatePackItems(
+                env.mapFolder,
+                file => !utils.isLuaFile(file) && !utils.isHiddenFile(file)
+            )),
+            ...(await this.generatePackItems(env.importsFolder, file => !utils.isHiddenFile(file))),
             [globals.ENTRY_FILE, env.asBuildPath(globals.ENTRY_FILE)]
         ];
         await fs.writeFile(env.asBuildPath(globals.PACKLIST_FILE), JSON.stringify(packList));
@@ -41,7 +44,7 @@ export class DebugPacker implements Packer {
         ]);
     }
 
-    @Report('Packing Map ...')
+    @report('Packing Map ...')
     async execute() {
         await this.generatePackList();
         await this.packByPackList();

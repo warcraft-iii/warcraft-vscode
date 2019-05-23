@@ -21,9 +21,8 @@
     "onCommand:extension.warcraft.pack.debug",
     "onCommand:extension.warcraft.run.game",
     "onCommand:extension.warcraft.run.we",
-    "onCommand:extension.warcraft.project.clean",
-    "onCommand:extension.warcraft.library.add",
-    "onCommand:extension.warcraft.option.open"
+    "onCommand:extension.warcraft.project.create",
+    "onCommand:extension.warcraft.project.clean"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -33,7 +32,7 @@
         "title": "Warcraft: Compile Debug"
       },
       {
-        "command": "extension.warcraft.map.pack",
+        "command": "extension.warcraft.pack.debug",
         "title": "Warcraft: Pack Map"
       },
       {
@@ -45,16 +44,12 @@
         "title": "Warcraft: Open World Editor"
       },
       {
-        "command": "extension.warcraft.library.add",
-        "title": "Warcraft: Add Library"
+        "command": "extension.warcraft.project.create",
+        "title": "Warcraft: Create Project"
       },
       {
         "command": "extension.warcraft.project.clean",
         "title": "Warcraft: Clean"
-      },
-      {
-        "command": "extension.warcraft.option.open",
-        "title": "Warcraft: Advance options"
       }
     ],
     "configuration": {
@@ -95,8 +90,10 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^5.1.0",
-    "@types/lodash": "^4.14.126",
+    "@types/lodash-es": "^4.17.3",
     "@types/node": "^10.12.21",
+    "@types/request": "^2.48.1",
+    "@types/unzipper": "^0.9.2",
     "ts-loader": "^6.0.0",
     "tslint": "^5.12.1",
     "typescript": "^3.4.5",
@@ -107,6 +104,9 @@
   "dependencies": {
     "@octokit/rest": "^16.25.4",
     "fs-extra": "^8.0.0",
-    "lodash": "^4.17.11"
+    "lodash-es": "^4.17.11",
+    "request": "^2.88.0",
+    "simple-git": "^1.113.0",
+    "unzipper": "^0.9.15"
   }
 }

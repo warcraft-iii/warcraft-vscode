@@ -40,7 +40,14 @@ export function isLuaFile(file: string) {
 
 export function isHiddenFile(file: string) {
     const name = path.basename(file);
-    return name.startsWith('@') || name.startsWith('.');
+    if (name.startsWith('.')) {
+        return true;
+    }
+
+    if (isLuaFile(file) && name.startsWith('@')) {
+        return true;
+    }
+    return false;
 }
 
 export function readFile(file: string) {

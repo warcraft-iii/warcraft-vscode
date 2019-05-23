@@ -7,6 +7,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as vscode from 'vscode';
 
 import { LUA } from './globals';
 
@@ -44,4 +45,39 @@ export function isHiddenFile(file: string) {
 
 export function readFile(file: string) {
     return fs.readFile(file, { encoding: 'utf-8' });
+}
+
+export enum ConfirmResult {
+    Cancel,
+    Ok,
+    Alt
+}
+
+export async function confirm(title: string, ok: string = 'Ok', alt?: string) {
+    const items = [
+        {
+            title: ok,
+            value: ConfirmResult.Ok
+        }
+    ];
+
+    if (alt) {
+        items.push({
+            title: alt,
+            value: ConfirmResult.Alt
+        });
+    }
+
+    const result = await vscode.window.showInformationMessage(
+        title,
+        {
+            modal: true
+        },
+        ...items
+    );
+
+    if (!result) {
+        return;
+    }
+    return result.value;
 }

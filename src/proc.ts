@@ -10,8 +10,6 @@ import * as utils from './utils';
 
 import { promisify } from 'util';
 
-const execFilePromise = promisify(cp.execFile);
-
 export class Process {
     private process: cp.ChildProcess | undefined;
 
@@ -44,6 +42,8 @@ export class Process {
 export function spawn(command: string, args?: string[]) {
     return new Process(command, args);
 }
+
+const execFilePromise = promisify(cp.execFile);
 
 export async function execFile(command: string, args?: string[]) {
     let ok: boolean;

@@ -78,17 +78,29 @@ export function Report(message: string) {
     };
 }
 
-export function Progress(_target: any, _key: string, descriptor: any) {
-    const orig = descriptor.value;
-    descriptor.value = async function(...args: any[]) {
-        try {
-            context.enter();
-            // tslint:disable-next-line: no-invalid-this
-            await orig.apply(this, ...args);
-            context.leave();
-        } catch (error) {
-            context.leave();
-            throw error;
-        }
-    };
+export async function withReport(task: () => Promise<void>) {
+    context.enter();
+
+    try {
+        await task();
+        context.leave();
+    } catch (error) {
+        context.leave();
+        throw error;
+    }
 }
+
+// export function Progress(_target: any, _key: string, descriptor: any) {
+//     const orig = descriptor.value;
+//     descriptor.value = async function(...args: any[]) {
+//         try {
+//             context.enter();
+//             // tslint:disable-next-line: no-invalid-this
+//             await orig.apply(this, ...args);
+//             context.leave();
+//         } catch (error) {
+//             context.leave();
+//             throw error;
+//         }
+//     };
+// }

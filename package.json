@@ -18,12 +18,12 @@
   ],
   "activationEvents": [
     "onCommand:extension.warcraft.compile.debug",
-    "onCommand:extension.warcraft.map.pack",
+    "onCommand:extension.warcraft.pack.debug",
     "onCommand:extension.warcraft.run.game",
     "onCommand:extension.warcraft.run.we",
+    "onCommand:extension.warcraft.project.clean",
     "onCommand:extension.warcraft.library.add",
-    "onCommand:extension.warcraft.option.open",
-    "onCommand:extension.warcraft.project.clean"
+    "onCommand:extension.warcraft.option.open"
   ],
   "main": "./out/extension.js",
   "contributes": {

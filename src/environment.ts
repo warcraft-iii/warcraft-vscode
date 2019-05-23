@@ -7,28 +7,23 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as fs from 'fs-extra';
 import * as proc from './proc';
 
-import { PROJECT_FILE } from './globals';
+import { Config } from './config';
 
 const FOLDER_BUILD = '.build';
 const FOLDER_IMPORTS = 'imports';
-const REQUIRED_CONFIG_KEYS = ['sourcedir', 'mapdir'];
-const REQUIRED_SETTING_KEYS = ['gamePath', 'wePath'];
-
-interface WarcraftJson {
-    mapdir?: string;
-    sourcedir?: string;
-}
 
 class Environment {
-    private data: WarcraftJson;
     private context?: vscode.ExtensionContext;
     private documentFolder?: string;
 
-    private get config() {
-        return vscode.workspace.getConfiguration('warcraft');
+    readonly config = new Config();
+
+    async init(context: vscode.ExtensionContext) {
+        this.context = context;
+        await this.initDocumentFolder();
+        await this.config.init();
     }
 
     asExetensionPath(...args: string[]) {
@@ -44,7 +39,7 @@ class Environment {
     }
 
     asGamePath(...args: string[]) {
-        return path.join(path.dirname(this.gamePath), ...args);
+        return path.join(path.dirname(this.config.gamePath), ...args);
     }
 
     asDocumentPath(...args: string[]) {
@@ -65,46 +60,12 @@ class Environment {
         return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
 
-    get gamePath(): string {
-        return this.config.get('gamePath') || '';
-    }
-
-    get wePath(): string {
-        return this.config.get('wePath') || '';
-    }
-
-    get allowSshLibrary(): boolean {
-        return this.config.get<boolean>('allowAddSshLibrary') || false;
-    }
-
-    get gameArgs(): string[] {
-        return this.config.get('gameArgs') || [];
-    }
-
-    get weArgs(): string[] {
-        return this.config.get('weArgs') || [];
-    }
-
-    get autoCloseClient(): boolean {
-        return this.config.get<boolean>('autoCloseClient') || false;
-    }
-
-    set autoCloseClient(flag: boolean) {
-        this.config.update('autoCloseClient', flag, vscode.ConfigurationTarget.Global);
-    }
-
     get sourceFolder(): string {
-        if (!this.data.sourcedir) {
-            throw new Error('sourcedir not set in warcraft.json');
-        }
-        return path.join(this.rootPath, this.data.sourcedir);
+        return path.join(this.rootPath, this.config.sourceDir);
     }
 
     get mapFolder(): string {
-        if (!this.data.mapdir) {
-            throw new Error('mapdir not set in warcraft.json');
-        }
-        return path.join(this.rootPath, this.data.mapdir);
+        return path.join(this.rootPath, this.config.mapDir);
     }
 
     get buildFolder(): string {
@@ -113,45 +74,6 @@ class Environment {
 
     get importsFolder(): string {
         return path.join(this.rootPath, FOLDER_IMPORTS);
-    }
-
-    private async loadProjectConfig() {
-        const configFile = path.join(this.rootPath, PROJECT_FILE);
-        if (!(await fs.pathExists(configFile))) {
-            throw new Error(`Not found ${PROJECT_FILE}`);
-        }
-        const stat = await fs.stat(configFile);
-        if (!stat.isFile()) {
-            throw new Error(`Not found ${PROJECT_FILE}`);
-        }
-
-        const config = await fs.readJson(configFile, { encoding: 'utf-8' });
-        if (!config) {
-            throw new Error(`Parse ${PROJECT_FILE} failed`);
-        }
-
-        this.data = config;
-    }
-
-    private async checkProjectConfig() {
-        for (const key of REQUIRED_CONFIG_KEYS) {
-            if (!this.data[key]) {
-                throw new Error(`Lost config ${key}`);
-            }
-        }
-
-        for (const key of REQUIRED_SETTING_KEYS) {
-            if (!this.config.get(key)) {
-                throw new Error(`${key} not set`);
-            }
-        }
-
-        const folders = [this.sourceFolder, this.mapFolder, this.gamePath, this.wePath];
-        for (const folder of folders) {
-            if (!(await fs.pathExists(folder))) {
-                throw new Error(`Not found dir: ${folder}`);
-            }
-        }
     }
 
     private async initDocumentFolder() {
@@ -174,16 +96,6 @@ class Environment {
                 return sys.has(x) ? sys.get(x) : x;
             });
         }
-    }
-
-    async init(context: vscode.ExtensionContext) {
-        this.context = context;
-        await this.initDocumentFolder();
-    }
-
-    async verifyProjectConfig() {
-        await this.loadProjectConfig();
-        await this.checkProjectConfig();
     }
 }
 

@@ -7,18 +7,20 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
+import * as utils from './utils';
 
 import * as lib from './lib';
 
 import { env } from './environment';
-import { Compiler } from './compiler';
+
+import { DebugCompiler } from './compiler';
 import { Packer } from './packer';
-import { Runner, ProcessType } from './runner';
+import { Runner, ProcessType } from './~runner';
 import { App } from './app';
 import { Report, Progress } from './report';
 
 export class Project {
-    private compiler = new Compiler();
+    private compiler = new DebugCompiler();
     private packer = new Packer();
     private runner = new Runner();
     private app = new App();
@@ -69,14 +71,14 @@ export class Project {
     @Project.validate
     @Progress
     commandCompileDebug() {
-        return this.compiler.debug();
+        return this.compiler.execute();
     }
 
     @Project.catch
     @Project.validate
     @Progress
     async commandPackMap() {
-        await this.compiler.debug();
+        await this.compiler.execute();
         await this.packer.pack();
     }
 
@@ -85,20 +87,13 @@ export class Project {
     @Progress
     async commandRunGame() {
         if (this.runner.hasProcess(ProcessType.Game)) {
-            if (env.autoCloseClient) {
-                await this.runner.kill(ProcessType.Game);
-            } else {
-                const confirm = await this.confirmKillWar3('Warcraft III running, to terminal?');
-                if (confirm) {
-                    if (confirm === 'Auto Close') {
-                        env.autoCloseClient = true;
-                    }
-                    await this.runner.kill(ProcessType.Game);
-                }
+            if (!(await this.canTerminateGame())) {
+                return;
             }
+            await this.runner.kill(ProcessType.Game);
         }
 
-        await this.compiler.debug();
+        await this.compiler.execute();
         await this.packer.pack();
         await this.runner.runGame();
     }
@@ -142,15 +137,20 @@ export class Project {
         return lib.addLibrary(library, isSsh);
     }
 
-    private async confirmKillWar3(info: string) {
-        return await vscode.window.showInformationMessage(
-            info,
-            {
-                modal: true
-            },
-            'Ok',
-            'Auto Close'
-        );
+    private async canTerminateGame() {
+        if (env.autoCloseClient) {
+            return true;
+        }
+
+        const result = await utils.confirm('Warcraft III running, to terminate?', 'Ok', 'Auto close');
+        if (!result) {
+            return false;
+        }
+
+        if (result === utils.ConfirmResult.Alt) {
+            env.autoCloseClient = true;
+        }
+        return true;
     }
 
     private async askGit() {

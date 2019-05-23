@@ -1,41 +1,48 @@
 /**
- * @File   : packer.ts
+ * @File   : debug.ts
  * @Author : Dencer (tdaddon@163.com)
  * @Link   : https://dengsir.github.io
- * @Date   : 5/21/2019, 10:33:43 PM
+ * @Date   : 5/23/2019, 12:27:34 PM
  */
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import * as utils from './utils';
-import * as proc from './proc';
+import * as utils from '../utils';
+import * as proc from '../proc';
+import * as globals from '../globals';
 
-import { env } from './environment';
-import { Report } from './report';
-import { ENTRY_FILE, PACKLIST_FILE, DEBUG_MAP_FILE } from './globals';
+import { env } from '../environment';
+import { Report } from '../report';
+import { Packer } from '../packer';
+
+import { PackerType } from './packer';
 
 type PackItem = [string, string];
 
-export class Packer {
+export class DebugPacker implements Packer {
+    type() {
+        return PackerType.Debug;
+    }
+
     async generatePackList() {
         const packList = [
             ...(await this.generatePackItems(env.mapFolder, file => !utils.isLuaFile(file))),
             ...(await this.generatePackItems(env.importsFolder)),
-            [ENTRY_FILE, env.asBuildPath(ENTRY_FILE)]
+            [globals.ENTRY_FILE, env.asBuildPath(globals.ENTRY_FILE)]
         ];
-        await fs.writeFile(env.asBuildPath(PACKLIST_FILE), JSON.stringify(packList));
+        await fs.writeFile(env.asBuildPath(globals.PACKLIST_FILE), JSON.stringify(packList));
     }
 
     async packByPackList() {
         await proc.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
             '-o',
-            env.asBuildPath(DEBUG_MAP_FILE),
-            env.asBuildPath(PACKLIST_FILE)
+            env.asBuildPath(globals.DEBUG_MAP_FILE),
+            env.asBuildPath(globals.PACKLIST_FILE)
         ]);
     }
 
     @Report('Packing Map ...')
-    async pack() {
+    async execute() {
         await this.generatePackList();
         await this.packByPackList();
     }
@@ -55,3 +62,5 @@ export class Packer {
         return [path.relative(root, file), file];
     }
 }
+
+export const debugPacker = new DebugPacker();

@@ -7,15 +7,12 @@
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import * as utils from '../utils';
-import * as proc from '../runner/proc';
-import * as globals from '../globals';
+import * as utils from '../../utils';
 
-import { env } from '../env';
-import { report } from '../report';
-import { Packer } from '../packer';
+import { env } from '../../env';
+import { globals } from '../../globals';
 
-import { PackerType } from './packer';
+import { Packer, PackerType } from './packer';
 
 type PackItem = [string, string];
 
@@ -37,14 +34,14 @@ export class DebugPacker implements Packer {
     }
 
     async packByPackList() {
-        await proc.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
+        await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
             '-o',
             env.asBuildPath(globals.DEBUG_MAP_FILE),
             env.asBuildPath(globals.PACKLIST_FILE)
         ]);
     }
 
-    @report('Packing Map ...')
+    @utils.report('Packing Map ...')
     async execute() {
         await this.generatePackList();
         await this.packByPackList();

@@ -5,24 +5,25 @@
  * @Date   : 5/23/2019, 11:14:03 AM
  */
 
-import * as proc from './proc';
-import { env } from '../env';
+import * as utils from '../../utils';
+
+import { Errors } from '../../globals';
+import { env } from '../../env';
+
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
-import { report } from '../report';
-import { Errors } from '../errors';
 
 class EditorRunner extends BaseRunner {
     type() {
         return RunnerType.Editor;
     }
 
-    @report('Starting World Editor: ')
+    @utils.report('Starting World Editor: ')
     async execute() {
         if (this.isAlive()) {
             throw Error(Errors.EditorIsRunning);
         }
-        this.process = proc.spawn(env.config.wePath, [...env.config.weArgs, '-loadfile', env.mapFolder]);
+        this.process = utils.spawn(env.config.wePath, [...env.config.weArgs, '-loadfile', env.mapFolder]);
     }
 }
 

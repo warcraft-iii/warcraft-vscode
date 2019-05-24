@@ -7,20 +7,20 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as proc from './proc';
-import * as globals from '../globals';
+import * as utils from '../../utils';
 
-import { env } from '../env';
+import { env } from '../../env';
+import { globals } from '../../globals';
+
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
-import { report } from '../report';
 
 class GameRunner extends BaseRunner {
     type() {
         return RunnerType.Game;
     }
 
-    @report('Starting Game ...')
+    @utils.report('Starting Game ...')
     async execute() {
         const mapPath = env.asBuildPath(globals.DEBUG_MAP_FILE);
         const isPtr = await fs.pathExists(
@@ -30,7 +30,7 @@ class GameRunner extends BaseRunner {
         const targetPath = path.join(docMapFolder, 'Test', path.basename(mapPath));
         await fs.copy(mapPath, targetPath);
 
-        this.process = proc.spawn(env.config.gamePath, [
+        this.process = utils.spawn(env.config.gamePath, [
             ...env.config.gameArgs,
             '-loadfile',
             path.relative(docMapFolder, targetPath)

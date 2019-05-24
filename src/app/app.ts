@@ -6,7 +6,8 @@
  */
 
 import * as vscode from 'vscode';
-import { env } from './env';
+
+import { env } from '../env';
 
 export class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];

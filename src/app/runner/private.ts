@@ -5,11 +5,12 @@
  * @Date   : 5/23/2019, 11:26:03 AM
  */
 
-import * as proc from './proc';
+import * as utils from '../../utils';
+
 import { Runner, RunnerType } from './runner';
 
 export abstract class BaseRunner implements Runner {
-    protected process?: proc.Process;
+    protected process?: utils.Process;
 
     abstract execute(): Promise<void>;
     abstract type(): RunnerType;

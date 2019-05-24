@@ -7,23 +7,22 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as proc from '../runner/proc';
+import * as utils from '../utils';
 
 import { Config } from './config';
-import { Errors } from '../errors';
+import { Errors } from '../globals';
 
 const FOLDER_BUILD = '.build';
 const FOLDER_IMPORTS = 'imports';
 const FOLDER_SOURCE = 'src';
 
 class Environment {
-    private context?: vscode.ExtensionContext;
+    private context = vscode.extensions.getExtension('Dencer.warcraft-vscode');
     private documentFolder?: string;
 
     readonly config = new Config();
 
-    async init(context: vscode.ExtensionContext) {
-        this.context = context;
+    async init() {
         await this.initDocumentFolder();
         await this.config.init();
     }
@@ -79,7 +78,7 @@ class Environment {
     }
 
     private async initDocumentFolder() {
-        const output = await proc.execFile('reg', [
+        const output = await utils.execFile('reg', [
             'query',
             'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
             '/v',

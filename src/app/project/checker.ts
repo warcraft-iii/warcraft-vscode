@@ -8,9 +8,9 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as utils from '../utils';
+import * as utils from '../../utils';
 
-import { env } from '../env';
+import { env } from '../../env';
 
 interface ExecutionItem {
     name: string;

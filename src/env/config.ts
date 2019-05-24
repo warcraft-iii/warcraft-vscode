@@ -7,8 +7,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import * as globals from '../globals';
-import { Errors } from '../errors';
+
+import { Errors, globals } from '../globals';
 
 interface WarcraftJson {
     mapdir?: string;

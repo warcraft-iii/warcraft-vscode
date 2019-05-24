@@ -1,7 +1,10 @@
 import * as vscode from 'vscode';
+import { env } from './env';
+import { app, commands } from './app';
 
 export async function activate(context: vscode.ExtensionContext) {
-    context.subscriptions.push(...(await (await import('./init')).init(context)));
+    await env.init();
+    context.subscriptions.push(app, ...commands);
 }
 
 export function deactivate() {}

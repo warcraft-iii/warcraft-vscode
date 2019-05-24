@@ -9,8 +9,6 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { LUA } from '../globals';
-
 async function _getAllFiles(root: string, r: string[]) {
     const files = (await fs.readdir(root)).map(file => path.join(root, file));
 
@@ -26,6 +24,12 @@ async function _getAllFiles(root: string, r: string[]) {
     return r;
 }
 
+export enum ConfirmResult {
+    Cancel,
+    Ok,
+    Alt
+}
+
 export function getAllFiles(root: string) {
     return _getAllFiles(root, []);
 }
@@ -35,7 +39,7 @@ export function sleep(n: number) {
 }
 
 export function isLuaFile(file: string) {
-    return path.extname(file).toLowerCase() === LUA;
+    return path.extname(file).toLowerCase() === '.lua';
 }
 
 export function isHiddenFile(file: string) {
@@ -52,12 +56,6 @@ export function isHiddenFile(file: string) {
 
 export function readFile(file: string) {
     return fs.readFile(file, { encoding: 'utf-8' });
-}
-
-export enum ConfirmResult {
-    Cancel,
-    Ok,
-    Alt
 }
 
 export async function confirm(title: string, ok: string = 'Ok', alt?: string) {

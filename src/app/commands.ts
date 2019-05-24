@@ -6,18 +6,18 @@
  */
 
 import * as vscode from 'vscode';
-import * as utils from './utils';
+import * as utils from '../utils';
+
+import { env } from '../env';
 
 import { debugCompiler } from './compiler';
 import { debugPacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
 
-import { withReport } from './report';
-import { env } from './env';
 import { project, checker } from './project';
 
 function registerCommand(name: string, task: () => Promise<void>) {
-    return vscode.commands.registerCommand('extension.warcraft.' + name, () => withReport(task));
+    return vscode.commands.registerCommand('extension.warcraft.' + name, () => utils.withReport(task));
 }
 
 function registerCheckedCommand(name: string, task: () => Promise<void>) {

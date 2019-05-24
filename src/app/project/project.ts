@@ -10,22 +10,20 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as unzipper from 'unzipper';
 import * as request from 'request';
-import * as utils from '../utils';
-import * as globals from '../globals';
+import * as utils from '../../utils';
 
-import { env } from '../env';
-import { report } from '../report';
-import { Errors } from '../errors';
+import { env } from '../../env';
+import { Errors, globals } from '../../globals';
 
 export class Project {
     constructor() {}
 
-    @report('Cleaning Project ...')
+    @utils.report('Cleaning Project ...')
     clean() {
         return fs.remove(env.buildFolder);
     }
 
-    @report('Creating Project ...')
+    @utils.report('Creating Project ...')
     async create() {
         const result = await vscode.window.showOpenDialog({
             canSelectFiles: false,

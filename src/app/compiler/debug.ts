@@ -7,16 +7,13 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as utils from '../utils';
-import * as globals from '../globals';
+import * as utils from '../../utils';
 
-import { env } from '../env';
-
-import { report } from '../report';
+import { env } from '../../env';
+import { Errors, globals } from '../../globals';
 
 import { Compiler, CompilerType } from './compiler';
 import { readCompilerTemplate } from './private';
-import { Errors } from '../errors';
 
 export class DebugCompiler implements Compiler {
     private main: any;
@@ -31,7 +28,7 @@ export class DebugCompiler implements Compiler {
         return CompilerType.Debug;
     }
 
-    @report('Compiling Scripts ...')
+    @utils.report('Compiling Scripts ...')
     async execute() {
         if (!(await fs.stat(env.sourceFolder)).isDirectory()) {
             throw Error(Errors.NotFoundSource);

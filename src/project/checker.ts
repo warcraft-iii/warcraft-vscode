@@ -7,74 +7,96 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
+import * as path from 'path';
+import * as utils from '../utils';
 
 import { env } from '../env';
 
-export class Checker {
-    private async selectPath(title: string, filter: string) {
-        if (!(await vscode.window.showInformationMessage(title, 'Set'))) {
-            return;
-        }
+interface ExecutionItem {
+    name: string;
+    key: string;
+}
 
-        const result = await vscode.window.showOpenDialog({
-            filters: { [filter]: ['exe'] }
-        });
-        if (!result) {
-            return;
-        }
-        return result[0].fsPath;
+const EXECUTION_FILES: ExecutionItem[] = [
+    {
+        name: 'Warcraft III.exe',
+        key: 'gamePath'
+    },
+    {
+        name: 'World Editor.exe',
+        key: 'wePath'
     }
+];
 
-    checkFile(file: string) {
-        if (!fs.pathExistsSync(file)) {
+export class Checker {
+    private async checkFile(file: string) {
+        if (!(await fs.pathExists(file))) {
             return false;
         }
-        const stat = fs.statSync(file);
+        const stat = await fs.stat(file);
         if (!stat.isFile()) {
             return false;
         }
         return true;
     }
 
-    checkGamePath() {
+    private async checkPath(key: string) {
         try {
-            if (this.checkFile(env.config.gamePath)) {
+            if (await this.checkFile(env.config[key])) {
                 return true;
             }
         } catch (error) {}
 
-        (async () => {
-            const file = await this.selectPath('Warcraft : Warcraft III.exe is not set, to set?', 'Warcraft III.exe');
-            if (file) {
-                env.config.gamePath = file;
-            }
-        })();
-
         return false;
     }
 
-    checkEditorPath() {
-        try {
-            if (this.checkFile(env.config.wePath)) {
-                return true;
-            }
-        } catch (error) {}
+    private async notify(notFounds: ExecutionItem[]) {
+        if (!(await utils.confirm('Not found Warcraft III, to set?'))) {
+            return;
+        }
 
-        (async () => {
-            const file = await this.selectPath('Warcraft : WorldEditor.exe is not set, to set?', 'WorldEditor.exe');
-            if (file) {
-                env.config.wePath = file;
-            }
-        })();
+        const result = await vscode.window.showOpenDialog({
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false
+        });
 
-        return false;
+        if (!result) {
+            return;
+        }
+
+        const folder = result[0].fsPath;
+        const names: string[] = [];
+
+        for (const item of notFounds) {
+            const file = path.join(folder, item.name);
+            if ((await fs.pathExists(file)) && (await fs.stat(file)).isFile()) {
+                env.config[item.key] = file;
+            } else {
+                names.push(item.name);
+            }
+        }
+
+        if (names.length > 0) {
+            vscode.window.showWarningMessage(`Warcraft: Not Found ${names.join(' ')}`);
+        }
     }
 
-    check() {
-        let ok = true;
-        ok = this.checkGamePath() && ok;
-        ok = this.checkEditorPath() && ok;
-        return ok;
+    async check() {
+        const notFounds: ExecutionItem[] = [];
+
+        for (const item of EXECUTION_FILES) {
+            if (!(await this.checkPath(item.key))) {
+                notFounds.push(item);
+            }
+        }
+
+        if (notFounds.length > 0) {
+            this.notify(notFounds);
+            return false;
+        }
+
+        return true;
     }
 }
 

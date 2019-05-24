@@ -19,11 +19,11 @@ export class Config {
 
     async init() {
         if (vscode.workspace.workspaceFolders) {
-            this.reload();
+            await this.reload();
         }
     }
 
-    reload() {
+    async reload() {
         this.projectConfig = {};
 
         if (!vscode.workspace.workspaceFolders) {
@@ -32,15 +32,15 @@ export class Config {
 
         const file = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.PROJECT_FILE);
 
-        if (!fs.pathExistsSync(file)) {
+        if (!(await fs.pathExists(file))) {
             return;
         }
 
-        if (!fs.statSync(file).isFile()) {
+        if (!(await fs.stat(file)).isFile()) {
             return;
         }
 
-        const content = fs.readJsonSync(file);
+        const content = await fs.readJson(file);
         if (!content || typeof content !== 'object') {
             return;
         }

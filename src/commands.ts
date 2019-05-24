@@ -22,7 +22,7 @@ function registerCommand(name: string, task: () => Promise<void>) {
 
 function registerCheckedCommand(name: string, task: () => Promise<void>) {
     return registerCommand(name, async () => {
-        if (!checker.check()) {
+        if (!(await checker.check())) {
             return;
         }
         return await task();

@@ -17,13 +17,13 @@ interface WarcraftJson {
 export class Config {
     private projectConfig: WarcraftJson = {};
 
-    async init() {
+    constructor() {
         if (vscode.workspace.workspaceFolders) {
-            await this.reload();
+            this.reload();
         }
     }
 
-    async reload() {
+    reload() {
         this.projectConfig = {};
 
         if (!vscode.workspace.workspaceFolders) {
@@ -32,15 +32,15 @@ export class Config {
 
         const file = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.PROJECT_FILE);
 
-        if (!(await fs.pathExists(file))) {
+        if (!fs.pathExistsSync(file)) {
             return;
         }
 
-        if (!(await fs.stat(file)).isFile()) {
+        if (!fs.statSync(file).isFile()) {
             return;
         }
 
-        const content = await fs.readJson(file);
+        const content = fs.readJsonSync(file);
         if (!content || typeof content !== 'object') {
             return;
         }

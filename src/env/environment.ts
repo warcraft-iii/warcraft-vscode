@@ -7,7 +7,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as utils from '../utils';
+import * as cp from 'child_process';
 
 import { Config } from './config';
 import { Errors } from '../globals';
@@ -22,9 +22,8 @@ class Environment {
 
     readonly config = new Config();
 
-    async init() {
-        await this.initDocumentFolder();
-        await this.config.init();
+    constructor() {
+        this.initDocumentFolder();
     }
 
     asExetensionPath(...args: string[]) {
@@ -77,13 +76,15 @@ class Environment {
         return path.join(this.rootPath, FOLDER_IMPORTS);
     }
 
-    private async initDocumentFolder() {
-        const output = await utils.execFile('reg', [
-            'query',
-            'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
-            '/v',
-            'Personal'
-        ]);
+    private initDocumentFolder() {
+        const output = cp
+            .execFileSync('reg', [
+                'query',
+                'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
+                '/v',
+                'Personal'
+            ])
+            .toString();
 
         const m = output.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
         if (!m) {

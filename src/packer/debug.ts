@@ -11,7 +11,7 @@ import * as utils from '../utils';
 import * as proc from '../proc';
 import * as globals from '../globals';
 
-import { env } from '../environment';
+import { env } from '../env';
 import { report } from '../report';
 import { Packer } from '../packer';
 

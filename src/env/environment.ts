@@ -7,12 +7,14 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as proc from './proc';
+import * as proc from '../proc';
 
 import { Config } from './config';
+import { Errors } from '../error';
 
 const FOLDER_BUILD = '.build';
 const FOLDER_IMPORTS = 'imports';
+const FOLDER_SOURCE = 'src';
 
 class Environment {
     private context?: vscode.ExtensionContext;
@@ -44,7 +46,7 @@ class Environment {
 
     asDocumentPath(...args: string[]) {
         if (!this.documentFolder) {
-            throw new Error('Not found documents folder');
+            throw Error(Errors.NotFoundDocuments);
         }
         return path.join(this.documentFolder, ...args);
     }
@@ -55,13 +57,13 @@ class Environment {
 
     get rootPath() {
         if (!vscode.workspace.workspaceFolders) {
-            throw Error('Not warcraft III map project');
+            throw Error(Errors.NotWarcraftProject);
         }
         return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
 
     get sourceFolder(): string {
-        return path.join(this.rootPath, this.config.sourceDir);
+        return path.join(this.rootPath, FOLDER_SOURCE);
     }
 
     get mapFolder(): string {
@@ -86,7 +88,7 @@ class Environment {
 
         const m = output.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
         if (!m) {
-            throw new Error('Not found documents folder');
+            return;
         } else {
             type SysEnv = Map<string, string>;
             const sys = new Map(Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])) as SysEnv;

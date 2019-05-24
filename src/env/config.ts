@@ -7,11 +7,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import * as globals from './globals';
+import * as globals from '../globals';
+import { Errors } from '../error';
 
 interface WarcraftJson {
     mapdir?: string;
-    sourcedir?: string;
 }
 
 export class Config {
@@ -19,11 +19,11 @@ export class Config {
 
     async init() {
         if (vscode.workspace.workspaceFolders) {
-            await this.reload();
+            this.reload();
         }
     }
 
-    async reload() {
+    reload() {
         this.projectConfig = {};
 
         if (!vscode.workspace.workspaceFolders) {
@@ -32,15 +32,15 @@ export class Config {
 
         const file = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.PROJECT_FILE);
 
-        if (!(await fs.pathExists(file))) {
+        if (!fs.pathExistsSync(file)) {
             return;
         }
 
-        if (!(await fs.stat(file)).isFile()) {
+        if (!fs.statSync(file).isFile()) {
             return;
         }
 
-        const content = await fs.readJson(file);
+        const content = fs.readJsonSync(file);
         if (!content || typeof content !== 'object') {
             return;
         }
@@ -55,7 +55,7 @@ export class Config {
     get gamePath() {
         const value = this.config.get<string>('gamePath');
         if (!value) {
-            throw new Error('Not set gamePath');
+            throw Error(Errors.NotFoundGame);
         }
         return value;
     }
@@ -67,7 +67,7 @@ export class Config {
     get wePath() {
         const value = this.config.get<string>('wePath');
         if (!value) {
-            throw new Error('Not set wePath');
+            throw Error(Errors.NotFoundEditor);
         }
         return value;
     }
@@ -94,15 +94,20 @@ export class Config {
 
     get mapDir() {
         if (!this.projectConfig.mapdir) {
-            throw new Error('Not set mapdir');
+            throw Error(Errors.NotFoundMap);
         }
         return this.projectConfig.mapdir;
     }
 
-    get sourceDir() {
-        if (!this.projectConfig.sourcedir) {
-            throw new Error('Not set sourcedir');
+    set mapDir(value: string) {
+        if (!vscode.workspace.workspaceFolders) {
+            return;
         }
-        return this.projectConfig.sourcedir;
+
+        const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+
+        fs.writeJSON(path.join(rootPath, globals.PROJECT_FILE), this.projectConfig);
+
+        this.projectConfig.mapdir = value;
     }
 }

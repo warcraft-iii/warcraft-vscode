@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as proc from '../proc';
 import * as globals from '../globals';
 
-import { env } from '../environment';
+import { env } from '../env';
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
 import { report } from '../report';

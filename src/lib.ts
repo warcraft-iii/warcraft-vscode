@@ -12,7 +12,7 @@ import * as cp from 'child_process';
 
 import * as Octokit from '@octokit/rest';
 
-import { env } from './environment';
+import { env } from './env';
 import { promisify } from 'util';
 
 export interface ClassicLibrary extends vscode.QuickPickItem {
@@ -44,7 +44,7 @@ export async function addLibrary(library: ClassicLibrary, ssh: boolean): Promise
     const target = path.posix.join('src/lib', library.label);
 
     if (await fs.pathExists(path.join(env.rootPath, target))) {
-        throw new Error(`${target} already exists`);
+        throw  Error(`${target} already exists`);
     }
 
     try {

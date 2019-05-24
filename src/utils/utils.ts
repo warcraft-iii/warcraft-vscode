@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { LUA } from './globals';
+import { LUA } from '../globals';
 
 async function _getAllFiles(root: string, r: string[]) {
     const files = (await fs.readdir(root)).map(file => path.join(root, file));
@@ -30,8 +30,8 @@ export function getAllFiles(root: string) {
     return _getAllFiles(root, []);
 }
 
-export function sleep(n: number): Promise<void> {
-    return new Promise(resolve => setTimeout(() => resolve(), n));
+export function sleep(n: number) {
+    return new Promise<void>(resolve => setTimeout(() => resolve(), n));
 }
 
 export function isLuaFile(file: string) {
@@ -87,4 +87,18 @@ export async function confirm(title: string, ok: string = 'Ok', alt?: string) {
         return;
     }
     return result.value;
+}
+
+export async function selectFolder() {
+    const result = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false
+    });
+    return result ? result[0].fsPath : undefined;
+}
+
+export async function selectFile() {
+    const result = await vscode.window.showOpenDialog({ filters: { 'Warcraft III.exe': ['exe'] } });
+    return result ? result[0].fsPath : undefined;
 }

@@ -10,12 +10,13 @@ import * as path from 'path';
 import * as utils from '../utils';
 import * as globals from '../globals';
 
-import { env } from '../environment';
+import { env } from '../env';
 
 import { report } from '../report';
 
 import { Compiler, CompilerType } from './compiler';
 import { readCompilerTemplate } from './private';
+import { Errors } from '../error';
 
 export class DebugCompiler implements Compiler {
     private main: any;
@@ -35,7 +36,7 @@ export class DebugCompiler implements Compiler {
     @report('Compiling Scripts ...')
     async execute() {
         if (!(await fs.stat(env.sourceFolder)).isDirectory()) {
-            throw new Error('Not found source folder');
+            throw Error(Errors.NotFoundSource);
         }
 
         const outputPath = env.asBuildPath(globals.ENTRY_FILE);

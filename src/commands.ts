@@ -13,21 +13,30 @@ import { debugPacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
 
 import { withReport } from './report';
-import { env } from './environment';
-import { project } from './project';
+import { env } from './env';
+import { project, checker } from './project';
 
 function registerCommand(name: string, task: () => Promise<void>) {
-    return vscode.commands.registerCommand('extension.warcraft.' + name, async () => withReport(task));
+    return vscode.commands.registerCommand('extension.warcraft.' + name, () => withReport(task));
+}
+
+function registerCheckedCommand(name: string, task: () => Promise<void>) {
+    return registerCommand(name, async () => {
+        if (!checker.check()) {
+            return;
+        }
+        return await task();
+    });
 }
 
 export function registerCommands() {
     return [
-        registerCommand('compile.debug', () => debugCompiler.execute()),
-        registerCommand('pack.debug', async () => {
+        registerCheckedCommand('compile.debug', () => debugCompiler.execute()),
+        registerCheckedCommand('pack.debug', async () => {
             await debugCompiler.execute();
             await debugPacker.execute();
         }),
-        registerCommand('run.game', async () => {
+        registerCheckedCommand('run.game', async () => {
             const canTerminateGame = async () => {
                 if (env.config.autoCloseClient) {
                     return true;
@@ -55,9 +64,9 @@ export function registerCommands() {
             await debugPacker.execute();
             await gameRunner.execute();
         }),
-        registerCommand('run.editor', () => editorRunner.execute()),
+        registerCheckedCommand('run.editor', () => editorRunner.execute()),
         registerCommand('project.create', () => project.create()),
-        registerCommand('project.clean', () => project.clean()),
-        registerCommand('project.addlibrary', async () => {})
+        registerCheckedCommand('project.clean', () => project.clean())
+        // registerCommand('project.addlibrary', async () => {})
     ];
 }

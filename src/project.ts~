@@ -103,7 +103,7 @@ export class Project {
     @Progress
     commandRunWorldEditor() {
         if (this.runner.hasProcess(ProcessType.Editor)) {
-            throw new Error('World Editor is running.');
+            throw  Error('World Editor is running.');
         }
         return this.runner.runEditor();
     }

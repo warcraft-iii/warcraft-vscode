@@ -13,8 +13,9 @@ import * as request from 'request';
 import * as utils from '../utils';
 import * as globals from '../globals';
 
-import { env } from '../environment';
+import { env } from '../env';
 import { report } from '../report';
+import { Errors } from '../error';
 
 export class Project {
     constructor() {}
@@ -39,10 +40,10 @@ export class Project {
 
         if (await fs.pathExists(output)) {
             if (!(await fs.stat(output)).isDirectory()) {
-                throw new Error('Target is not a folder');
+                throw Error(Errors.TargetNotFolder);
             }
             if ((await fs.readdir(output)).length > 0) {
-                throw new Error('Target folder must empty');
+                throw Error(Errors.TargetMustEmpty);
             }
         }
 

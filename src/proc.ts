@@ -68,7 +68,7 @@ export async function execFile(command: string, args?: string[]) {
     }
 
     if (!ok) {
-        throw new Error(output);
+        throw Error(output);
     }
     return output;
 }

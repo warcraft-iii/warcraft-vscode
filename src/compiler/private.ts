@@ -10,7 +10,7 @@ import * as utils from '../utils';
 import template from 'lodash-es/template';
 import templateSettings from 'lodash-es/templateSettings';
 
-import { env } from '../environment';
+import { env } from '../env';
 import { CompilerType } from './compiler';
 
 templateSettings.interpolate = /\-\-\[\[%\=([\s\S]+?)%\]\]/g;

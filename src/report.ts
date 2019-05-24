@@ -15,8 +15,8 @@ class Context {
     private resolver?: any;
     private enabled = false;
 
-    private wait(): Promise<void> {
-        return new Promise(resolve => {
+    private wait() {
+        return new Promise<void>(resolve => {
             if (this.resolver) {
                 resolve();
                 return;
@@ -26,11 +26,11 @@ class Context {
                 {
                     cancellable: false,
                     location: vscode.ProgressLocation.Notification,
-                    title: 'Warcraft: '
+                    title: 'Warcraft '
                 },
-                async p => {
-                    this.reporter = p;
-                    await new Promise(resolver => {
+                async reporter => {
+                    this.reporter = reporter;
+                    await new Promise<void>(resolver => {
                         this.resolver = resolver;
                         resolve();
                     });
@@ -68,7 +68,7 @@ class Context {
 const context = new Context();
 
 export function report(message: string) {
-    return (_target: any, _key: string, descriptor: any) => {
+    return (_target: any, _key: string, descriptor: PropertyDescriptor) => {
         const orig = descriptor.value;
         descriptor.value = async function(...args: any[]) {
             await context.report(message);
@@ -83,24 +83,9 @@ export async function withReport(task: () => Promise<void>) {
 
     try {
         await task();
-        context.leave();
     } catch (error) {
-        context.leave();
         throw error;
+    } finally {
+        context.leave();
     }
 }
-
-// export function Progress(_target: any, _key: string, descriptor: any) {
-//     const orig = descriptor.value;
-//     descriptor.value = async function(...args: any[]) {
-//         try {
-//             context.enter();
-//             // tslint:disable-next-line: no-invalid-this
-//             await orig.apply(this, ...args);
-//             context.leave();
-//         } catch (error) {
-//             context.leave();
-//             throw error;
-//         }
-//     };
-// }

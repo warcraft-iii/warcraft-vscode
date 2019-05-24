@@ -6,10 +6,11 @@
  */
 
 import * as proc from '../proc';
-import { env } from '../environment';
+import { env } from '../env';
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
 import { report } from '../report';
+import { Errors } from '../error';
 
 class EditorRunner extends BaseRunner {
     type() {
@@ -19,7 +20,7 @@ class EditorRunner extends BaseRunner {
     @report('Starting World Editor: ')
     async execute() {
         if (this.isAlive()) {
-            throw new Error('World Editor is running');
+            throw Error(Errors.EditorIsRunning);
         }
         this.process = proc.spawn(env.config.wePath, [...env.config.weArgs, '-loadfile', env.mapFolder]);
     }

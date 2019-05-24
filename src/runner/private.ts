@@ -5,7 +5,7 @@
  * @Date   : 5/23/2019, 11:26:03 AM
  */
 
-import * as proc from '../proc';
+import * as proc from './proc';
 import { Runner, RunnerType } from './runner';
 
 export abstract class BaseRunner implements Runner {

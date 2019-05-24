@@ -29,44 +29,42 @@ function registerCheckedCommand(name: string, task: () => Promise<void>) {
     });
 }
 
-export function registerCommands() {
-    return [
-        registerCheckedCommand('compile.debug', () => debugCompiler.execute()),
-        registerCheckedCommand('pack.debug', async () => {
-            await debugCompiler.execute();
-            await debugPacker.execute();
-        }),
-        registerCheckedCommand('run.game', async () => {
-            const canTerminateGame = async () => {
-                if (env.config.autoCloseClient) {
-                    return true;
-                }
-
-                const result = await utils.confirm('Warcraft III running, to terminate?', 'Ok', 'Auto close');
-                if (!result) {
-                    return false;
-                }
-
-                if (result === utils.ConfirmResult.Alt) {
-                    env.config.autoCloseClient = true;
-                }
+export const commands = [
+    registerCheckedCommand('compile.debug', () => debugCompiler.execute()),
+    registerCheckedCommand('pack.debug', async () => {
+        await debugCompiler.execute();
+        await debugPacker.execute();
+    }),
+    registerCheckedCommand('run.game', async () => {
+        const canTerminateGame = async () => {
+            if (env.config.autoCloseClient) {
                 return true;
-            };
-
-            if (gameRunner.isAlive()) {
-                if (!(await canTerminateGame())) {
-                    return;
-                }
-                await gameRunner.kill();
             }
 
-            await debugCompiler.execute();
-            await debugPacker.execute();
-            await gameRunner.execute();
-        }),
-        registerCheckedCommand('run.editor', () => editorRunner.execute()),
-        registerCommand('project.create', () => project.create()),
-        registerCheckedCommand('project.clean', () => project.clean())
-        // registerCommand('project.addlibrary', async () => {})
-    ];
-}
+            const result = await utils.confirm('Warcraft III running, to terminate?', 'Ok', 'Auto close');
+            if (!result) {
+                return false;
+            }
+
+            if (result === utils.ConfirmResult.Alt) {
+                env.config.autoCloseClient = true;
+            }
+            return true;
+        };
+
+        if (gameRunner.isAlive()) {
+            if (!(await canTerminateGame())) {
+                return;
+            }
+            await gameRunner.kill();
+        }
+
+        await debugCompiler.execute();
+        await debugPacker.execute();
+        await gameRunner.execute();
+    }),
+    registerCheckedCommand('run.editor', () => editorRunner.execute()),
+    registerCommand('project.create', () => project.create()),
+    registerCheckedCommand('project.clean', () => project.clean())
+    // registerCommand('project.addlibrary', async () => {})
+];

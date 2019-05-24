@@ -16,21 +16,19 @@ import { report } from '../report';
 
 import { Compiler, CompilerType } from './compiler';
 import { readCompilerTemplate } from './private';
-import { Errors } from '../error';
+import { Errors } from '../errors';
 
 export class DebugCompiler implements Compiler {
     private main: any;
     private file: any;
 
-    constructor() {}
+    constructor() {
+        this.main = readCompilerTemplate(CompilerType.Debug, 'main.lua');
+        this.file = readCompilerTemplate(CompilerType.Debug, 'file.lua');
+    }
 
     type() {
         return CompilerType.Debug;
-    }
-
-    async init() {
-        this.main = await readCompilerTemplate(CompilerType.Debug, 'main.lua');
-        this.file = await readCompilerTemplate(CompilerType.Debug, 'file.lua');
     }
 
     @report('Compiling Scripts ...')

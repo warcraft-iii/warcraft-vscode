@@ -8,7 +8,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as utils from '../utils';
-import * as proc from '../proc';
+import * as proc from '../runner/proc';
 import * as globals from '../globals';
 
 import { env } from '../env';

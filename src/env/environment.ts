@@ -7,10 +7,10 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as proc from '../proc';
+import * as proc from '../runner/proc';
 
 import { Config } from './config';
-import { Errors } from '../error';
+import { Errors } from '../errors';
 
 const FOLDER_BUILD = '.build';
 const FOLDER_IMPORTS = 'imports';

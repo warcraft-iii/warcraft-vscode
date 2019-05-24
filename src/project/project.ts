@@ -15,7 +15,7 @@ import * as globals from '../globals';
 
 import { env } from '../env';
 import { report } from '../report';
-import { Errors } from '../error';
+import { Errors } from '../errors';
 
 export class Project {
     constructor() {}

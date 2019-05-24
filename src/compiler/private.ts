@@ -5,7 +5,7 @@
  * @Date   : 5/23/2019, 11:04:39 AM
  */
 
-import * as utils from '../utils';
+import * as fs from 'fs-extra';
 
 import template from 'lodash-es/template';
 import templateSettings from 'lodash-es/templateSettings';
@@ -16,8 +16,10 @@ import { CompilerType } from './compiler';
 templateSettings.interpolate = /\-\-\[\[%\=([\s\S]+?)%\]\]/g;
 templateSettings.evaluate = /\-\-\[\[%\>([\s\S]+?)%\]\]/g;
 
-export async function readCompilerTemplate(compilerType: CompilerType, file: string) {
+export function readCompilerTemplate(compilerType: CompilerType, file: string) {
     return template(
-        (await utils.readFile(env.asExetensionPath('templates', CompilerType[compilerType].toLowerCase(), file))).trim()
+        fs.readFileSync(env.asExetensionPath('templates', CompilerType[compilerType].toLowerCase(), file), {
+            encoding: 'utf-8'
+        })
     );
 }

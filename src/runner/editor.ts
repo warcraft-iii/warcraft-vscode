@@ -5,12 +5,12 @@
  * @Date   : 5/23/2019, 11:14:03 AM
  */
 
-import * as proc from '../proc';
+import * as proc from './proc';
 import { env } from '../env';
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
 import { report } from '../report';
-import { Errors } from '../error';
+import { Errors } from '../errors';
 
 class EditorRunner extends BaseRunner {
     type() {

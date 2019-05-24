@@ -6,7 +6,7 @@
  */
 
 import * as cp from 'child_process';
-import * as utils from './utils';
+import * as utils from '../utils';
 
 import { promisify } from 'util';
 

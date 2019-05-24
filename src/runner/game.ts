@@ -7,7 +7,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as proc from '../proc';
+import * as proc from './proc';
 import * as globals from '../globals';
 
 import { env } from '../env';

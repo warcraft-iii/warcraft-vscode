@@ -26,7 +26,7 @@ class Context {
                 {
                     cancellable: false,
                     location: vscode.ProgressLocation.Notification,
-                    title: 'Warcraft '
+                    title: '[Warcraft vscode] '
                 },
                 async reporter => {
                     this.reporter = reporter;

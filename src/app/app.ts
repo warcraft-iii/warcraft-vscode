@@ -8,6 +8,7 @@
 import * as vscode from 'vscode';
 
 import { env } from '../env';
+import { globals } from '../globals';
 
 export class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];
@@ -19,7 +20,7 @@ export class App implements vscode.Disposable {
     constructor() {
         if (env.rootPath) {
             const watcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(env.rootPath, 'warcraft.json')
+                new vscode.RelativePattern(env.rootPath, globals.PROJECT_FILE)
             );
 
             this.subscriptions.push(

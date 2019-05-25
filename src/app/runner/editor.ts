@@ -7,8 +7,8 @@
 
 import * as utils from '../../utils';
 
-import { Errors } from '../../globals';
 import { env } from '../../env';
+import { localize } from '../../globals';
 
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
@@ -18,11 +18,8 @@ class EditorRunner extends BaseRunner {
         return RunnerType.Editor;
     }
 
-    @utils.report('Starting World Editor: ')
+    @utils.report(localize('report.openEditor', 'Starting world editor'))
     async execute() {
-        if (this.isAlive()) {
-            throw Error(Errors.EditorIsRunning);
-        }
         this.process = utils.spawn(env.config.wePath, [...env.config.weArgs, '-loadfile', env.mapFolder]);
     }
 }

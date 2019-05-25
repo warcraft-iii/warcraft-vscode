@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { globals } from '../../globals';
+import { globals, localize } from '../../globals';
 
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
@@ -20,7 +20,7 @@ class GameRunner extends BaseRunner {
         return RunnerType.Game;
     }
 
-    @utils.report('Starting Game ...')
+    @utils.report(localize('report.openGame', 'Starting game'))
     async execute() {
         const mapPath = env.asBuildPath(globals.DEBUG_MAP_FILE);
         const isPtr = await fs.pathExists(

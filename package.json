@@ -107,6 +107,7 @@
     "lodash-es": "^4.17.11",
     "request": "^2.88.0",
     "simple-git": "^1.113.0",
-    "unzipper": "^0.9.15"
+    "unzipper": "^0.9.15",
+    "vscode-nls": "^4.1.1"
   }
 }

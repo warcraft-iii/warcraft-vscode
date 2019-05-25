@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 
-import { Errors, globals } from '../globals';
+import { globals, localize } from '../globals';
 
 interface WarcraftJson {
     mapdir?: string;
@@ -55,7 +55,7 @@ export class Config {
     get gamePath() {
         const value = this.config.get<string>('gamePath');
         if (!value) {
-            throw Error(Errors.NotFoundGame);
+            throw Error(localize('error.noGamePath', 'Not found: Warcraft III.exe'));
         }
         return value;
     }
@@ -67,7 +67,7 @@ export class Config {
     get wePath() {
         const value = this.config.get<string>('wePath');
         if (!value) {
-            throw Error(Errors.NotFoundEditor);
+            throw Error(localize('error.noEditorPath', 'Not found: World Editor.exe'));
         }
         return value;
     }
@@ -94,7 +94,7 @@ export class Config {
 
     get mapDir() {
         if (!this.projectConfig.mapdir) {
-            throw Error(Errors.NotFoundMap);
+            throw Error(localize('error.noMapFolder', 'Not found: map folder'));
         }
         return this.projectConfig.mapdir;
     }

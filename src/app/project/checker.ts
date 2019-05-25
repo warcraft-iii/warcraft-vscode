@@ -11,6 +11,7 @@ import * as path from 'path';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
+import { localize } from '../../globals';
 
 interface ExecutionItem {
     name: string;
@@ -51,7 +52,11 @@ export class Checker {
     }
 
     private async notify(notFounds: ExecutionItem[]) {
-        if (!(await utils.confirm('Not found Warcraft III, to set?'))) {
+        if (
+            !(await utils.confirm(
+                localize('confirm.setGamePath', 'Warcraft III path is not set or incorrect, to set?')
+            ))
+        ) {
             return;
         }
 
@@ -78,7 +83,7 @@ export class Checker {
         }
 
         if (names.length > 0) {
-            vscode.window.showWarningMessage(`Warcraft: Not Found ${names.join(' ')}`);
+            vscode.window.showWarningMessage(localize('error.notFound', 'Not found {0}', names.join(' ')));
         }
     }
 

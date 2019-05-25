@@ -6,4 +6,4 @@
  */
 
 export * from './globals';
-export * from './errors';
+export * from './localize';

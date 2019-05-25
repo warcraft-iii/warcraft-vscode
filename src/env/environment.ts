@@ -10,14 +10,14 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 
 import { Config } from './config';
-import { Errors } from '../globals';
+import { globals, localize } from '../globals';
 
 const FOLDER_BUILD = '.build';
 const FOLDER_IMPORTS = 'imports';
 const FOLDER_SOURCE = 'src';
 
 class Environment {
-    private context = vscode.extensions.getExtension('Dencer.warcraft-vscode');
+    private context = vscode.extensions.getExtension(globals.EXTENSION_ID);
     private documentFolder?: string;
 
     readonly config = new Config();
@@ -44,7 +44,7 @@ class Environment {
 
     asDocumentPath(...args: string[]) {
         if (!this.documentFolder) {
-            throw Error(Errors.NotFoundDocuments);
+            throw Error(localize('error.noDocFolder', 'Not found: My Documents'));
         }
         return path.join(this.documentFolder, ...args);
     }
@@ -55,7 +55,7 @@ class Environment {
 
     get rootPath() {
         if (!vscode.workspace.workspaceFolders) {
-            throw Error(Errors.NotWarcraftProject);
+            throw Error(localize('error.notProject', 'Not Warcraft III project'));
         }
         return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }

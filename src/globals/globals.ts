@@ -13,4 +13,5 @@ export namespace globals {
     export const DEBUG_MAP_FILE = '_warcraft_vscode_test.w3x';
     export const PROJECT_FILE = 'warcraft.json';
     export const TEMPLATE_URL = 'https://github.com/warcraft-iii/warcraft-template/archive/master.zip';
+    export const EXTENSION_ID = 'Dencer.warcraft-vscode';
 }

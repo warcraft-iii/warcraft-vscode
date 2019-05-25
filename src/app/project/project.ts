@@ -13,17 +13,17 @@ import * as request from 'request';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { Errors, globals } from '../../globals';
+import { globals, localize } from '../../globals';
 
 export class Project {
     constructor() {}
 
-    @utils.report('Cleaning Project ...')
+    @utils.report(localize('report.clean', 'Cleaning project'))
     clean() {
         return fs.remove(env.buildFolder);
     }
 
-    @utils.report('Creating Project ...')
+    @utils.report(localize('report.create', 'Creating project'))
     async create() {
         const result = await vscode.window.showOpenDialog({
             canSelectFiles: false,
@@ -38,16 +38,16 @@ export class Project {
 
         if (await fs.pathExists(output)) {
             if (!(await fs.stat(output)).isDirectory()) {
-                throw Error(Errors.TargetNotFolder);
+                throw Error(localize('error.targetNotFolder', 'Target not a folder'));
             }
             if ((await fs.readdir(output)).length > 0) {
-                throw Error(Errors.TargetMustEmpty);
+                throw Error(localize('error.folderNotEmpty', 'Folder must be empty'));
             }
         }
 
         await this.download(output);
 
-        if (await utils.confirm('Create project success, to open project?')) {
+        if (await utils.confirm(localize('confirm.openProject', 'Create project success, to open?'))) {
             vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(output), true);
         }
     }

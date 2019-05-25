@@ -10,7 +10,7 @@ import * as fs from 'fs-extra';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { globals } from '../../globals';
+import { globals, localize } from '../../globals';
 
 import { Packer, PackerType } from './packer';
 
@@ -41,7 +41,7 @@ export class DebugPacker implements Packer {
         ]);
     }
 
-    @utils.report('Packing Map ...')
+    @utils.report(localize('report.pack', 'Packing map'))
     async execute() {
         await this.generatePackList();
         await this.packByPackList();

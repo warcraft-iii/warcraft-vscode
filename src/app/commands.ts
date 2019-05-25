@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import * as utils from '../utils';
 
 import { env } from '../env';
+import { localize } from '../globals';
 
 import { debugCompiler } from './compiler';
 import { debugPacker } from './packer';
@@ -41,7 +42,11 @@ export const commands = [
                 return true;
             }
 
-            const result = await utils.confirm('Warcraft III running, to terminate?', 'Ok', 'Auto close');
+            const result = await utils.confirm(
+                localize('confirm.closeGame', 'Warcraft III running, to terminate?'),
+                localize('confirm.accept', 'Accept'),
+                localize('confirm.autoCloseGame', 'Auto close')
+            );
             if (!result) {
                 return false;
             }
@@ -63,7 +68,12 @@ export const commands = [
         await debugPacker.execute();
         await gameRunner.execute();
     }),
-    registerCheckedCommand('run.editor', () => editorRunner.execute()),
+    registerCheckedCommand('run.we', async () => {
+        if (editorRunner.isAlive()) {
+            throw Error(localize('error.editorRunning', 'World Editor is running'));
+        }
+        await editorRunner.execute();
+    }),
     registerCommand('project.create', () => project.create()),
     registerCheckedCommand('project.clean', () => project.clean())
     // registerCommand('project.addlibrary', async () => {})

@@ -15,7 +15,9 @@ import { debugCompiler } from './compiler';
 import { debugPacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
 
-import { project, checker } from './project';
+import { project } from './project';
+import { checker } from './option';
+import { library } from './project/library';
 
 function registerCommand(name: string, task: () => Promise<void>) {
     return vscode.commands.registerCommand('extension.warcraft.' + name, () => utils.withReport(task));
@@ -75,6 +77,6 @@ export const commands = [
         await editorRunner.execute();
     }),
     registerCommand('project.create', () => project.create()),
-    registerCheckedCommand('project.clean', () => project.clean())
-    // registerCommand('project.addlibrary', async () => {})
+    registerCheckedCommand('project.clean', () => project.clean()),
+    registerCommand('project.addlibrary', () => library.add())
 ];

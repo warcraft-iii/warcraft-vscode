@@ -86,17 +86,3 @@ export async function confirm(title: string, ok: string = 'Ok', alt?: string) {
     }
     return result.value;
 }
-
-export async function selectFolder() {
-    const result = await vscode.window.showOpenDialog({
-        canSelectFiles: false,
-        canSelectFolders: true,
-        canSelectMany: false
-    });
-    return result ? result[0].fsPath : undefined;
-}
-
-export async function selectFile() {
-    const result = await vscode.window.showOpenDialog({ filters: { 'Warcraft III.exe': ['exe'] } });
-    return result ? result[0].fsPath : undefined;
-}

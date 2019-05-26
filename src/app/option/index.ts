@@ -2,7 +2,7 @@
  * @File   : index.ts
  * @Author : Dencer (tdaddon@163.com)
  * @Link   : https://dengsir.github.io
- * @Date   : 5/23/2019, 11:56:13 PM
+ * @Date   : 5/26/2019, 12:34:06 AM
  */
 
-export * from './project';
+export * from './checker';

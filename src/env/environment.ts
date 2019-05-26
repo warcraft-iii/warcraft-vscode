@@ -17,16 +17,20 @@ const FOLDER_IMPORTS = 'imports';
 const FOLDER_SOURCE = 'src';
 
 class Environment {
-    private context = vscode.extensions.getExtension(globals.EXTENSION_ID);
+    private extensionFolder?: string;
     private documentFolder?: string;
 
     readonly config = new Config();
 
     constructor() {
+        this.initExtensionFolder();
         this.initDocumentFolder();
     }
 
     asExetensionPath(...args: string[]) {
+        if (!this.extensionFolder) {
+            throw Error(localize('error.noExtFolder', 'Not found: Extension Folder'));
+        }
         return path.join(this.extensionFolder, ...args);
     }
 
@@ -49,8 +53,12 @@ class Environment {
         return path.join(this.documentFolder, ...args);
     }
 
-    get extensionFolder() {
-        return this.context ? this.context.extensionPath : '';
+    asRootPath(...args: string[]) {
+        return path.join(this.rootPath, ...args);
+    }
+
+    asSourceFolder(...args: string[]) {
+        return this.asRootPath(FOLDER_SOURCE, ...args);
     }
 
     get rootPath() {
@@ -61,19 +69,19 @@ class Environment {
     }
 
     get sourceFolder(): string {
-        return path.join(this.rootPath, FOLDER_SOURCE);
+        return this.asRootPath(FOLDER_SOURCE);
     }
 
     get mapFolder(): string {
-        return path.join(this.rootPath, this.config.mapDir);
+        return this.asRootPath(this.config.mapDir);
     }
 
     get buildFolder(): string {
-        return path.join(this.rootPath, FOLDER_BUILD);
+        return this.asRootPath(FOLDER_BUILD);
     }
 
     get importsFolder(): string {
-        return path.join(this.rootPath, FOLDER_IMPORTS);
+        return this.asRootPath(FOLDER_IMPORTS);
     }
 
     private initDocumentFolder() {
@@ -97,6 +105,13 @@ class Environment {
                 x = x.toLowerCase();
                 return sys.has(x) ? sys.get(x) : x;
             });
+        }
+    }
+
+    private initExtensionFolder() {
+        const extension = vscode.extensions.getExtension(globals.EXTENSION_ID);
+        if (extension) {
+            this.extensionFolder = extension.extensionPath;
         }
     }
 }

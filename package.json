@@ -19,8 +19,8 @@
   "activationEvents": [
     "onCommand:extension.warcraft.compile.debug",
     "onCommand:extension.warcraft.pack.debug",
-    "onCommand:extension.warcraft.run.game",
-    "onCommand:extension.warcraft.run.we",
+    "onCommand:extension.warcraft.run.debug",
+    "onCommand:extension.warcraft.run.editor",
     "onCommand:extension.warcraft.project.create",
     "onCommand:extension.warcraft.project.clean",
     "onCommand:extension.warcraft.project.addlibrary"

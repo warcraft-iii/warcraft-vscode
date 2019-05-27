@@ -10,6 +10,7 @@ before_deploy:
 deploy:
 - provider: script
   script: vsce publish -p $VS_TOKEN
+  skip_cleanup: true
   on:
     repo: warcraft-iii/warcraft-vscode
     branch: master

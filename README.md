@@ -2,6 +2,10 @@
 
 This extension is a Warcraft III map development tool set of Lua.
 
+## Install
+
+[warcraft-vscode](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
+
 ## Features
 
 - Compile script for Debug

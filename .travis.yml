@@ -1,0 +1,15 @@
+language: node_js
+
+node_js:
+- 10
+
+before_deploy:
+- npm install -g vsce
+
+deploy:
+- provider: script
+  script: vsce publish -p $VS_TOKEN
+  on:
+    repo: warcraft-iii/warcraft-vscode
+    branch: master
+    tags: true

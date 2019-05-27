@@ -39,12 +39,12 @@
         "category": "Warcraft"
       },
       {
-        "command": "extension.warcraft.run.game",
+        "command": "extension.warcraft.run.debug",
         "title": "Run Map",
         "category": "Warcraft"
       },
       {
-        "command": "extension.warcraft.run.we",
+        "command": "extension.warcraft.run.editor",
         "title": "Open World Editor",
         "category": "Warcraft"
       },
@@ -55,7 +55,7 @@
       },
       {
         "command": "extension.warcraft.project.clean",
-        "title": "Clean",
+        "title": "Clean Project",
         "category": "Warcraft"
       },
       {

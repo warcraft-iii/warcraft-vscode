@@ -48,7 +48,7 @@ class Context {
         if (this.reporter) {
             this.reporter.report({ message });
         }
-        await utils.sleep(2000);
+        await utils.sleep(100);
     }
 
     enter() {

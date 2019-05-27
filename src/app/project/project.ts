@@ -27,7 +27,8 @@ export class Project {
     async create() {
         const result = await vscode.window.showOpenDialog({
             canSelectFiles: false,
-            canSelectFolders: true
+            canSelectFolders: true,
+            openLabel: localize('confirm.createProject', 'Use this folder to create project')
         });
 
         if (!result) {

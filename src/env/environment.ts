@@ -31,30 +31,30 @@ class Environment {
         if (!this.extensionFolder) {
             throw Error(localize('error.noExtFolder', 'Not found: Extension Folder'));
         }
-        return path.join(this.extensionFolder, ...args);
+        return path.resolve(this.extensionFolder, ...args);
     }
 
     asMapPath(...args: string[]) {
-        return path.join(this.mapFolder, ...args);
+        return path.resolve(this.mapFolder, ...args);
     }
 
     asBuildPath(...args: string[]) {
-        return path.join(this.buildFolder, ...args);
+        return path.resolve(this.buildFolder, ...args);
     }
 
     asGamePath(...args: string[]) {
-        return path.join(path.dirname(this.config.gamePath), ...args);
+        return path.resolve(path.dirname(this.config.gamePath), ...args);
     }
 
     asDocumentPath(...args: string[]) {
         if (!this.documentFolder) {
             throw Error(localize('error.noDocFolder', 'Not found: My Documents'));
         }
-        return path.join(this.documentFolder, ...args);
+        return path.resolve(this.documentFolder, ...args);
     }
 
     asRootPath(...args: string[]) {
-        return path.join(this.rootPath, ...args);
+        return path.resolve(this.rootPath, ...args);
     }
 
     asSourceFolder(...args: string[]) {

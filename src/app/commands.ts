@@ -33,12 +33,12 @@ function registerCheckedCommand(name: string, task: () => Promise<void>) {
 }
 
 export const commands = [
-    registerCheckedCommand('compile.debug', () => debugCompiler.execute()),
-    registerCheckedCommand('pack.debug', async () => {
+    registerCommand('compile.debug', () => debugCompiler.execute()),
+    registerCommand('pack.debug', async () => {
         await debugCompiler.execute();
         await debugPacker.execute();
     }),
-    registerCheckedCommand('run.game', async () => {
+    registerCheckedCommand('run.debug', async () => {
         const canTerminateGame = async () => {
             if (env.config.autoCloseClient) {
                 return true;
@@ -70,13 +70,13 @@ export const commands = [
         await debugPacker.execute();
         await gameRunner.execute();
     }),
-    registerCheckedCommand('run.we', async () => {
+    registerCheckedCommand('run.editor', async () => {
         if (editorRunner.isAlive()) {
             throw Error(localize('error.editorRunning', 'World Editor is running'));
         }
         await editorRunner.execute();
     }),
     registerCommand('project.create', () => project.create()),
-    registerCheckedCommand('project.clean', () => project.clean()),
+    registerCommand('project.clean', () => project.clean()),
     registerCommand('project.addlibrary', () => library.add())
 ];

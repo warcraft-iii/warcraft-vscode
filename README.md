@@ -4,6 +4,8 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## Install
 
+[![Build Status](https://travis-ci.com/warcraft-iii/warcraft-vscode.svg?branch=master)](https://travis-ci.com/warcraft-iii/warcraft-vscode)
+
 [warcraft-vscode](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
 
 ## Features

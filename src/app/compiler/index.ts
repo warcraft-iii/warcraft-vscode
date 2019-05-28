@@ -7,3 +7,4 @@
 
 export * from './compiler';
 export * from './debug';
+export * from './release';

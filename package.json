@@ -18,6 +18,7 @@
   ],
   "activationEvents": [
     "onCommand:extension.warcraft.compile.debug",
+    "onCommand:extension.warcraft.compile.release",
     "onCommand:extension.warcraft.pack.debug",
     "onCommand:extension.warcraft.run.debug",
     "onCommand:extension.warcraft.run.editor",
@@ -31,6 +32,11 @@
       {
         "command": "extension.warcraft.compile.debug",
         "title": "Compile Debug",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.compile.release",
+        "title": "Compile Release",
         "category": "Warcraft"
       },
       {
@@ -114,6 +120,8 @@
     "@octokit/rest": "^16.27.0",
     "fs-extra": "^8.0.1",
     "lodash-es": "^4.17.11",
+    "luamin": "^1.0.4",
+    "luaparse": "^0.2.1",
     "request": "^2.88.0",
     "simple-git": "^1.113.0",
     "unzipper": "^0.9.15",

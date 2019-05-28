@@ -11,13 +11,12 @@ import * as utils from '../utils';
 import { env } from '../env';
 import { localize } from '../globals';
 
-import { debugCompiler } from './compiler';
+import { debugCompiler, releaseCompiler } from './compiler';
 import { debugPacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
 
-import { project } from './project';
+import { project, library } from './project';
 import { checker } from './option';
-import { library } from './project/library';
 
 function registerCommand(name: string, task: () => Promise<void>) {
     return vscode.commands.registerCommand('extension.warcraft.' + name, () => utils.withReport(task));
@@ -34,6 +33,7 @@ function registerCheckedCommand(name: string, task: () => Promise<void>) {
 
 export const commands = [
     registerCommand('compile.debug', () => debugCompiler.execute()),
+    registerCommand('compile.release', () => releaseCompiler.execute()),
     registerCommand('pack.debug', async () => {
         await debugCompiler.execute();
         await debugPacker.execute();
@@ -66,7 +66,7 @@ export const commands = [
             await gameRunner.kill();
         }
 
-        await debugCompiler.execute();
+        await releaseCompiler.execute();
         await debugPacker.execute();
         await gameRunner.execute();
     }),

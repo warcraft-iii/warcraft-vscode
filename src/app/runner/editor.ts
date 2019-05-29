@@ -22,6 +22,13 @@ class EditorRunner extends BaseRunner {
     async execute() {
         this.process = utils.spawn(env.config.wePath, [...env.config.weArgs, '-loadfile', env.mapFolder]);
     }
+
+    async check() {
+        if (this.isAlive()) {
+            throw Error(localize('error.editorRunning', 'World Editor is running'));
+        }
+        return true;
+    }
 }
 
 export const editorRunner = new EditorRunner();

@@ -8,9 +8,6 @@
 import * as vscode from 'vscode';
 import * as utils from '../utils';
 
-import { env } from '../env';
-import { localize } from '../globals';
-
 import { debugCompiler, releaseCompiler } from './compiler';
 import { debugPacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
@@ -19,7 +16,13 @@ import { project, library } from './project';
 import { checker } from './option';
 
 function registerCommand(name: string, task: () => Promise<void>) {
-    return vscode.commands.registerCommand('extension.warcraft.' + name, () => utils.withReport(task));
+    return vscode.commands.registerCommand('extension.warcraft.' + name, async () => {
+        try {
+            await utils.withReport(task);
+        } catch (error) {
+            vscode.window.showWarningMessage(`[Warcraft vscode] ${error.message}`);
+        }
+    });
 }
 
 function registerCheckedCommand(name: string, task: () => Promise<void>) {
@@ -39,40 +42,16 @@ export const commands = [
         await debugPacker.execute();
     }),
     registerCheckedCommand('run.debug', async () => {
-        const canTerminateGame = async () => {
-            if (env.config.autoCloseClient) {
-                return true;
-            }
-
-            const result = await utils.confirm(
-                localize('confirm.closeGame', 'Warcraft III running, to terminate?'),
-                localize('confirm.accept', 'Accept'),
-                localize('confirm.autoCloseGame', 'Auto close')
-            );
-            if (!result) {
-                return false;
-            }
-
-            if (result === utils.ConfirmResult.Alt) {
-                env.config.autoCloseClient = true;
-            }
-            return true;
-        };
-
-        if (gameRunner.isAlive()) {
-            if (!(await canTerminateGame())) {
-                return;
-            }
-            await gameRunner.kill();
+        if (!(await gameRunner.check())) {
+            return;
         }
-
-        await releaseCompiler.execute();
+        await debugCompiler.execute();
         await debugPacker.execute();
         await gameRunner.execute();
     }),
     registerCheckedCommand('run.editor', async () => {
-        if (editorRunner.isAlive()) {
-            throw Error(localize('error.editorRunning', 'World Editor is running'));
+        if (!(await editorRunner.check())) {
+            return;
         }
         await editorRunner.execute();
     }),

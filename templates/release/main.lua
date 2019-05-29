@@ -44,7 +44,6 @@ function main()
         orig_main()
         require('lib')
         require('main')
-        print('done')
     end)
     if not ok then
         print(err)

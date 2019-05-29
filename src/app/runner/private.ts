@@ -14,6 +14,7 @@ export abstract class BaseRunner implements Runner {
 
     abstract execute(): Promise<void>;
     abstract type(): RunnerType;
+    abstract check(): Promise<boolean>;
 
     isAlive() {
         return this.process ? this.process.isAlive() : false;

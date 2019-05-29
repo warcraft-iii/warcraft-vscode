@@ -34,9 +34,6 @@ export class DebugCompiler implements Compiler {
             throw Error(localize('error.noSrcFolder', 'Not found: source folder'));
         }
 
-        const outputPath = env.asBuildPath(globals.ENTRY_FILE);
-        await fs.mkdirp(path.dirname(outputPath));
-
         const war3map = await utils.readFile(env.asMapPath(globals.ENTRY_FILE));
         const code = (await Promise.all(
             (await utils.getAllFiles(env.sourceFolder))
@@ -50,6 +47,8 @@ export class DebugCompiler implements Compiler {
         )).join('\n\n');
 
         const out = this.main({ war3map, code });
+        const outputPath = env.asBuildPath(globals.ENTRY_FILE);
+        await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);
     }
 

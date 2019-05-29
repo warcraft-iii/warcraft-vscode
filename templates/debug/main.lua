@@ -46,7 +46,12 @@ end
 
 local orig_main = main
 function main()
-    orig_main()
-    require('lib')
-    require('main')
+    local ok, err = pcall(function()
+        orig_main()
+        require('lib')
+        require('main')
+    end)
+    if not ok then
+        print(err)
+    end
 end

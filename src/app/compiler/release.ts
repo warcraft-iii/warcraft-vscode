@@ -98,16 +98,14 @@ export class ReleaseCompiler implements Compiler {
 
         await this.processFiles([env.asSourceFolder('main.lua'), env.asSourceFolder('lib/init.lua')]);
 
-        const outputPath = env.asBuildPath(globals.ENTRY_FILE);
-        await fs.mkdirp(path.dirname(outputPath));
-
         const war3map = await utils.readFile(env.asMapPath(globals.ENTRY_FILE));
         const code = [...this.touched.entries()]
-            .map(([file, body]) => this.file({ name: this.getRequireName(file), body: luamin.minify(body) }))
+            .map(([file, body]) => this.file({ name: this.getRequireName(file), body }))
             .join('\n');
 
-        let out = this.main({ war3map, code });
-        // out = luamin.minify(out);
+        const out = luamin.minify(this.main({ war3map, code }));
+        const outputPath = env.asBuildPath(globals.ENTRY_FILE);
+        await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);
     }
 

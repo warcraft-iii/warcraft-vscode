@@ -34,6 +34,28 @@ class GameRunner extends BaseRunner {
             path.relative(docMapFolder, targetPath)
         ]);
     }
+
+    async check() {
+        if (!this.isAlive()) {
+            return true;
+        }
+
+        if (!env.config.autoCloseClient) {
+            const result = await utils.confirm(
+                localize('confirm.closeGame', 'Warcraft III running, to terminate?'),
+                localize('confirm.accept', 'Accept'),
+                localize('confirm.autoCloseGame', 'Auto close')
+            );
+            if (!result) {
+                return false;
+            }
+            if (result === utils.ConfirmResult.Alt) {
+                env.config.autoCloseClient = true;
+            }
+        }
+        await this.kill();
+        return true;
+    }
 }
 
 export const gameRunner = new GameRunner();

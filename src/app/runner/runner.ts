@@ -15,4 +15,5 @@ export interface Runner {
     isAlive(): boolean;
     execute(): Promise<void>;
     kill(): Promise<void>;
+    check(): Promise<boolean>;
 }

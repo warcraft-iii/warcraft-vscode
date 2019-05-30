@@ -120,7 +120,7 @@
     "@octokit/rest": "^16.27.0",
     "fs-extra": "^8.0.1",
     "lodash-es": "^4.17.11",
-    "luamin": "^1.0.4",
+    "luamin": "git+https://github.com/DengSir/luamin.git",
     "luaparse": "^0.2.1",
     "request": "^2.88.0",
     "simple-git": "^1.113.0",

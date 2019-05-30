@@ -88,7 +88,7 @@ export class Library {
             const repos = (await this.getOrgRepos(org)).filter(item => !exists.has(item.name));
 
             if (repos.length === 0) {
-                throw new Error(localize('error.noMoreLibrary', 'No more libraries in {0}', org.name));
+                throw Error(localize('error.noMoreLibrary', 'No more libraries in {0}', org.name));
             }
 
             return repos.map(item => ({
@@ -127,6 +127,9 @@ export class Library {
 
     @utils.report(localize('report.addSubmodule', 'Adding submodule'))
     async addLibrary(repo: RepoInfo) {
+        if (!env.rootPath) {
+            return;
+        }
         return await this.repo.submoduleAdd(
             repo.url,
             path.relative(env.rootPath, env.asSourceFolder(LIBRARIES_FOLDER, repo.name)).replace(/[\\\/]/g, '/')

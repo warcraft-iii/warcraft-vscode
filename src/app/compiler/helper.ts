@@ -24,3 +24,14 @@ export function readCompilerTemplate(compilerType: CompilerType, file: string) {
         })
     );
 }
+
+export function getCommentEqual(code: string) {
+    const m = code.match(/\[(=*)\[|\](=*)\]/g);
+    const exists = new Set(m ? m.map(x => x.length - 2) : []);
+
+    let length = 0;
+    while (exists.has(length)) {
+        length++;
+    }
+    return '='.repeat(length);
+}

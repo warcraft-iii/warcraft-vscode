@@ -8,20 +8,20 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as utils from '../../utils';
+import * as helper from './helper';
 
 import { env } from '../../env';
 import { globals, localize } from '../../globals';
 
 import { Compiler, CompilerType } from './compiler';
-import { readCompilerTemplate } from './private';
 
 export class DebugCompiler implements Compiler {
     private main: any;
     private file: any;
 
     constructor() {
-        this.main = readCompilerTemplate(CompilerType.Debug, 'main.lua');
-        this.file = readCompilerTemplate(CompilerType.Debug, 'file.lua');
+        this.main = helper.readCompilerTemplate(CompilerType.Debug, 'main.lua');
+        this.file = helper.readCompilerTemplate(CompilerType.Debug, 'file.lua');
     }
 
     type() {
@@ -40,7 +40,7 @@ export class DebugCompiler implements Compiler {
                 .filter(file => !utils.isHiddenFile(file) && utils.isLuaFile(file))
                 .map(async file => {
                     const body = await utils.readFile(file);
-                    const comment = this.getCommentExpr(body);
+                    const comment = helper.getCommentEqual(body);
                     const name = this.getRequireName(file);
                     return this.file({ name, comment, body });
                 })
@@ -50,17 +50,6 @@ export class DebugCompiler implements Compiler {
         const outputPath = env.asBuildPath(globals.ENTRY_FILE);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);
-    }
-
-    getCommentExpr(code: string) {
-        const m = code.match(/\[(=*)\[|\](=*)\]/g);
-        const exists = new Set(m ? m.map(x => x.length - 2) : []);
-
-        let length = 0;
-        while (exists.has(length)) {
-            length++;
-        }
-        return '='.repeat(length);
     }
 
     getRequireName(file: string) {

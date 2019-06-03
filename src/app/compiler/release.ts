@@ -10,12 +10,12 @@ import * as path from 'path';
 import * as luaparse from 'luaparse';
 import * as luamin from 'luamin';
 import * as utils from '../../utils';
+import * as helper from './helper';
 
 import { env } from '../../env';
 import { globals, localize } from '../../globals';
 
 import { Compiler, CompilerType } from './compiler';
-import { readCompilerTemplate } from './private';
 
 export class ReleaseCompiler implements Compiler {
     private file: any;
@@ -23,8 +23,8 @@ export class ReleaseCompiler implements Compiler {
     private touched = new Map<string, string>();
 
     constructor() {
-        this.file = readCompilerTemplate(CompilerType.Release, 'file.lua');
-        this.main = readCompilerTemplate(CompilerType.Release, 'main.lua');
+        this.file = helper.readCompilerTemplate(CompilerType.Release, 'file.lua');
+        this.main = helper.readCompilerTemplate(CompilerType.Release, 'main.lua');
     }
 
     type() {
@@ -58,10 +58,15 @@ export class ReleaseCompiler implements Compiler {
             return;
         }
 
+        let code = await utils.readFile(file);
+        const comment = helper.getCommentEqual(code);
         const required: string[] = [];
-        const code = (await utils.readFile(file))
-            .replace(/--@debug@/g, '--[===[@debug')
-            .replace(/--@end-debug/g, '--@end-debug]===]');
+
+        code = code
+            .replace(/--@debug@/g, `--[${comment}[@debug@`)
+            .replace(/--@end-debug@/g, `--@end-debug@]${comment}]`)
+            .replace(/--\[=*\[@non-debug@/g, '--@non-debug')
+            .replace(/--@end-debug\]=*\]/g, '--@end-debug');
 
         this.touched.set(file, code);
 
@@ -89,6 +94,7 @@ export class ReleaseCompiler implements Compiler {
         await this.processFiles(await Promise.all(required.map(item => this.resolveFile(item))));
     }
 
+    @utils.report(localize('report.compile', 'Compiling script'))
     async execute() {
         if (!(await fs.stat(env.sourceFolder)).isDirectory()) {
             throw Error(localize('error.noSrcFolder', 'Not found: source folder'));

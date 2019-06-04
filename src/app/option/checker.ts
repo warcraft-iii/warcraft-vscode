@@ -88,6 +88,14 @@ export class Checker {
     }
 
     async check() {
+        if (!env.rootPath) {
+            throw Error(localize('error.notProject', 'Not Warcraft III project'));
+        }
+
+        if (!env.mapFolder) {
+            throw Error(localize('error.notProject', 'Not Warcraft III project'));
+        }
+
         const notFounds: ExecutionItem[] = [];
 
         for (const item of EXECUTION_FILES) {

@@ -54,6 +54,9 @@ class Environment {
     }
 
     asRootPath(...args: string[]) {
+        if (!this.rootPath) {
+            throw Error(localize('error.notProject', 'Not Warcraft III project'));
+        }
         return path.resolve(this.rootPath, ...args);
     }
 
@@ -63,7 +66,7 @@ class Environment {
 
     get rootPath() {
         if (!vscode.workspace.workspaceFolders) {
-            throw Error(localize('error.notProject', 'Not Warcraft III project'));
+            return undefined;
         }
         return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }

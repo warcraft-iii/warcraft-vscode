@@ -30,6 +30,15 @@ export class DebugPacker implements Packer {
             ...(await this.generatePackItems(env.importsFolder, file => !utils.isHiddenFile(file))),
             [globals.ENTRY_FILE, env.asBuildPath(globals.ENTRY_FILE)]
         ];
+
+        const libs = await utils.getAllFiles(env.asSourceFolder('lib'), true, false);
+        for (const lib of libs) {
+            const imp = path.join(lib, env.importsDirName);
+            if (await fs.pathExists(imp)) {
+                packList.push(...(await this.generatePackItems(imp, file => !utils.isHiddenFile(file))));
+            }
+        }
+
         await fs.writeFile(env.asBuildPath(globals.PACKLIST_FILE), JSON.stringify(packList));
     }
 

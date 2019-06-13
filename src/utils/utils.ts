@@ -9,18 +9,24 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-async function _getAllFiles(root: string, r: string[]) {
+async function _getAllFiles(root: string, r: string[], isDir: boolean, recursive: boolean) {
     const files = (await fs.readdir(root)).map(file => path.join(root, file));
 
     for (const file of files) {
         const stat = await fs.stat(file);
 
-        if (stat.isFile()) {
+        if (stat.isDirectory()) {
+            if (recursive) {
+                await _getAllFiles(file, r, isDir, recursive);
+            }
+            if (isDir) {
+                r.push(file);
+            }
+        } else if (!isDir) {
             r.push(file);
-        } else if (stat.isDirectory()) {
-            await _getAllFiles(file, r);
         }
     }
+
     return r;
 }
 
@@ -30,8 +36,8 @@ export enum ConfirmResult {
     Alt
 }
 
-export function getAllFiles(root: string) {
-    return _getAllFiles(root, []);
+export function getAllFiles(root: string, isDir: boolean = false, recursive: boolean = true) {
+    return _getAllFiles(root, [], isDir, recursive);
 }
 
 export function sleep(n: number) {

@@ -87,6 +87,10 @@ class Environment {
         return this.asRootPath(FOLDER_IMPORTS);
     }
 
+    get importsDirName(): string {
+        return FOLDER_IMPORTS;
+    }
+
     private initDocumentFolder() {
         const output = cp
             .execFileSync('reg', [

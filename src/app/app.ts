@@ -6,12 +6,14 @@
  */
 
 import * as vscode from 'vscode';
+import debounce from 'lodash-es/debounce';
 
 import { env } from '../env';
 import { globals } from '../globals';
 
 export class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];
+    private reload = debounce(() => env.config.reload(), 100);
 
     dispose() {
         this.subscriptions.forEach(sub => sub.dispose());
@@ -24,15 +26,15 @@ export class App implements vscode.Disposable {
             );
 
             this.subscriptions.push(
-                watcher.onDidChange(() => env.config.reload()),
-                watcher.onDidCreate(() => env.config.reload()),
-                watcher.onDidDelete(() => env.config.reload())
+                watcher.onDidChange(() => this.reload()),
+                watcher.onDidCreate(() => this.reload()),
+                watcher.onDidDelete(() => this.reload())
             );
         }
 
         vscode.workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration('warcraft')) {
-                env.config.reload();
+                this.reload();
             }
         });
     }

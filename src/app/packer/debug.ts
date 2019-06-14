@@ -22,23 +22,18 @@ export class DebugPacker implements Packer {
     }
 
     async generatePackList() {
-        const packList = [
-            ...(await this.generatePackItems(
-                env.mapFolder,
-                file => !utils.isLuaFile(file) && !utils.isHiddenFile(file)
-            )),
-            ...(await this.generatePackItems(env.importsFolder, file => !utils.isHiddenFile(file))),
-            [globals.ENTRY_FILE, env.asBuildPath(globals.ENTRY_FILE)]
-        ];
+        const packList: PackItem[] = [];
+        const imports = (await fs.readdir(env.asSourceFolder('lib'))).map(f =>
+            env.asSourceFolder('lib', f, globals.FOLDER_IMPORTS)
+        );
 
-        const libs = await utils.getAllFiles(env.asSourceFolder('lib'), true, false);
-        for (const lib of libs) {
-            const imp = path.join(lib, env.importsDirName);
-            if (await fs.pathExists(imp)) {
-                packList.push(...(await this.generatePackItems(imp, file => !utils.isHiddenFile(file))));
-            }
+        packList.push([globals.ENTRY_FILE, env.asBuildPath(globals.ENTRY_FILE)]);
+        packList.push(...(await this.generatePackItems(env.mapFolder, file => !utils.isLuaFile(file))));
+        packList.push(...(await this.generatePackItems(env.asRootPath(globals.FOLDER_IMPORTS))));
+
+        for (const folder of imports) {
+            packList.push(...(await this.generatePackItems(folder)));
         }
-
         await fs.writeFile(env.asBuildPath(globals.PACKLIST_FILE), JSON.stringify(packList));
     }
 
@@ -60,7 +55,7 @@ export class DebugPacker implements Packer {
         if (!(await fs.pathExists(root)) || !(await fs.stat(root)).isDirectory()) {
             return [];
         }
-        let files = await utils.getAllFiles(root);
+        let files = (await utils.getAllFiles(root)).filter(file => !utils.isHiddenFile(file));
         if (filter) {
             files = files.filter(filter);
         }

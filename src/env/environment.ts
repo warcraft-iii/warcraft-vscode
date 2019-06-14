@@ -13,7 +13,6 @@ import { Config } from './config';
 import { globals, localize } from '../globals';
 
 const FOLDER_BUILD = '.build';
-const FOLDER_IMPORTS = 'imports';
 const FOLDER_SOURCE = 'src';
 
 class Environment {
@@ -81,14 +80,6 @@ class Environment {
 
     get buildFolder(): string {
         return this.asRootPath(FOLDER_BUILD);
-    }
-
-    get importsFolder(): string {
-        return this.asRootPath(FOLDER_IMPORTS);
-    }
-
-    get importsDirName(): string {
-        return FOLDER_IMPORTS;
     }
 
     private initDocumentFolder() {

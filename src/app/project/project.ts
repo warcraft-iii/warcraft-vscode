@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as unzipper from 'unzipper';
-import * as request from 'request';
+import * as got from 'got';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
@@ -55,8 +55,8 @@ export class Project {
 
     download(output: string) {
         return new Promise<void>((resolve, reject) => {
-            request
-                .get(globals.TEMPLATE_URL)
+            got
+                .stream(globals.TEMPLATE_URL)
                 .pipe(unzipper.Parse())
                 .on('entry', (entry: unzipper.Entry) => {
                     if (entry.type === 'Directory') {

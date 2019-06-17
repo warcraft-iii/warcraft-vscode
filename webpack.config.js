@@ -23,6 +23,8 @@ const config = {
         extensions: [".ts", ".js"]
     },
     module: {
+        unknownContextCritical: false,
+        exprContextCritical: false,
         rules: [
             {
                 test: /\.ts$/,

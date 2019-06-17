@@ -42,7 +42,7 @@ export class ReleaseCompiler implements Compiler {
             }
         }
 
-        throw new Error('not found');
+        throw Error('not found');
     }
 
     async processFiles(files: string[]) {
@@ -77,13 +77,13 @@ export class ReleaseCompiler implements Compiler {
             onCreateNode: node => {
                 if (node.type === 'CallExpression' && node.base.type === 'Identifier' && node.base.name === 'require') {
                     if (node.arguments.length !== 1) {
-                        throw new Error('error');
+                        throw Error('error');
                     }
 
                     const arg = node.arguments[0];
                     if (arg.type !== 'StringLiteral') {
                         console.error(node);
-                        throw new Error(arg.type);
+                        throw Error(arg.type);
                     }
 
                     required.push(arg.value);

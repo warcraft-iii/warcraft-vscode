@@ -22,7 +22,7 @@ export class App implements vscode.Disposable {
     constructor() {
         if (env.rootPath) {
             const watcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(env.rootPath, globals.PROJECT_FILE)
+                new vscode.RelativePattern(env.rootPath, globals.FILE_PROJECT)
             );
 
             this.subscriptions.push(

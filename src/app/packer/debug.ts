@@ -23,25 +23,25 @@ export class DebugPacker implements Packer {
 
     async generatePackList() {
         const packList: PackItem[] = [];
-        const imports = (await fs.readdir(env.asSourceFolder('lib'))).map(f =>
-            env.asSourceFolder('lib', f, globals.FOLDER_IMPORTS)
+        const imports = (await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES))).map(f =>
+            env.asSourcePath(globals.FOLDER_LIBRARIES, f, globals.FOLDER_IMPORTS)
         );
 
-        packList.push([globals.ENTRY_FILE, env.asBuildPath(globals.ENTRY_FILE)]);
+        packList.push([globals.FILE_ENTRY, env.asBuildPath(globals.FILE_ENTRY)]);
         packList.push(...(await this.generatePackItems(env.mapFolder, file => !utils.isLuaFile(file))));
         packList.push(...(await this.generatePackItems(env.asRootPath(globals.FOLDER_IMPORTS))));
 
         for (const folder of imports) {
             packList.push(...(await this.generatePackItems(folder)));
         }
-        await fs.writeFile(env.asBuildPath(globals.PACKLIST_FILE), JSON.stringify(packList));
+        await fs.writeFile(env.asBuildPath(globals.FILE_PACKLIST), JSON.stringify(packList));
     }
 
     async packByPackList() {
         await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
             '-o',
-            env.asBuildPath(globals.DEBUG_MAP_FILE),
-            env.asBuildPath(globals.PACKLIST_FILE)
+            env.asBuildPath(globals.FILE_DEBUG_MAP),
+            env.asBuildPath(globals.FILE_PACKLIST)
         ]);
     }
 

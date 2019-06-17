@@ -12,9 +12,6 @@ import * as cp from 'child_process';
 import { Config } from './config';
 import { globals, localize } from '../globals';
 
-const FOLDER_BUILD = '.build';
-const FOLDER_SOURCE = 'src';
-
 class Environment {
     private extensionFolder?: string;
     private documentFolder?: string;
@@ -59,8 +56,8 @@ class Environment {
         return path.resolve(this.rootPath, ...args);
     }
 
-    asSourceFolder(...args: string[]) {
-        return this.asRootPath(FOLDER_SOURCE, ...args);
+    asSourcePath(...args: string[]) {
+        return this.asRootPath(globals.FOLDER_SOURCE, ...args);
     }
 
     get rootPath() {
@@ -71,7 +68,7 @@ class Environment {
     }
 
     get sourceFolder(): string {
-        return this.asRootPath(FOLDER_SOURCE);
+        return this.asRootPath(globals.FOLDER_SOURCE);
     }
 
     get mapFolder(): string {
@@ -79,7 +76,7 @@ class Environment {
     }
 
     get buildFolder(): string {
-        return this.asRootPath(FOLDER_BUILD);
+        return this.asRootPath(globals.FOLDER_BUILD);
     }
 
     private initDocumentFolder() {

@@ -30,7 +30,7 @@ export class Config {
             return;
         }
 
-        const file = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.PROJECT_FILE);
+        const file = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.FILE_PROJECT);
 
         if (!fs.pathExistsSync(file)) {
             return;
@@ -106,7 +106,7 @@ export class Config {
 
         const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-        fs.writeJSON(path.join(rootPath, globals.PROJECT_FILE), this.projectConfig);
+        fs.writeJSON(path.join(rootPath, globals.FILE_PROJECT), this.projectConfig);
 
         this.projectConfig.mapdir = value;
     }

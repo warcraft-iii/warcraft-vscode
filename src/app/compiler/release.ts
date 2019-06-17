@@ -34,7 +34,7 @@ export class ReleaseCompiler implements Compiler {
     async resolveFile(name: string) {
         const base = name.replace(/\./g, '/');
 
-        const files = [env.asSourceFolder(base + globals.LUA), env.asSourceFolder(base + '/init' + globals.LUA)];
+        const files = [env.asSourcePath(base + globals.LUA), env.asSourcePath(base, 'init' + globals.LUA)];
 
         for (const file of files) {
             if (await fs.pathExists(file)) {
@@ -102,15 +102,15 @@ export class ReleaseCompiler implements Compiler {
 
         this.touched.clear();
 
-        await this.processFiles([env.asSourceFolder('main.lua'), env.asSourceFolder('lib/init.lua')]);
+        await this.processFiles([env.asSourcePath('main.lua'), env.asSourcePath('lib/init.lua')]);
 
-        const war3map = await utils.readFile(env.asMapPath(globals.ENTRY_FILE));
+        const war3map = await utils.readFile(env.asMapPath(globals.FILE_ENTRY));
         const code = [...this.touched.entries()]
             .map(([file, body]) => this.file({ name: this.getRequireName(file), body }))
             .join('\n');
 
         const out = luamin.minify(this.main({ war3map, code }));
-        const outputPath = env.asBuildPath(globals.ENTRY_FILE);
+        const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);
     }

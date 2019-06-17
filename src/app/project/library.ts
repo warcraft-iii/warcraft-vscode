@@ -13,7 +13,7 @@ import * as Octokit from '@octokit/rest';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { localize } from '../../globals';
+import { localize, globals } from '../../globals';
 
 export interface GithubOrgInfo {
     name: string;
@@ -33,8 +33,6 @@ interface RepoInfo {
     name: string;
     url: string;
 }
-
-const LIBRARIES_FOLDER = 'lib';
 
 const ORGS: GithubOrgOrUserInfo[] = [
     {
@@ -84,7 +82,7 @@ export class Library {
 
     private async askRepo(org: GithubOrgOrUserInfo) {
         const asyncRepos = async () => {
-            const exists = new Set(await fs.readdir(env.asSourceFolder(LIBRARIES_FOLDER)));
+            const exists = new Set(await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES)));
             const repos = (await this.getOrgRepos(org)).filter(item => !exists.has(item.name));
 
             if (repos.length === 0) {
@@ -132,7 +130,7 @@ export class Library {
         }
         return await this.repo.submoduleAdd(
             repo.url,
-            path.relative(env.rootPath, env.asSourceFolder(LIBRARIES_FOLDER, repo.name)).replace(/[\\\/]/g, '/')
+            path.relative(env.rootPath, env.asSourcePath(globals.FOLDER_LIBRARIES, repo.name)).replace(/[\\\/]/g, '/')
         );
     }
 

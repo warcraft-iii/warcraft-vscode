@@ -22,7 +22,7 @@ class GameRunner extends BaseRunner {
 
     @utils.report(localize('report.openGame', 'Starting game'))
     async execute() {
-        const mapPath = env.asBuildPath(globals.DEBUG_MAP_FILE);
+        const mapPath = env.asBuildPath(globals.FILE_DEBUG_MAP);
         const isPtr = await fs.pathExists(env.asGamePath('../Warcraft III Public Test Launcher.exe'));
         const docMapFolder = env.asDocumentPath(isPtr ? 'Warcraft III Public Test' : 'Warcraft III', 'Maps');
         const targetPath = path.join(docMapFolder, 'Test', path.basename(mapPath));

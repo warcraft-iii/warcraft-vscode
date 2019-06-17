@@ -8,11 +8,18 @@
 export namespace globals {
     export const LUA = '.lua';
     export const LUA_REG = new RegExp(LUA + '$');
-    export const ENTRY_FILE = 'war3map.lua';
-    export const PACKLIST_FILE = 'packlist.json';
-    export const DEBUG_MAP_FILE = '_warcraft_vscode_test.w3x';
-    export const PROJECT_FILE = 'warcraft.json';
+
     export const TEMPLATE_URL = 'https://github.com/warcraft-iii/warcraft-template/archive/master.zip';
+
     export const EXTENSION_ID = 'Dencer.warcraft-vscode';
+
+    export const FILE_DEBUG_MAP = '_warcraft_vscode_test.w3x';
+    export const FILE_ENTRY = 'war3map.lua';
+    export const FILE_PACKLIST = 'packlist.json';
+    export const FILE_PROJECT = 'warcraft.json';
+
+    export const FOLDER_BUILD = '.build';
     export const FOLDER_IMPORTS = 'imports';
+    export const FOLDER_LIBRARIES = 'lib';
+    export const FOLDER_SOURCE = 'src';
 }

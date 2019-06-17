@@ -8,8 +8,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import * as unzipper from 'unzipper';
 import * as got from 'got';
+import * as yauzl from 'yauzl-promise';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
@@ -53,24 +53,26 @@ export class Project {
         }
     }
 
-    download(output: string) {
-        return new Promise<void>((resolve, reject) => {
-            got
-                .stream(globals.TEMPLATE_URL)
-                .pipe(unzipper.Parse())
-                .on('entry', (entry: unzipper.Entry) => {
-                    if (entry.type === 'Directory') {
-                        entry.autodrain().promise();
-                    } else {
-                        const outputPath = path.join(output, path.relative('warcraft-template-master', entry.path));
+    async download(output: string) {
+        const resp = await got(globals.TEMPLATE_URL, { encoding: null });
+        const zipFile = await yauzl.fromBuffer(resp.body);
 
-                        fs.mkdirp(path.dirname(outputPath)).then(() => {
-                            entry.pipe(fs.createWriteStream(outputPath));
-                        });
-                    }
-                })
-                .on('close', () => resolve())
-                .on('error', err => reject(err));
+        await zipFile.walkEntries(entry => {
+            if (entry.fileName.endsWith('/')) {
+                return;
+            }
+            return new Promise((resolve, reject) => {
+                const outputPath = path.join(output, path.relative('warcraft-template-master', entry.fileName));
+
+                fs.mkdirp(path.dirname(outputPath))
+                    .then(() => entry.openReadStream())
+                    .then(stream =>
+                        stream
+                            .pipe(fs.createWriteStream(outputPath))
+                            .on('close', () => resolve())
+                            .on('error', err => reject(err))
+                    );
+            });
         });
     }
 }

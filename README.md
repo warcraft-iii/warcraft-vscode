@@ -16,12 +16,6 @@ This extension is a Warcraft III map development tool set of Lua.
 - Open world editor
 - Add libraries
 
-## Usage
-
-1. Press `F1` in vscode
-2. Input `warcraft create` and Press `Enter` to create a Warcraft III map project
-3. Open the project folder and execute the Commands of this extension
-
 ## Commands
 
 - **Warcraft: Create Project**
@@ -41,6 +35,28 @@ This extension is a Warcraft III map development tool set of Lua.
     - Run map in **Warcraft III**
 - **Warcraft: Open World Editor**
     - Open the map folder with **World Editor**
+
+## Quick Start
+
+1. Press `F1` in vscode
+2. Input `warcraft create` and Press `Enter` to create a Warcraft III map project
+3. Open the project folder and execute the Commands of this extension
+
+## Usage
+
+#### Compile Script
+
+##### Macros
+1. In Release
+    - `--@debug@` turn into `--[===[@debug@`
+    - `--@end-debug@` turn into `--@end-debug@]===]`
+    - `--[===[@non-debug@` turn into `--@non-debug`
+    - `--@end-debug]===]` turn into `--@end-debug`
+2. In Debug & Release
+    - `--@remove@` turn into `--[===[@remove@`
+    - `--@end-remove@` turn into `--@end-remove@]===]`
+
+##### Pack
 
 ## Known Issues
 

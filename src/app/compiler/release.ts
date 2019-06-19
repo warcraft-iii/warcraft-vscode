@@ -31,10 +31,15 @@ export class ReleaseCompiler implements Compiler {
         return CompilerType.Release;
     }
 
-    async resolveFile(name: string) {
-        const base = name.replace(/\./g, '/');
+    private async resolveFile(item: { name: string; isRequire: boolean }) {
+        let files: string[];
 
-        const files = [env.asSourcePath(base + globals.LUA), env.asSourcePath(base, 'init' + globals.LUA)];
+        if (item.isRequire) {
+            const base = item.name.replace(/\./g, '/');
+            files = [env.asSourcePath(base + globals.LUA), env.asSourcePath(base, 'init' + globals.LUA)];
+        } else {
+            files = [env.asSourcePath(item.name)];
+        }
 
         for (const file of files) {
             if (await fs.pathExists(file)) {
@@ -45,48 +50,55 @@ export class ReleaseCompiler implements Compiler {
         throw Error('not found');
     }
 
-    async processFiles(files: string[]) {
+    private async processFiles(files: string[]) {
         for (const file of files) {
             await this.processFile(file);
         }
     }
 
-    async processFile(file: string) {
+    private async processFile(file: string) {
         file = path.resolve(file);
 
         if (this.touched.has(file)) {
             return;
         }
 
-        let code = await utils.readFile(file);
-        const comment = helper.getCommentEqual(code);
-        const required: string[] = [];
+        let body = await utils.readFile(file);
+        const comment = helper.getCommentEqual(body);
+        const required: { name: string; isRequire: boolean }[] = [];
 
-        code = code
+        body = body
             .replace(/--@debug@/g, `--[${comment}[@debug@`)
             .replace(/--@end-debug@/g, `--@end-debug@]${comment}]`)
+            .replace(/--@remove@/g, `--[${comment}[@remove@`)
+            .replace(/--@end-remove@/g, `--@end-remove@]${comment}]`)
             .replace(/--\[=*\[@non-debug@/g, '--@non-debug')
             .replace(/--@end-debug\]=*\]/g, '--@end-debug');
 
-        this.touched.set(file, code);
+        this.touched.set(file, body);
 
-        luaparse.parse(code, {
+        luaparse.parse(body, {
             locations: true,
             ranges: true,
             scope: true,
             onCreateNode: node => {
-                if (node.type === 'CallExpression' && node.base.type === 'Identifier' && node.base.name === 'require') {
-                    if (node.arguments.length !== 1) {
-                        throw Error('error');
-                    }
+                if (node.type === 'CallExpression' && node.base.type === 'Identifier') {
+                    if (node.base.name === 'require' || node.base.name === 'dofile' || node.base.name === 'loadfile') {
+                        if (node.arguments.length !== 1) {
+                            throw Error('error');
+                        }
 
-                    const arg = node.arguments[0];
-                    if (arg.type !== 'StringLiteral') {
-                        console.error(node);
-                        throw Error(arg.type);
-                    }
+                        const arg = node.arguments[0];
+                        if (arg.type !== 'StringLiteral') {
+                            console.error(node);
+                            throw Error(arg.type);
+                        }
 
-                    required.push(arg.value);
+                        required.push({
+                            name: arg.value,
+                            isRequire: node.base.name === 'require'
+                        });
+                    }
                 }
             }
         });
@@ -106,20 +118,13 @@ export class ReleaseCompiler implements Compiler {
 
         const war3map = await utils.readFile(env.asMapPath(globals.FILE_ENTRY));
         const code = [...this.touched.entries()]
-            .map(([file, body]) => this.file({ name: this.getRequireName(file), body }))
+            .map(([file, body]) => this.file({ name: utils.posixCase(path.relative(env.sourceFolder, file)), body }))
             .join('\n');
 
         const out = luamin.minify(this.main({ war3map, code }));
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);
-    }
-
-    getRequireName(file: string) {
-        return path
-            .relative(env.sourceFolder, file)
-            .replace(globals.LUA_REG, '')
-            .replace(/[\\\/]+/g, '.');
     }
 }
 

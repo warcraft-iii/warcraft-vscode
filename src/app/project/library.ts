@@ -130,7 +130,7 @@ export class Library {
         }
         return await this.repo.submoduleAdd(
             repo.url,
-            path.relative(env.rootPath, env.asSourcePath(globals.FOLDER_LIBRARIES, repo.name)).replace(/[\\\/]/g, '/')
+            utils.posixCase(path.relative(env.rootPath, env.asSourcePath(globals.FOLDER_LIBRARIES, repo.name)))
         );
     }
 

@@ -64,6 +64,10 @@ export function readFile(file: string) {
     return fs.readFile(file, { encoding: 'utf-8' });
 }
 
+export function posixCase(p: string) {
+    return p.split(path.normalize(path.sep)).join(path.posix.sep);
+}
+
 export async function confirm(title: string, ok: string = 'Ok', alt?: string) {
     const items = [
         {

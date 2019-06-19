@@ -12,7 +12,7 @@ import { env } from '../env';
 import { globals, ConfigurationType } from '../globals';
 import { registerCommand, registerCheckedCommand } from './command';
 import { debugCompiler, releaseCompiler } from './compiler';
-import { debugPacker } from './packer';
+import { debugPacker, releasePacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
 import { project, library } from './project';
 
@@ -37,7 +37,7 @@ export class App implements vscode.Disposable {
     }
 
     private get packer() {
-        return debugPacker;
+        return env.config.configuration === ConfigurationType.Release ? releasePacker : debugPacker;
     }
 
     private initListeners() {

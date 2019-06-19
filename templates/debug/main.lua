@@ -65,7 +65,6 @@ local orig_main = main
 function main()
     local ok, err = pcall(function()
         orig_main()
-        require('lib')
         dofile('main.lua')
     end)
     if not ok then

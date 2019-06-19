@@ -10,7 +10,7 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## Features
 
-- Compile script for Debug
+- Compile script
 - Pack map
 - Run map
 - Open world editor
@@ -24,17 +24,19 @@ This extension is a Warcraft III map development tool set of Lua.
     - Remove the `.build` folder
 - **Warcraft: Add Library**
     - Add a library for project
-- **Warcraft: Compile Debug**
-    - Compile script for Debug
+- **Warcraft: Compile Script**
+    - Compile script
 - **Warcraft: Pack Map**
-    - Compile script for Debug
+    - Compile script
     - Pack map to w3x
 - **Warcraft: Run Map**
-    - Compile script for Debug
+    - Compile script
     - Pack map to w3x
     - Run map in **Warcraft III**
 - **Warcraft: Open World Editor**
     - Open the map folder with **World Editor**
+- **Warcraft: Toggle Configuration**
+    - Toggle Configuration between with debug and release
 
 ## Quick Start
 
@@ -44,9 +46,10 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## Usage
 
-#### Compile Script
+#### Macros
 
-##### Macros
+> There are some macros in lua file.
+
 1. In Release
     - `--@debug@` turn into `--[===[@debug@`
     - `--@end-debug@` turn into `--@end-debug@]===]`
@@ -56,7 +59,17 @@ This extension is a Warcraft III map development tool set of Lua.
     - `--@remove@` turn into `--[===[@remove@`
     - `--@end-remove@` turn into `--@end-remove@]===]`
 
-##### Pack
+#### Lua API
+
+> The extention implements some APIs in Lua that removed from Warcraft III
+
+- [require](https://www.lua.org/manual/5.3/manual.html#pdf-require)
+- [dofile](https://www.lua.org/manual/5.3/manual.html#pdf-dofile)
+- [loadfile](https://www.lua.org/manual/5.3/manual.html#pdf-loadfile)
+
+#### Pack
+
+> The extension packages all files in folder named **imports** into the map, In Configuration Release, packages the folder named **imports.release**, In Configuration Debug, it's **imports.debug**
 
 ## Known Issues
 

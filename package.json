@@ -41,12 +41,12 @@
       },
       {
         "command": "extension.warcraft.pack.debug",
-        "title": "Pack Map",
+        "title": "Pack Map Debug",
         "category": "Warcraft"
       },
       {
         "command": "extension.warcraft.run.debug",
-        "title": "Run Map",
+        "title": "Test Map",
         "category": "Warcraft"
       },
       {

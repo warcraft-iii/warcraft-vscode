@@ -17,32 +17,49 @@ import { Packer } from './packer';
 type PackItem = [string, string];
 
 export class DebugPacker implements Packer {
+    private _type: ConfigurationType;
+
+    constructor(type: ConfigurationType) {
+        this._type = type;
+    }
+
     type() {
-        return ConfigurationType.Debug;
+        return this._type;
     }
 
     async generatePackList() {
         const packList: PackItem[] = [];
-        const imports = (await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES))).map(file =>
-            env.asSourcePath(globals.FOLDER_LIBRARIES, file, globals.FOLDER_IMPORTS)
-        );
+        const libs = await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES));
 
         packList.push([globals.FILE_ENTRY, env.asBuildPath(globals.FILE_ENTRY)]);
         packList.push(...(await this.generatePackItems(env.mapFolder, file => !utils.isLuaFile(file))));
         packList.push(...(await this.generatePackItems(env.asRootPath(globals.FOLDER_IMPORTS))));
 
-        for (const folder of imports) {
-            packList.push(...(await this.generatePackItems(folder)));
+        for (const lib of libs) {
+            packList.push(
+                ...(await this.generatePackItems(
+                    env.asSourcePath(globals.FOLDER_LIBRARIES, lib, globals.FOLDER_IMPORTS)
+                )),
+                ...(await this.generatePackItems(
+                    env.asSourcePath(
+                        globals.FOLDER_LIBRARIES,
+                        lib,
+                        `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`
+                    )
+                ))
+            );
         }
         await fs.writeFile(env.asBuildPath(globals.FILE_PACKLIST), JSON.stringify(packList));
     }
 
     async packByPackList() {
-        await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
-            '-o',
-            env.outFilePath,
-            env.asBuildPath(globals.FILE_PACKLIST)
-        ]);
+        const args: string[] = ['-o', env.outFilePath, env.asBuildPath(globals.FILE_PACKLIST)];
+
+        if (this.type() === ConfigurationType.Release) {
+            args.push('-f');
+        }
+
+        await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), args);
     }
 
     @utils.report(localize('report.pack', 'Packing map'))
@@ -63,8 +80,9 @@ export class DebugPacker implements Packer {
     }
 
     private generatePackItem(file: string, root: string): PackItem {
-        return [utils.posixCase(path.relative(root, file)), file];
+        return [path.relative(root, file), file];
     }
 }
 
-export const debugPacker = new DebugPacker();
+export const debugPacker = new DebugPacker(ConfigurationType.Debug);
+export const releasePacker = new DebugPacker(ConfigurationType.Release);

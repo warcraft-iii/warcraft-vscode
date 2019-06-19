@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 
-import { globals, localize } from '../globals';
+import { globals, localize, ConfigurationType } from '../globals';
 
 interface WarcraftJson {
     mapdir?: string;
@@ -90,6 +90,14 @@ export class Config {
 
     set autoCloseClient(value: boolean) {
         this.config.update('autoCloseClient', value, vscode.ConfigurationTarget.Global);
+    }
+
+    get configuration() {
+        return ConfigurationType[this.config.get<string>('configuration') || ''] || ConfigurationType.Debug;
+    }
+
+    set configuration(value: ConfigurationType) {
+        this.config.update('configuration', ConfigurationType[value], vscode.ConfigurationTarget.Workspace);
     }
 
     get mapDir() {

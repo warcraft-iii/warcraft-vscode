@@ -5,12 +5,9 @@
  * @Date   : 5/23/2019, 12:27:25 PM
  */
 
-export enum PackerType {
-    Debug,
-    Release
-}
+import { ConfigurationType } from '../../globals';
 
 export interface Packer {
     execute(): Promise<void>;
-    type(): PackerType;
+    type(): ConfigurationType;
 }

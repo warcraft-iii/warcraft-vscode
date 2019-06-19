@@ -8,7 +8,7 @@
 import * as vscode from 'vscode';
 import * as utils from '../utils';
 
-import { debugCompiler, releaseCompiler } from './compiler';
+import { debugCompiler } from './compiler';
 import { debugPacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
 
@@ -36,7 +36,6 @@ function registerCheckedCommand(name: string, task: () => Promise<void>) {
 
 export const commands = [
     registerCommand('compile.debug', () => debugCompiler.execute()),
-    registerCommand('compile.release', () => releaseCompiler.execute()),
     registerCommand('pack.debug', async () => {
         await debugCompiler.execute();
         await debugPacker.execute();

@@ -45,9 +45,6 @@ do
             error(string.format('cannot open %s: No such file or directory', filename), level + 1)
         end
 
-        if not env then
-            return f
-        end
         return function(...)
             return f(env or _G, ...)
         end

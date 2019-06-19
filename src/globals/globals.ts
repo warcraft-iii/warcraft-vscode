@@ -7,7 +7,6 @@
 
 export namespace globals {
     export const LUA = '.lua';
-    export const LUA_REG = new RegExp(LUA + '$');
 
     export const TEMPLATE_URL = 'https://github.com/warcraft-iii/warcraft-template/archive/master.zip';
 
@@ -22,4 +21,9 @@ export namespace globals {
     export const FOLDER_IMPORTS = 'imports';
     export const FOLDER_LIBRARIES = 'lib';
     export const FOLDER_SOURCE = 'src';
+}
+
+export enum ConfigurationType {
+    Debug,
+    Release
 }

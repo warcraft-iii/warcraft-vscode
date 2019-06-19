@@ -5,12 +5,9 @@
  * @Date   : 5/23/2019, 10:45:09 AM
  */
 
-export enum CompilerType {
-    Debug,
-    Release
-}
+import { ConfigurationType } from '../../globals';
 
 export interface Compiler {
     execute(): Promise<void>;
-    type(): CompilerType;
+    type(): ConfigurationType;
 }

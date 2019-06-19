@@ -18,13 +18,13 @@
   ],
   "activationEvents": [
     "onCommand:extension.warcraft.compile.debug",
-    "onCommand:extension.warcraft.compile.release",
     "onCommand:extension.warcraft.pack.debug",
     "onCommand:extension.warcraft.run.debug",
     "onCommand:extension.warcraft.run.editor",
     "onCommand:extension.warcraft.project.create",
     "onCommand:extension.warcraft.project.clean",
-    "onCommand:extension.warcraft.project.addlibrary"
+    "onCommand:extension.warcraft.project.addlibrary",
+    "workspaceContains:warcraft.json"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -35,11 +35,6 @@
         "category": "Warcraft"
       },
       {
-        "command": "extension.warcraft.compile.release",
-        "title": "Compile Release",
-        "category": "Warcraft"
-      },
-      {
         "command": "extension.warcraft.pack.debug",
         "title": "Pack Map Debug",
         "category": "Warcraft"
@@ -47,6 +42,11 @@
       {
         "command": "extension.warcraft.run.debug",
         "title": "Test Map",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.run.map",
+        "title": "Select a map file to run",
         "category": "Warcraft"
       },
       {
@@ -92,6 +92,11 @@
         "warcraft.autoCloseClient": {
           "type": "boolean",
           "description": "Automatically close the client?"
+        },
+        "warcraft.configuration": {
+          "type": "string",
+          "description": "Which configuration, debug or release?",
+          "default": "debug"
         }
       }
     }

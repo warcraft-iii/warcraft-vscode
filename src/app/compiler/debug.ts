@@ -11,21 +11,21 @@ import * as utils from '../../utils';
 import * as helper from './helper';
 
 import { env } from '../../env';
-import { globals, localize } from '../../globals';
+import { globals, localize, ConfigurationType } from '../../globals';
 
-import { Compiler, CompilerType } from './compiler';
+import { Compiler } from './compiler';
 
 export class DebugCompiler implements Compiler {
     private main: any;
     private file: any;
 
     constructor() {
-        this.main = helper.readCompilerTemplate(CompilerType.Debug, 'main.lua');
-        this.file = helper.readCompilerTemplate(CompilerType.Debug, 'file.lua');
+        this.main = helper.readCompilerTemplate(ConfigurationType.Debug, 'main.lua');
+        this.file = helper.readCompilerTemplate(ConfigurationType.Debug, 'file.lua');
     }
 
     type() {
-        return CompilerType.Debug;
+        return ConfigurationType.Debug;
     }
 
     @utils.report(localize('report.compile', 'Compiling script'))

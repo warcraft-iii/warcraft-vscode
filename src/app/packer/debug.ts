@@ -10,15 +10,15 @@ import * as fs from 'fs-extra';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { globals, localize } from '../../globals';
+import { globals, localize, ConfigurationType } from '../../globals';
 
-import { Packer, PackerType } from './packer';
+import { Packer } from './packer';
 
 type PackItem = [string, string];
 
 export class DebugPacker implements Packer {
     type() {
-        return PackerType.Debug;
+        return ConfigurationType.Debug;
     }
 
     async generatePackList() {

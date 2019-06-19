@@ -13,9 +13,9 @@ import * as utils from '../../utils';
 import * as helper from './helper';
 
 import { env } from '../../env';
-import { globals, localize } from '../../globals';
+import { globals, localize, ConfigurationType } from '../../globals';
 
-import { Compiler, CompilerType } from './compiler';
+import { Compiler } from './compiler';
 
 export class ReleaseCompiler implements Compiler {
     private file: any;
@@ -23,12 +23,12 @@ export class ReleaseCompiler implements Compiler {
     private touched = new Map<string, string>();
 
     constructor() {
-        this.file = helper.readCompilerTemplate(CompilerType.Release, 'file.lua');
-        this.main = helper.readCompilerTemplate(CompilerType.Release, 'main.lua');
+        this.file = helper.readCompilerTemplate(ConfigurationType.Release, 'file.lua');
+        this.main = helper.readCompilerTemplate(ConfigurationType.Release, 'main.lua');
     }
 
     type() {
-        return CompilerType.Release;
+        return ConfigurationType.Release;
     }
 
     private async resolveFile(item: { name: string; isRequire: boolean }) {

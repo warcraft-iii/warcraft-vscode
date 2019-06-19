@@ -11,15 +11,14 @@ import template from 'lodash-es/template';
 import templateSettings from 'lodash-es/templateSettings';
 
 import { env } from '../../env';
-
-import { CompilerType } from './compiler';
+import { ConfigurationType } from '../../globals';
 
 templateSettings.interpolate = /\-\-\[\[%\=([\s\S]+?)%\]\]/g;
 templateSettings.evaluate = /\-\-\[\[%\>([\s\S]+?)%\]\]/g;
 
-export function readCompilerTemplate(compilerType: CompilerType, file: string) {
+export function readCompilerTemplate(configurationType: ConfigurationType, file: string) {
     return template(
-        fs.readFileSync(env.asExetensionPath('templates', CompilerType[compilerType].toLowerCase(), file), {
+        fs.readFileSync(env.asExetensionPath('templates', ConfigurationType[configurationType].toLowerCase(), file), {
             encoding: 'utf-8'
         })
     );

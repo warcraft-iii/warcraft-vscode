@@ -24,6 +24,7 @@
     "onCommand:extension.warcraft.project.create",
     "onCommand:extension.warcraft.project.clean",
     "onCommand:extension.warcraft.project.addlibrary",
+    "onCommand:extension.warcraft.project.toggleConfiguration",
     "workspaceContains:warcraft.json"
   ],
   "main": "./out/extension.js",
@@ -31,22 +32,17 @@
     "commands": [
       {
         "command": "extension.warcraft.compile.debug",
-        "title": "Compile Debug",
+        "title": "Compile Script",
         "category": "Warcraft"
       },
       {
         "command": "extension.warcraft.pack.debug",
-        "title": "Pack Map Debug",
+        "title": "Pack Map",
         "category": "Warcraft"
       },
       {
         "command": "extension.warcraft.run.debug",
-        "title": "Test Map",
-        "category": "Warcraft"
-      },
-      {
-        "command": "extension.warcraft.run.map",
-        "title": "Select a map file to run",
+        "title": "Run Map",
         "category": "Warcraft"
       },
       {
@@ -67,6 +63,11 @@
       {
         "command": "extension.warcraft.project.addlibrary",
         "title": "Add Library",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.project.toggleConfiguration",
+        "title": "Toggle Configuration",
         "category": "Warcraft"
       }
     ],

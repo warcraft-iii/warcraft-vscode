@@ -12,7 +12,8 @@ export namespace globals {
 
     export const EXTENSION_ID = 'Dencer.warcraft-vscode';
 
-    export const FILE_DEBUG_MAP = '_warcraft_vscode_test.w3x';
+    export const FILE_DEBUG_MAP = '_warcraft_vscode_test';
+    export const FILE_RELEASE_MAP = 'release';
     export const FILE_ENTRY = 'war3map.lua';
     export const FILE_PACKLIST = 'packlist.json';
     export const FILE_PROJECT = 'warcraft.json';

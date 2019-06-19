@@ -13,7 +13,7 @@ import * as yauzl from 'yauzl-promise';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { globals, localize } from '../../globals';
+import { globals, localize, ConfigurationType } from '../../globals';
 
 export class Project {
     constructor() {}
@@ -74,6 +74,25 @@ export class Project {
                     );
             });
         });
+    }
+
+    async toggleConfiguration() {
+        const result = await vscode.window.showQuickPick([
+            {
+                label: 'Debug',
+                value: ConfigurationType.Debug
+            },
+            {
+                label: 'Release',
+                value: ConfigurationType.Release
+            }
+        ]);
+
+        if (!result) {
+            return;
+        }
+
+        env.config.configuration = result.value;
     }
 }
 

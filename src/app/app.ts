@@ -10,12 +10,16 @@ import debounce from 'lodash-es/debounce';
 
 import { env } from '../env';
 import { globals, ConfigurationType } from '../globals';
+import { registerCommand, registerCheckedCommand } from './command';
+import { debugCompiler, releaseCompiler } from './compiler';
+import { debugPacker } from './packer';
+import { gameRunner, editorRunner } from './runner';
+import { project, library } from './project';
 
 export class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];
     private reloader = debounce(() => env.config.reload(), 100);
     private configurationButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
-    private anonymousCommandIndex = 0;
 
     dispose() {
         this.configurationButton.dispose();
@@ -23,6 +27,20 @@ export class App implements vscode.Disposable {
     }
 
     constructor() {
+        this.initListeners();
+        this.initCommands();
+        this.initStatusBar();
+    }
+
+    private get compiler() {
+        return env.config.configuration === ConfigurationType.Release ? releaseCompiler : debugCompiler;
+    }
+
+    private get packer() {
+        return debugPacker;
+    }
+
+    private initListeners() {
         if (env.rootPath) {
             const watcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(env.rootPath, globals.FILE_PROJECT)
@@ -40,27 +58,40 @@ export class App implements vscode.Disposable {
                 this.reload();
             }
         });
+    }
 
-        this.configurationButton.command = this.createAnonymousCommand(async () => {
-            const result = await vscode.window.showQuickPick([
-                {
-                    label: 'Debug',
-                    value: ConfigurationType.Debug
-                },
-                {
-                    label: 'Release',
-                    value: ConfigurationType.Release
-                }
-            ]);
-
-            if (!result) {
-                return;
-            }
-
-            env.config.configuration = result.value;
-        });
+    private initStatusBar() {
+        this.configurationButton.command = 'extension.warcraft.project.toggleConfiguration';
         this.configurationButton.show();
         this.updateConfigurationButton();
+    }
+
+    private initCommands() {
+        this.subscriptions.push(
+            registerCommand('compile.debug', () => this.compiler.execute()),
+            registerCommand('pack.debug', async () => {
+                await this.compiler.execute();
+                await this.packer.execute();
+            }),
+            registerCheckedCommand('run.debug', async () => {
+                if (!(await gameRunner.check())) {
+                    return;
+                }
+                await this.compiler.execute();
+                await this.packer.execute();
+                await gameRunner.execute();
+            }),
+            registerCheckedCommand('run.editor', async () => {
+                if (!(await editorRunner.check())) {
+                    return;
+                }
+                await editorRunner.execute();
+            }),
+            registerCommand('project.create', () => project.create()),
+            registerCommand('project.clean', () => project.clean()),
+            registerCommand('project.addlibrary', () => library.add()),
+            registerCommand('project.toggleConfiguration', () => project.toggleConfiguration())
+        );
     }
 
     private reload() {
@@ -70,12 +101,6 @@ export class App implements vscode.Disposable {
 
     private updateConfigurationButton() {
         this.configurationButton.text = '$(gear) ' + ConfigurationType[env.config.configuration];
-    }
-
-    private createAnonymousCommand(callback: (...args: any[]) => any) {
-        const command = 'extension.warcraft.anonymous.' + this.anonymousCommandIndex++;
-        this.subscriptions.push(vscode.commands.registerCommand(command, callback));
-        return command;
     }
 }
 

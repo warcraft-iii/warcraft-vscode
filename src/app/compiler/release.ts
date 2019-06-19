@@ -114,7 +114,7 @@ export class ReleaseCompiler implements Compiler {
 
         this.touched.clear();
 
-        await this.processFiles([env.asSourcePath('main.lua'), env.asSourcePath('lib/init.lua')]);
+        await this.processFiles([env.asSourcePath('main.lua')]);
 
         const war3map = await utils.readFile(env.asMapPath(globals.FILE_ENTRY));
         const code = [...this.touched.entries()]

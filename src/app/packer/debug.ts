@@ -23,8 +23,8 @@ export class DebugPacker implements Packer {
 
     async generatePackList() {
         const packList: PackItem[] = [];
-        const imports = (await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES))).map(f =>
-            env.asSourcePath(globals.FOLDER_LIBRARIES, f, globals.FOLDER_IMPORTS)
+        const imports = (await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES))).map(file =>
+            env.asSourcePath(globals.FOLDER_LIBRARIES, file, globals.FOLDER_IMPORTS)
         );
 
         packList.push([globals.FILE_ENTRY, env.asBuildPath(globals.FILE_ENTRY)]);
@@ -40,7 +40,7 @@ export class DebugPacker implements Packer {
     async packByPackList() {
         await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
             '-o',
-            env.asBuildPath(globals.FILE_DEBUG_MAP),
+            env.outFilePath,
             env.asBuildPath(globals.FILE_PACKLIST)
         ]);
     }
@@ -63,7 +63,7 @@ export class DebugPacker implements Packer {
     }
 
     private generatePackItem(file: string, root: string): PackItem {
-        return [path.relative(root, file), file];
+        return [utils.posixCase(path.relative(root, file)), file];
     }
 }
 

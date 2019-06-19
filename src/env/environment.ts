@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 
 import { Config } from './config';
-import { globals, localize } from '../globals';
+import { globals, localize, ConfigurationType } from '../globals';
 
 class Environment {
     private extensionFolder?: string;
@@ -62,21 +62,33 @@ class Environment {
 
     get rootPath() {
         if (!vscode.workspace.workspaceFolders) {
-            return undefined;
+            return;
         }
         return vscode.workspace.workspaceFolders[0].uri.fsPath;
     }
 
-    get sourceFolder(): string {
+    get sourceFolder() {
         return this.asRootPath(globals.FOLDER_SOURCE);
     }
 
-    get mapFolder(): string {
+    get mapFolder() {
         return this.asRootPath(this.config.mapDir);
     }
 
-    get buildFolder(): string {
+    get buildFolder() {
         return this.asRootPath(globals.FOLDER_BUILD);
+    }
+
+    get outFilePath() {
+        const fileName =
+            (this.config.configuration === ConfigurationType.Release
+                ? globals.FILE_RELEASE_MAP
+                : globals.FILE_DEBUG_MAP) + this.mapExtName;
+        return this.asBuildPath(fileName);
+    }
+
+    get mapExtName() {
+        return path.extname(this.config.mapDir);
     }
 
     private initDocumentFolder() {
@@ -93,8 +105,9 @@ class Environment {
         if (!m) {
             return;
         } else {
-            type SysEnv = Map<string, string>;
-            const sys = new Map(Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])) as SysEnv;
+            const sys: Map<string, string> = new Map(
+                Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])
+            ) as Map<string, string>;
 
             this.documentFolder = m[1].replace(/%([^%]+)%/g, (_, x) => {
                 x = x.toLowerCase();

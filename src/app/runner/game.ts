@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { globals, localize } from '../../globals';
+import { localize } from '../../globals';
 
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
@@ -22,7 +22,7 @@ class GameRunner extends BaseRunner {
 
     @utils.report(localize('report.openGame', 'Starting game'))
     async execute() {
-        const mapPath = env.asBuildPath(globals.FILE_DEBUG_MAP);
+        const mapPath = env.outFilePath;
         const isPtr = await fs.pathExists(env.asGamePath('../Warcraft III Public Test Launcher.exe'));
         const docMapFolder = env.asDocumentPath(isPtr ? 'Warcraft III Public Test' : 'Warcraft III', 'Maps');
         const targetPath = path.join(docMapFolder, 'Test', path.basename(mapPath));

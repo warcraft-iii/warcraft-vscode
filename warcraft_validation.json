@@ -1,0 +1,17 @@
+{
+  "title": "Warcraft.json",
+  "type": "object",
+  "properties": {
+    "mapdir": {
+      "description": "The map path",
+      "type": "string"
+    },
+    "files": {
+      "description": "Lua file list",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

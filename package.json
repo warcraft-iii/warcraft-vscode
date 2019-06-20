@@ -29,6 +29,12 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "jsonValidation": [
+      {
+        "fileMatch": "warcraft.json",
+        "url": "./warcraft_validation.json"
+      }
+    ],
     "commands": [
       {
         "command": "extension.warcraft.compile.debug",
@@ -84,11 +90,17 @@
         },
         "warcraft.gameArgs": {
           "type": "array",
-          "description": "Arguments to added to run the game."
+          "description": "Arguments to added to run the game.",
+          "items": {
+            "type": "string"
+          }
         },
         "warcraft.weArgs": {
           "type": "array",
-          "description": "Arguments to added to run the world editor"
+          "description": "Arguments to added to run the world editor",
+          "items": {
+            "type": "string"
+          }
         },
         "warcraft.autoCloseClient": {
           "type": "boolean",
@@ -97,7 +109,10 @@
         "warcraft.configuration": {
           "type": "string",
           "description": "Which configuration, debug or release?",
-          "default": "debug"
+          "enum": [
+            "Debug",
+            "Release"
+          ]
         }
       }
     }

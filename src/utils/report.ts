@@ -75,6 +75,7 @@ export function report(message: string) {
             // tslint:disable-next-line: no-invalid-this
             return await orig.apply(this, args);
         };
+        return descriptor;
     };
 }
 

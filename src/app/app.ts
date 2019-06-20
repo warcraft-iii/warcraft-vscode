@@ -6,7 +6,7 @@
  */
 
 import * as vscode from 'vscode';
-import debounce from 'lodash-es/debounce';
+import * as utils from '../utils';
 
 import { env } from '../env';
 import { globals, ConfigurationType } from '../globals';
@@ -18,7 +18,6 @@ import { project, library } from './project';
 
 class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];
-    private reloader = debounce(() => env.config.reload(), 100);
     private configurationButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
 
     dispose() {
@@ -94,8 +93,9 @@ class App implements vscode.Disposable {
         );
     }
 
+    @utils.debounce(100)
     private reload() {
-        this.reloader();
+        env.config.reload();
         this.updateConfigurationButton();
     }
 

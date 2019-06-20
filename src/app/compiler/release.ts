@@ -11,20 +11,22 @@ import * as luaparse from 'luaparse';
 import * as luamin from 'luamin';
 import * as utils from '../../utils';
 
+import template from 'lodash-es/template';
+
 import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
+import { templates } from '../../templates';
 
 class ReleaseCompiler extends BaseCompiler {
-    private file: any;
-    private main: any;
+    private main = template(templates.release.main);
+    private file = template(templates.release.file);
+
     private touched = new Map<string, string>();
 
     constructor() {
         super();
-        this.file = this.readCompilerTemplate('file.lua');
-        this.main = this.readCompilerTemplate('main.lua');
     }
 
     type() {

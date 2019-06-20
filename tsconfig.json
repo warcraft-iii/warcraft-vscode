@@ -4,7 +4,7 @@
     "moduleResolution": "node",
     "target": "es6",
     "outDir": "dist",
-    "typeRoots": ["./node_modules/@types", "./typings/modules"],
+    "typeRoots": ["./node_modules/@types", "./typings/modules", "./typings"],
     "sourceMap": true,
     "declaration": true,
     "allowJs": false,

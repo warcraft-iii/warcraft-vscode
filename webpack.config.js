@@ -34,6 +34,14 @@ const config = {
                         loader: "ts-loader"
                     }
                 ]
+            },
+            {
+                test: /\.lua$/,
+                use: [
+                    {
+                        loader: "raw-loader"
+                    }
+                ]
             }
         ]
     }

@@ -26,7 +26,6 @@
     "no-internal-module": true,
     "no-invalid-this": true,
     "no-mergeable-namespace": true,
-    // "no-namespace": [true, "allow-declarations"],
     "no-parameter-properties": true,
     "no-shadowed-variable": true,
     "no-string-literal": true,

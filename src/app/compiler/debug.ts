@@ -9,19 +9,20 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as utils from '../../utils';
 
+import template from 'lodash-es/template';
+
 import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
+import { templates } from '../../templates';
 
 class DebugCompiler extends BaseCompiler {
-    private main: any;
-    private file: any;
+    private main = template(templates.debug.main);
+    private file = template(templates.debug.file);
 
     constructor() {
         super();
-        this.main = this.readCompilerTemplate('main.lua');
-        this.file = this.readCompilerTemplate('file.lua');
     }
 
     type() {

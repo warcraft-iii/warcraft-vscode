@@ -5,13 +5,8 @@
  * @Date   : 5/23/2019, 10:45:09 AM
  */
 
-import * as fs from 'fs-extra';
-
-import template from 'lodash-es/template';
-import templateSettings from 'lodash-es/templateSettings';
-
-import { env } from '../../env';
 import { ConfigurationType } from '../../globals';
+import templateSettings from 'lodash-es/templateSettings';
 
 templateSettings.interpolate = /\-\-\[\[%\=([\s\S]+?)%\]\]/g;
 templateSettings.evaluate = /\-\-\[\[%\>([\s\S]+?)%\]\]/g;
@@ -25,7 +20,7 @@ export abstract class BaseCompiler implements Compiler {
     abstract execute(): Promise<void>;
     abstract type(): ConfigurationType;
 
-    processCodeMacros(code: string) {
+    protected processCodeMacros(code: string) {
         const comment = this.getCommentEqual(code);
         code = code
             .trimRight()
@@ -35,18 +30,14 @@ export abstract class BaseCompiler implements Compiler {
         if (this.type() === ConfigurationType.Release) {
             code = code
                 .replace(/--@debug@/g, `--[${comment}[@debug@`)
-                .replace(/--@end-debug@/g, `--@end-debug@]${comment}]`);
-        }
-
-        if (this.type() === ConfigurationType.Debug) {
-            code = code
-                .replace(/--@release@/g, `--[${comment}[@release@`)
-                .replace(/--@end-release@/g, `--@end-release@]${comment}]`);
+                .replace(/--@end-debug@/g, `--@end-debug@]${comment}]`)
+                .replace(/--\[=*\[@non-debug@/g, '--@non-debug@')
+                .replace(/--@end-non-debug@\]=*\]/g, '--@end-non-debug@');
         }
         return code;
     }
 
-    getCommentEqual(code: string) {
+    protected getCommentEqual(code: string) {
         const m = code.match(/\[(=*)\[|\](=*)\]/g);
         const exists = new Set(m ? m.map(x => x.length - 2) : []);
 
@@ -55,13 +46,5 @@ export abstract class BaseCompiler implements Compiler {
             length++;
         }
         return '='.repeat(length);
-    }
-
-    readCompilerTemplate(file: string) {
-        return template(
-            fs.readFileSync(env.asExetensionPath('templates', ConfigurationType[this.type()].toLowerCase(), file), {
-                encoding: 'utf-8'
-            })
-        );
     }
 }

@@ -117,6 +117,7 @@
     "@types/node": "^10.12.21",
     "@types/yauzl-promise": "^2.1.0",
     "auto-changelog": "^1.13.0",
+    "raw-loader": "^3.0.0",
     "ts-loader": "^6.0.3",
     "tslint": "^5.17.0",
     "typescript": "^3.5.2",

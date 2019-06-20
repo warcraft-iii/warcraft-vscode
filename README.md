@@ -46,6 +46,16 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## Usage
 
+> The extension packages all Lua files into single file, *Debug* and *Release* behave differently, *Debug* packages all Lua files in *src* folder, but *Release* automatically analyzes dependencies.
+
+#### Lua API
+
+> The extension implements some APIs in Lua that removed from Warcraft III, These functions are used in the same way as Lua, but only string literals are supported for now in Release
+
+- [require](https://www.lua.org/manual/5.3/manual.html#pdf-require)
+- [dofile](https://www.lua.org/manual/5.3/manual.html#pdf-dofile)
+- [loadfile](https://www.lua.org/manual/5.3/manual.html#pdf-loadfile)
+
 #### Macros
 
 > There are some macros in lua file.
@@ -53,23 +63,18 @@ This extension is a Warcraft III map development tool set of Lua.
 1. In Release
     - `--@debug@` turn into `--[===[@debug@`
     - `--@end-debug@` turn into `--@end-debug@]===]`
-    - `--[===[@non-debug@` turn into `--@non-debug`
-    - `--@end-debug]===]` turn into `--@end-debug`
-2. In Debug & Release
+
+2. In Debug
+    - `--@release@` turn into `--[===[@release@`
+    - `--@end-release@` turn into `--@end-release@]===]`
+
+3. In Debug & Release
     - `--@remove@` turn into `--[===[@remove@`
     - `--@end-remove@` turn into `--@end-remove@]===]`
 
-#### Lua API
-
-> The extention implements some APIs in Lua that removed from Warcraft III
-
-- [require](https://www.lua.org/manual/5.3/manual.html#pdf-require)
-- [dofile](https://www.lua.org/manual/5.3/manual.html#pdf-dofile)
-- [loadfile](https://www.lua.org/manual/5.3/manual.html#pdf-loadfile)
-
 #### Pack
 
-> The extension packages all files in folder named **imports** into the map, In Configuration Release, packages the folder named **imports.release**, In Configuration Debug, it's **imports.debug**
+> The extension packages all files in folder named **imports** and **src/lib/*/imports** into the map, In Configuration Release, packages the folder named **imports.release**, In Configuration Debug, it's **imports.debug**
 
 ## Known Issues
 

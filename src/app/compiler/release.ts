@@ -78,13 +78,12 @@ class ReleaseCompiler extends BaseCompiler {
                 if (node.type === 'CallExpression' && node.base.type === 'Identifier') {
                     if (node.base.name === 'require' || node.base.name === 'dofile' || node.base.name === 'loadfile') {
                         if (node.arguments.length !== 1) {
-                            throw Error('error');
+                            return;
                         }
 
                         const arg = node.arguments[0];
                         if (arg.type !== 'StringLiteral') {
-                            console.error(node);
-                            throw Error(arg.type);
+                            return;
                         }
 
                         required.push({
@@ -107,7 +106,10 @@ class ReleaseCompiler extends BaseCompiler {
 
         this.touched.clear();
 
-        await this.processFiles([env.asSourcePath('main.lua')]);
+        await this.processFiles([
+            env.asSourcePath('main.lua'),
+            ...env.config.files.map(file => env.asSourcePath(file))
+        ]);
 
         const war3map = await utils.readFile(env.asMapPath(globals.FILE_ENTRY));
         const code = [...this.touched.entries()]

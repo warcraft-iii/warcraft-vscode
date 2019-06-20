@@ -7,11 +7,17 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import * as utils from '../utils';
+
+import isArray from 'lodash-es/isArray';
+import isString from 'lodash-es/isString';
+import isPlainObject from 'lodash-es/isPlainObject';
 
 import { globals, localize, ConfigurationType } from '../globals';
 
 interface WarcraftJson {
     mapdir?: string;
+    files?: string[];
 }
 
 export class Config {
@@ -30,7 +36,7 @@ export class Config {
             return;
         }
 
-        const file = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.FILE_PROJECT);
+        const file = path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.FILE_PROJECT);
 
         if (!fs.pathExistsSync(file)) {
             return;
@@ -41,11 +47,14 @@ export class Config {
         }
 
         const content = fs.readJsonSync(file);
-        if (!content || typeof content !== 'object') {
+        if (!isPlainObject(content)) {
             return;
         }
 
-        this.projectConfig = content as WarcraftJson;
+        this.projectConfig = utils.pick<WarcraftJson>(content, {
+            mapdir: isString,
+            files: (v: any) => isArray(v) && v.every(isString)
+        });
     }
 
     private get config() {
@@ -114,8 +123,12 @@ export class Config {
 
         const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
-        fs.writeJSON(path.join(rootPath, globals.FILE_PROJECT), this.projectConfig);
+        fs.writeJSON(path.resolve(rootPath, globals.FILE_PROJECT), this.projectConfig);
 
         this.projectConfig.mapdir = value;
+    }
+
+    get files() {
+        return this.projectConfig.files || [];
     }
 }

@@ -62,7 +62,7 @@ class Project {
                 return;
             }
             return new Promise((resolve, reject) => {
-                const outputPath = path.join(output, path.relative('warcraft-template-master', entry.fileName));
+                const outputPath = path.resolve(output, path.relative('warcraft-template-master', entry.fileName));
 
                 fs.mkdirp(path.dirname(outputPath))
                     .then(() => entry.openReadStream())

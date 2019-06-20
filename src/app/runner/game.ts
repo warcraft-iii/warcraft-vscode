@@ -25,7 +25,7 @@ class GameRunner extends BaseRunner {
         const mapPath = env.outFilePath;
         const isPtr = await fs.pathExists(env.asGamePath('../Warcraft III Public Test Launcher.exe'));
         const docMapFolder = env.asDocumentPath(isPtr ? 'Warcraft III Public Test' : 'Warcraft III', 'Maps');
-        const targetPath = path.join(docMapFolder, 'Test', path.basename(mapPath));
+        const targetPath = path.resolve(docMapFolder, 'Test', path.basename(mapPath));
         await fs.copy(mapPath, targetPath);
 
         this.process = utils.spawn(env.config.gamePath, [

@@ -8,9 +8,10 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import pickBy from 'lodash-es/pickBy';
 
 async function _getAllFiles(root: string, r: string[], isDir: boolean, recursive: boolean) {
-    const files = (await fs.readdir(root)).map(file => path.join(root, file));
+    const files = (await fs.readdir(root)).map(file => path.resolve(root, file));
 
     for (const file of files) {
         const stat = await fs.stat(file);
@@ -95,4 +96,12 @@ export async function confirm(title: string, ok: string = 'Ok', alt?: string) {
         return;
     }
     return result.value;
+}
+
+export interface PickPredicate {
+    [key: string]: (value: any) => boolean;
+}
+
+export function pick<T>(object: any, predicate: PickPredicate) {
+    return pickBy(object, (value: any, key: string) => (predicate[key] ? predicate[key](value) : false)) as T;
 }

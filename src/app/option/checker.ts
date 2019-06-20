@@ -74,7 +74,7 @@ class Checker {
         const names: string[] = [];
 
         for (const item of notFounds) {
-            const file = path.join(folder, item.name);
+            const file = path.resolve(folder, item.name);
             if ((await fs.pathExists(file)) && (await fs.stat(file)).isFile()) {
                 env.config[item.key] = file;
             } else {

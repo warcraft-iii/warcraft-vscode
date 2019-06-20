@@ -6,7 +6,7 @@ This extension is a Warcraft III map development tool set of Lua.
 
 [![Build Status](https://travis-ci.com/warcraft-iii/warcraft-vscode.svg?branch=master)](https://travis-ci.com/warcraft-iii/warcraft-vscode)
 
-[warcraft-vscode](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
+[Marketplace: warcraft-vscode](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
 
 ## Features
 
@@ -85,6 +85,14 @@ This extension is a Warcraft III map development tool set of Lua.
 #### Pack
 
 > The extension packages all files in folder named **imports** and **src/lib/\*/imports** into the map, In Configuration Release, packages the folder named **imports.release**, In Configuration Debug, it's **imports.debug**
+
+## Libraries
+
+- [base](https://github.com/warcraft-iii/lib-base)
+- [native](https://github.com/warcraft-iii/lib-native)
+- [oop](https://github.com/warcraft-iii/lib-oop)
+- [observer](https://github.com/warcraft-iii/lib-observer)
+- [console](https://github.com/warcraft-iii/lib-console)
 
 ## Known Issues
 

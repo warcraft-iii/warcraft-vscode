@@ -42,7 +42,7 @@ const ORGS: GithubOrgOrUserInfo[] = [
 
 type ReposResponse = Octokit.Response<Octokit.ReposListForOrgResponseItem[]>;
 
-export class Library {
+class Library {
     private repo = git(env.rootPath);
     private github = new Octokit();
 

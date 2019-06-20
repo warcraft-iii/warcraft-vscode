@@ -14,7 +14,7 @@ import { globals, localize, ConfigurationType } from '../../globals';
 
 type PackItem = [string, string];
 
-export class Packer {
+class Packer {
     private _type: ConfigurationType;
 
     constructor(type: ConfigurationType) {

@@ -15,7 +15,7 @@ import * as utils from '../../utils';
 import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
 
-export class Project {
+class Project {
     constructor() {}
 
     @utils.report(localize('report.clean', 'Cleaning project'))

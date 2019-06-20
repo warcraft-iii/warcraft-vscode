@@ -10,21 +10,21 @@ import * as path from 'path';
 import * as luaparse from 'luaparse';
 import * as luamin from 'luamin';
 import * as utils from '../../utils';
-import * as helper from './helper';
 
 import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
 
-import { Compiler } from './compiler';
+import { BaseCompiler } from './compiler';
 
-export class ReleaseCompiler implements Compiler {
+class ReleaseCompiler extends BaseCompiler {
     private file: any;
     private main: any;
     private touched = new Map<string, string>();
 
     constructor() {
-        this.file = helper.readCompilerTemplate(ConfigurationType.Release, 'file.lua');
-        this.main = helper.readCompilerTemplate(ConfigurationType.Release, 'main.lua');
+        super();
+        this.file = this.readCompilerTemplate('file.lua');
+        this.main = this.readCompilerTemplate('main.lua');
     }
 
     type() {
@@ -63,17 +63,8 @@ export class ReleaseCompiler implements Compiler {
             return;
         }
 
-        let body = await utils.readFile(file);
-        const comment = helper.getCommentEqual(body);
+        const body = this.processCodeMacros(await utils.readFile(file));
         const required: { name: string; isRequire: boolean }[] = [];
-
-        body = body
-            .replace(/--@debug@/g, `--[${comment}[@debug@`)
-            .replace(/--@end-debug@/g, `--@end-debug@]${comment}]`)
-            .replace(/--@remove@/g, `--[${comment}[@remove@`)
-            .replace(/--@end-remove@/g, `--@end-remove@]${comment}]`)
-            .replace(/--\[=*\[@non-debug@/g, '--@non-debug')
-            .replace(/--@end-debug\]=*\]/g, '--@end-debug');
 
         this.touched.set(file, body);
 

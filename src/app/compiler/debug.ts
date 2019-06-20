@@ -8,20 +8,20 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as utils from '../../utils';
-import * as helper from './helper';
 
 import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
 
-import { Compiler } from './compiler';
+import { BaseCompiler } from './compiler';
 
-export class DebugCompiler implements Compiler {
+class DebugCompiler extends BaseCompiler {
     private main: any;
     private file: any;
 
     constructor() {
-        this.main = helper.readCompilerTemplate(ConfigurationType.Debug, 'main.lua');
-        this.file = helper.readCompilerTemplate(ConfigurationType.Debug, 'file.lua');
+        super();
+        this.main = this.readCompilerTemplate('main.lua');
+        this.file = this.readCompilerTemplate('file.lua');
     }
 
     type() {
@@ -39,14 +39,9 @@ export class DebugCompiler implements Compiler {
             (await utils.getAllFiles(env.sourceFolder))
                 .filter(file => !utils.isHiddenFile(file) && utils.isLuaFile(file))
                 .map(async file => {
-                    let body = await utils.readFile(file);
-                    const comment = helper.getCommentEqual(body);
+                    const body = this.processCodeMacros(await utils.readFile(file));
+                    const comment = this.getCommentEqual(body);
                     const name = utils.posixCase(path.relative(env.sourceFolder, file));
-
-                    body = body
-                        .trim()
-                        .replace(/--@remove@/g, `--[${comment}[@remove@`)
-                        .replace(/--@end-remove@/g, `--@end-remove@]${comment}]`);
 
                     return this.file({ name, comment, body });
                 })

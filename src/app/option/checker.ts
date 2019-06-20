@@ -29,7 +29,7 @@ const EXECUTION_FILES: ExecutionItem[] = [
     }
 ];
 
-export class Checker {
+class Checker {
     private async checkFile(file: string) {
         if (!(await fs.pathExists(file))) {
             return false;

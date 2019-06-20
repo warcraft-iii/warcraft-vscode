@@ -16,7 +16,7 @@ import { debugPacker, releasePacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
 import { project, library } from './project';
 
-export class App implements vscode.Disposable {
+class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];
     private reloader = debounce(() => env.config.reload(), 100);
     private configurationButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);

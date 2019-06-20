@@ -7,20 +7,19 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as cp from 'child_process';
 
 import { Config } from './config';
 import { globals, localize, ConfigurationType } from '../globals';
 
 class Environment {
     private extensionFolder?: string;
-    private documentFolder?: string;
-
     readonly config = new Config();
 
     constructor() {
-        this.initExtensionFolder();
-        this.initDocumentFolder();
+        const extension = vscode.extensions.getExtension(globals.EXTENSION_ID);
+        if (extension) {
+            this.extensionFolder = extension.extensionPath;
+        }
     }
 
     asExetensionPath(...args: string[]) {
@@ -40,13 +39,6 @@ class Environment {
 
     asGamePath(...args: string[]) {
         return path.resolve(path.dirname(this.config.gamePath), ...args);
-    }
-
-    asDocumentPath(...args: string[]) {
-        if (!this.documentFolder) {
-            throw Error(localize('error.noDocFolder', 'Not found: My Documents'));
-        }
-        return path.resolve(this.documentFolder, ...args);
     }
 
     asRootPath(...args: string[]) {
@@ -89,38 +81,6 @@ class Environment {
 
     get mapExtName() {
         return path.extname(this.config.mapDir);
-    }
-
-    private initDocumentFolder() {
-        const output = cp
-            .execFileSync('reg', [
-                'query',
-                'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
-                '/v',
-                'Personal'
-            ])
-            .toString();
-
-        const m = output.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
-        if (!m) {
-            return;
-        } else {
-            const sys: Map<string, string> = new Map(
-                Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])
-            ) as Map<string, string>;
-
-            this.documentFolder = m[1].replace(/%([^%]+)%/g, (_, x) => {
-                x = x.toLowerCase();
-                return sys.has(x) ? sys.get(x) : x;
-            });
-        }
-    }
-
-    private initExtensionFolder() {
-        const extension = vscode.extensions.getExtension(globals.EXTENSION_ID);
-        if (extension) {
-            this.extensionFolder = extension.extensionPath;
-        }
     }
 }
 

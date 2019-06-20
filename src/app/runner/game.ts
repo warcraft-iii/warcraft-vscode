@@ -20,11 +20,36 @@ class GameRunner extends BaseRunner {
         return RunnerType.Game;
     }
 
+    @utils.once
+    private async getDocumentFolder() {
+        const output = await utils.execFile('reg', [
+            'query',
+            'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
+            '/v',
+            'Personal'
+        ]);
+
+        const m = output.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
+        if (!m) {
+            throw Error(localize('error.noDocFolder', 'Not found: My Documents'));
+        }
+
+        const sys: Map<string, string> = new Map(
+            Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])
+        ) as Map<string, string>;
+
+        return m[1].replace(/%([^%]+)%/g, (_, x) => {
+            x = x.toLowerCase();
+            return sys.has(x) ? sys.get(x) : x;
+        });
+    }
+
     @utils.report(localize('report.openGame', 'Starting game'))
     async execute() {
         const mapPath = env.outFilePath;
+        const docFolder = await this.getDocumentFolder();
         const isPtr = await fs.pathExists(env.asGamePath('../Warcraft III Public Test Launcher.exe'));
-        const docMapFolder = env.asDocumentPath(isPtr ? 'Warcraft III Public Test' : 'Warcraft III', 'Maps');
+        const docMapFolder = path.resolve(docFolder, isPtr ? 'Warcraft III Public Test' : 'Warcraft III', 'Maps');
         const targetPath = path.resolve(docMapFolder, 'Test', path.basename(mapPath));
         await fs.copy(mapPath, targetPath);
 

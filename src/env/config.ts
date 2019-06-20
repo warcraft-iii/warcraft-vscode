@@ -22,43 +22,59 @@ interface WarcraftJson {
 
 export class Config {
     private projectConfig: WarcraftJson = {};
+    private waiter?: Promise<void>;
 
     constructor() {
-        if (vscode.workspace.workspaceFolders) {
-            this.reload();
-        }
+        this.reload();
     }
 
     reload() {
-        this.projectConfig = {};
+        return (this.waiter =
+            this.waiter ||
+            new Promise<void>(resolve => {
+                this.readProjectConfig()
+                    .then(cfg => {
+                        this.projectConfig = cfg || {};
+                        resolve();
+                    })
+                    .finally(() => {
+                        this.waiter = undefined;
+                    });
+            }));
+    }
 
+    async waitLoaded() {
+        if (this.waiter) {
+            await this.waiter;
+        }
+    }
+
+    private get config() {
+        return vscode.workspace.getConfiguration('warcraft');
+    }
+
+    private async readProjectConfig() {
         if (!vscode.workspace.workspaceFolders) {
             return;
         }
 
         const file = path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.FILE_PROJECT);
-
-        if (!fs.pathExistsSync(file)) {
+        if (!(await fs.pathExists(file))) {
+            return;
+        }
+        if (!(await fs.stat(file)).isFile()) {
             return;
         }
 
-        if (!fs.statSync(file).isFile()) {
-            return;
-        }
-
-        const content = fs.readJsonSync(file);
+        const content = await fs.readJson(file);
         if (!isPlainObject(content)) {
             return;
         }
 
-        this.projectConfig = utils.pick<WarcraftJson>(content, {
+        return utils.pick<WarcraftJson>(content, {
             mapdir: isString,
             files: (v: any) => isArray(v) && v.every(isString)
         });
-    }
-
-    private get config() {
-        return vscode.workspace.getConfiguration('warcraft');
     }
 
     get gamePath() {

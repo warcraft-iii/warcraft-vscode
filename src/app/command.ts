@@ -9,10 +9,12 @@ import * as vscode from 'vscode';
 import * as utils from '../utils';
 
 import { checker } from './option';
+import { env } from '../env';
 
 export function registerCommand(name: string, task: () => Promise<void>) {
     return vscode.commands.registerCommand('extension.warcraft.' + name, async () => {
         try {
+            await env.config.waitLoaded();
             await utils.withReport(task);
         } catch (error) {
             vscode.window.showWarningMessage(`[Warcraft vscode] ${error.message}`);

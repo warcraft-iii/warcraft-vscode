@@ -94,8 +94,8 @@ class App implements vscode.Disposable {
     }
 
     @utils.debounce(100)
-    private reload() {
-        env.config.reload();
+    private async reload() {
+        await env.config.reload();
         this.updateConfigurationButton();
     }
 

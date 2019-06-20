@@ -53,9 +53,7 @@ This extension is a Warcraft III map development tool set of Lua.
 ```json
 {
     "mapdir": "map.w3x",
-    "files": [
-        "main.lua"
-    ]
+    "files": ["main.lua"]
 }
 ```
 
@@ -78,7 +76,7 @@ This extension is a Warcraft III map development tool set of Lua.
     - `--[===[@non-debug@` turn into `--@non-debug@`
     - `--@end-non-debug@]===]` turn into `--@end-non-debug`
 
-3. In Debug & Release
+2. In Debug & Release
     - `--@remove@` turn into `--[===[@remove@`
     - `--@end-remove@` turn into `--@end-remove@]===]`
 
@@ -88,11 +86,11 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## Libraries
 
-- [base](https://github.com/warcraft-iii/lib-base)
-- [native](https://github.com/warcraft-iii/lib-native)
-- [oop](https://github.com/warcraft-iii/lib-oop)
-- [observer](https://github.com/warcraft-iii/lib-observer)
-- [console](https://github.com/warcraft-iii/lib-console)
+-   [base](https://github.com/warcraft-iii/lib-base)
+-   [native](https://github.com/warcraft-iii/lib-native)
+-   [oop](https://github.com/warcraft-iii/lib-oop)
+-   [observer](https://github.com/warcraft-iii/lib-observer)
+-   [console](https://github.com/warcraft-iii/lib-console)
 
 ## Known Issues
 

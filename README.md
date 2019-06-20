@@ -50,7 +50,7 @@ This extension is a Warcraft III map development tool set of Lua.
 
 #### warcraft.json
 
-```
+```json
 {
     "mapdir": "map.w3x",
     "files": [

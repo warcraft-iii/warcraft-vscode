@@ -100,7 +100,9 @@ class App implements vscode.Disposable {
     }
 
     private updateConfigurationButton() {
-        this.configurationButton.text = '$(gear) ' + ConfigurationType[env.config.configuration];
+        const text = ConfigurationType[env.config.configuration];
+        this.configurationButton.text = '$(gear) ' + text;
+        this.configurationButton.tooltip = 'Warcraft Configuration: ' + text;
     }
 }
 

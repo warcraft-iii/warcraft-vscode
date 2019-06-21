@@ -77,16 +77,19 @@ class Project {
     }
 
     async toggleConfiguration() {
-        const result = await vscode.window.showQuickPick([
-            {
-                label: 'Debug',
-                value: ConfigurationType.Debug
-            },
-            {
-                label: 'Release',
-                value: ConfigurationType.Release
-            }
-        ]);
+        const result = await vscode.window.showQuickPick(
+            [
+                {
+                    label: 'Debug',
+                    value: ConfigurationType.Debug
+                },
+                {
+                    label: 'Release',
+                    value: ConfigurationType.Release
+                }
+            ],
+            { placeHolder: localize('quick.toggleConfiguration', 'Toggle Configuration') }
+        );
 
         if (!result) {
             return;

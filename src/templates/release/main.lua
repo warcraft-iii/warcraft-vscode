@@ -1,21 +1,15 @@
---[[%= war3map %]]
-
-do
+--[[%= war3map %]] --
+local P = (function()
     local _G = _G
     local _PRELOADED = {}
 
-    --[[%= code %]]
-
     local function findmodule(module, level)
-        local files = {
-            module:gsub('%.+', '/') .. '.lua',
-            module:gsub('%.+', '/') .. '/init.lua'
-        }
+        local files = {module:gsub('%.+', '/') .. '.lua', module:gsub('%.+', '/') .. '/init.lua'}
 
         for _, filename in ipairs(files) do
-            local code = _PRELOADED[filename]
-            if code then
-                return code, filename
+            local f = _PRELOADED[filename]
+            if f then
+                return f, filename
             end
         end
 
@@ -23,13 +17,8 @@ do
     end
 
     local function domodule(module)
-        local code, filename = findmodule(module, 5)
-        local f, err = load(code, '@' .. filename)
-        if not f then
-            error(err)
-        end
-
-        local ret = f(module, filename)
+        local f, filename = findmodule(module, 5)
+        local ret = f(_G, module, filename)
         return ret or true
     end
 
@@ -37,7 +26,7 @@ do
         __index = function(t, k)
             t[k] = domodule(k)
             return t[k]
-        end
+        end,
     })
 
     function require(module)
@@ -45,11 +34,14 @@ do
     end
 
     local function _loadfile(filename, mode, env, level)
-        local code = _PRELOADED[filename]
-        if not code then
+        local f = _PRELOADED[filename]
+        if not f then
             error(string.format('cannot open %s: No such file or directory', filename), level + 1)
         end
-        return load(code, '@' .. filename, mode, env or _G)
+
+        return function(...)
+            return f(env or _G, ...)
+        end
     end
 
     function loadfile(filename, mode, env)
@@ -59,15 +51,24 @@ do
     function dofile(filename)
         _loadfile(filename, nil, nil, 2)()
     end
-end
+
+    return setmetatable({}, {
+        __newindex = function(t, k, v)
+            if type(v) ~= 'function' then
+                error('PRELOADED value must be function')
+            end
+            _PRELOADED[k] = v
+        end,
+        __index = function(t, k)
+            error('Can`t read')
+        end,
+        __metatable = false,
+    })
+end)()
+--[[%= code %]]
 
 local orig_main = main
 function main()
-    local ok, err = pcall(function()
-        orig_main()
-        dofile('main.lua')
-    end)
-    if not ok then
-        print(err)
-    end
+    orig_main()
+    dofile('main.lua')
 end

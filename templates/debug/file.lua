@@ -1,1 +1,0 @@
---[[%> print(`_PRELOADED['${name}'] = [${comment}[${body}]${comment}]`) %]]

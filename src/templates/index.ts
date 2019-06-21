@@ -5,10 +5,10 @@
  * @Date   : 6/20/2019, 3:21:02 PM
  */
 
-import DEBUG_MAIN from '../../templates/debug/main.lua';
-import DEBUG_FILE from '../../templates/debug/file.lua';
-import RELEASE_MAIN from '../../templates/release/main.lua';
-import RELEASE_FILE from '../../templates/release/file.lua';
+import DEBUG_MAIN from './debug/main.lua';
+import DEBUG_FILE from './debug/file.lua';
+import RELEASE_MAIN from './release/main.lua';
+import RELEASE_FILE from './release/file.lua';
 
 export namespace templates {
     export namespace debug {

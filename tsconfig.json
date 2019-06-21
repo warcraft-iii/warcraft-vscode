@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es6",
+    "target": "es2017",
     "outDir": "dist",
     "typeRoots": ["./node_modules/@types", "./typings/modules", "./typings"],
     "sourceMap": true,

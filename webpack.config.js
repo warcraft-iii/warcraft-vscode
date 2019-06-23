@@ -39,7 +39,11 @@ const config = {
                 test: /\.lua$/,
                 use: [
                     {
-                        loader: "raw-loader"
+                        loader: "underscore-template-loader",
+                        query: {
+                            interpolate: /\-\-\[\[%\=([\s\S]+?)%\]\]/g,
+                            evaluate: /\-\-\[\[%\>([\s\S]+?)%\]\]/g
+                        }
                     }
                 ]
             }

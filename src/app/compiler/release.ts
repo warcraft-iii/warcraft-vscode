@@ -13,7 +13,6 @@ import * as utils from '../../utils';
 import * as templates from '../../templates';
 
 import isString from 'lodash-es/isString';
-import memoize from 'lodash-es/memoize';
 
 import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
@@ -32,8 +31,6 @@ class ReleaseCompiler extends BaseCompiler {
 
     constructor() {
         super();
-
-        this.resolveFile = memoize(this.resolveFile.bind(this));
     }
 
     type() {

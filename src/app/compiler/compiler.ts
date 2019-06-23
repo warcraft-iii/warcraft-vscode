@@ -6,10 +6,6 @@
  */
 
 import { ConfigurationType } from '../../globals';
-import templateSettings from 'lodash-es/templateSettings';
-
-templateSettings.interpolate = /\-\-\[\[%\=([\s\S]+?)%\]\]/g;
-templateSettings.evaluate = /\-\-\[\[%\>([\s\S]+?)%\]\]/g;
 
 export interface Compiler {
     execute(): Promise<void>;

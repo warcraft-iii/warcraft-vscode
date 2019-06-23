@@ -10,8 +10,8 @@ import * as path from 'path';
 import * as luaparse from 'luaparse';
 import * as luamin from 'luamin';
 import * as utils from '../../utils';
+import * as templates from '../../templates';
 
-import template from 'lodash-es/template';
 import isString from 'lodash-es/isString';
 import memoize from 'lodash-es/memoize';
 
@@ -19,7 +19,6 @@ import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
-import { templates } from '../../templates';
 
 interface RequireItem {
     name: string;
@@ -29,9 +28,6 @@ interface RequireItem {
 type FileItem = RequireItem | string;
 
 class ReleaseCompiler extends BaseCompiler {
-    private main = template(templates.release.main);
-    private file = template(templates.release.file);
-
     private files = new Map<string, string>();
 
     constructor() {
@@ -126,10 +122,12 @@ class ReleaseCompiler extends BaseCompiler {
 
         const war3map = await utils.readFile(env.asMapPath(globals.FILE_ENTRY));
         const code = [...this.files.entries()]
-            .map(([file, body]) => this.file({ name: utils.posixCase(path.relative(env.sourceFolder, file)), body }))
+            .map(([file, body]) =>
+                templates.release.file({ name: utils.posixCase(path.relative(env.sourceFolder, file)), body })
+            )
             .join('\n');
 
-        const out = luamin.minify(this.main({ war3map, code }));
+        const out = luamin.minify(templates.release.main({ war3map, code }));
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);

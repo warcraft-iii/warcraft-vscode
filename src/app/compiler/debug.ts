@@ -8,19 +8,14 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as utils from '../../utils';
-
-import template from 'lodash-es/template';
+import * as templates from '../../templates';
 
 import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
-import { templates } from '../../templates';
 
 class DebugCompiler extends BaseCompiler {
-    private main = template(templates.debug.main);
-    private file = template(templates.debug.file);
-
     constructor() {
         super();
     }
@@ -44,11 +39,11 @@ class DebugCompiler extends BaseCompiler {
                     const comment = this.getCommentEqual(body);
                     const name = utils.posixCase(path.relative(env.sourceFolder, file));
 
-                    return this.file({ name, comment, body });
+                    return templates.debug.file({ name, comment, body });
                 })
         )).join('\n\n');
 
-        const out = this.main({ war3map, code });
+        const out = templates.debug.main({ war3map, code });
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);

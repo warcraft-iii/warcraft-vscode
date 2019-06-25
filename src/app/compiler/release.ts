@@ -43,7 +43,7 @@ class ReleaseCompiler extends BaseCompiler {
         if (isString(item)) {
             files = [env.asSourcePath(item)];
         } else if (!item.isRequire) {
-            files = [env.asBuildPath(item.name)];
+            files = [env.asSourcePath(item.name)];
         } else {
             const base = item.name.replace(/\./g, '/');
             files = [env.asSourcePath(base + globals.LUA), env.asSourcePath(base, 'init' + globals.LUA)];
@@ -55,7 +55,7 @@ class ReleaseCompiler extends BaseCompiler {
             }
         }
 
-        throw Error('not found');
+        throw Error(localize('error.notFound', 'Not found {0}', files[0]));
     }
 
     private async processFiles(items: FileItem[]) {

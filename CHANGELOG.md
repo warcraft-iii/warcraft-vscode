@@ -1,3 +1,12 @@
+## [0.0.20](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.19...v0.0.20) (2019-06-25)
+
+
+### Bug Fixes
+
+* release compiler resolve file error ([d0c18c5](https://github.com/warcraft-iii/warcraft-vscode/commit/d0c18c5))
+
+
+
 ## [0.0.19](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.18...v0.0.19) (2019-06-21)
 
 

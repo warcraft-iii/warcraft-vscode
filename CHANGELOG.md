@@ -1,3 +1,12 @@
+## [0.0.21](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.20...v0.0.21) (2019-06-26)
+
+
+### Features
+
+* support package.path ([34405b6](https://github.com/warcraft-iii/warcraft-vscode/commit/34405b6))
+
+
+
 ## [0.0.20](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.19...v0.0.20) (2019-06-25)
 
 

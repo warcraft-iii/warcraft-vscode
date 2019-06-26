@@ -53,7 +53,8 @@ This extension is a Warcraft III map development tool set of Lua.
 ```json
 {
     "mapdir": "map.w3x",
-    "files": ["main.lua"]
+    "files": ["main.lua"],
+    "lua.package.path": ["./lib/?.lua", "./lib/?/init.lua"]
 }
 ```
 
@@ -64,6 +65,7 @@ This extension is a Warcraft III map development tool set of Lua.
 -   [require](https://www.lua.org/manual/5.3/manual.html#pdf-require)
 -   [dofile](https://www.lua.org/manual/5.3/manual.html#pdf-dofile)
 -   [loadfile](https://www.lua.org/manual/5.3/manual.html#pdf-loadfile)
+-   [package.path](https://www.lua.org/manual/5.3/manual.html#pdf-package.path)
 
 #### Macros
 

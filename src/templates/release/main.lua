@@ -1,15 +1,28 @@
 --[[%= war3map %]] --
-local P = (function()
+package = {}
+package.path = '--[[%> print(package.path.join(";")) %]]'
+
+local P = (function(preloadType, load)
     local _G = _G
     local _PRELOADED = {}
+    local package = package
+
+    local function resolveFiles(module)
+        module = module:gsub('[./\\]+', '/')
+
+        return coroutine.wrap(function()
+            for item in package.path:gmatch('[^;]+') do
+                local file = item:gsub('^%.[/\\]+', ''):gsub('%?', module)
+                coroutine.yield(file)
+            end
+        end)
+    end
 
     local function findmodule(module, level)
-        local files = {module:gsub('%.+', '/') .. '.lua', module:gsub('%.+', '/') .. '/init.lua'}
-
-        for _, filename in ipairs(files) do
-            local f = _PRELOADED[filename]
-            if f then
-                return f, filename
+        for filename in resolveFiles(module) do
+            local code = _PRELOADED[filename]
+            if code then
+                return code, filename
             end
         end
 
@@ -17,8 +30,13 @@ local P = (function()
     end
 
     local function domodule(module)
-        local f, filename = findmodule(module, 5)
-        local ret = f(_G, module, filename)
+        local code, filename = findmodule(module, 5)
+        local f, err = load(code, '@' .. filename)
+        if not f then
+            error(err)
+        end
+
+        local ret = f(module, filename)
         return ret or true
     end
 
@@ -34,14 +52,11 @@ local P = (function()
     end
 
     local function _loadfile(filename, mode, env, level)
-        local f = _PRELOADED[filename]
-        if not f then
+        local code = _PRELOADED[filename]
+        if not code then
             error(string.format('cannot open %s: No such file or directory', filename), level + 1)
         end
-
-        return function(...)
-            return f(env or _G, ...)
-        end
+        return load(code, '@' .. filename, mode, env or _G)
     end
 
     function loadfile(filename, mode, env)
@@ -54,8 +69,8 @@ local P = (function()
 
     return setmetatable({}, {
         __newindex = function(t, k, v)
-            if type(v) ~= 'function' then
-                error('PRELOADED value must be function')
+            if type(v) ~= preloadType then
+                error('PRELOADED value must be ' .. preloadType)
             end
             _PRELOADED[k] = v
         end,
@@ -64,11 +79,23 @@ local P = (function()
         end,
         __metatable = false,
     })
-end)()
+end)('function', function(chunk, _, _, env)
+    return function(...)
+        return chunk(env or _G, ...)
+    end
+end)
 --[[%= code %]]
 
 local orig_main = main
 function main()
-    orig_main()
-    dofile('main.lua')
+    -- orig_main()
+    -- dofile('main.lua')
+
+    local ok, err = pcall(function()
+        orig_main()
+        dofile('main.lua')
+    end)
+    if not ok then
+        print(err)
+    end
 end

@@ -18,10 +18,29 @@ import { globals, localize, ConfigurationType } from '../globals';
 interface WarcraftJson {
     mapdir?: string;
     files?: string[];
+    'lua.package.path'?: string[];
+}
+
+interface LuaPackage {
+    path: string[];
+}
+
+interface LuaConfig {
+    package: LuaPackage;
+}
+
+interface WarcraftConfig {
+    mapdir?: string;
+    files?: string[];
+    lua: LuaConfig;
+}
+
+function isStringArray(val: any) {
+    return isArray(val) && val.every(isString);
 }
 
 export class Config {
-    private projectConfig: WarcraftJson = {};
+    private projectConfig: WarcraftConfig = { lua: { package: { path: [] } } };
     private waiter?: Promise<void>;
 
     constructor() {
@@ -34,7 +53,7 @@ export class Config {
             new Promise<void>(resolve => {
                 this.readProjectConfig()
                     .then(cfg => {
-                        this.projectConfig = cfg || {};
+                        this.projectConfig = cfg || { lua: { package: { path: [] } } };
                         resolve();
                     })
                     .finally(() => {
@@ -53,7 +72,7 @@ export class Config {
         return vscode.workspace.getConfiguration('warcraft');
     }
 
-    private async readProjectConfig() {
+    private async readProjectConfig(): Promise<WarcraftConfig | undefined> {
         if (!vscode.workspace.workspaceFolders) {
             return;
         }
@@ -71,10 +90,21 @@ export class Config {
             return;
         }
 
-        return utils.pick<WarcraftJson>(content, {
+        const json = utils.pick<WarcraftJson>(content, {
             mapdir: isString,
-            files: (v: any) => isArray(v) && v.every(isString)
+            files: isStringArray,
+            'lua.package.path': isStringArray
         });
+
+        return {
+            mapdir: json.mapdir,
+            files: json.files,
+            lua: {
+                package: {
+                    path: [...['?.lua', '?/init.lua'], ...(json['lua.package.path'] || [])]
+                }
+            }
+        };
     }
 
     get gamePath() {
@@ -146,5 +176,9 @@ export class Config {
 
     get files() {
         return this.projectConfig.files || [];
+    }
+
+    get lua() {
+        return this.projectConfig.lua;
     }
 }

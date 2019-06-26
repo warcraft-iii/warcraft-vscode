@@ -12,6 +12,13 @@
       "items": {
         "type": "string"
       }
+    },
+    "lua.package.path": {
+      "description": "Define package.path in Lua",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   }
 }

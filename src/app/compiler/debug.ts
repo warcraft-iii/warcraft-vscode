@@ -43,7 +43,7 @@ class DebugCompiler extends BaseCompiler {
                 })
         )).join('\n\n');
 
-        const out = templates.debug.main({ war3map, code });
+        const out = templates.debug.main({ war3map, code, package: env.config.lua.package });
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);

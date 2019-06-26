@@ -46,7 +46,8 @@ class ReleaseCompiler extends BaseCompiler {
             files = [env.asSourcePath(item.name)];
         } else {
             const base = item.name.replace(/\./g, '/');
-            files = [env.asSourcePath(base + globals.LUA), env.asSourcePath(base, 'init' + globals.LUA)];
+
+            files = env.config.lua.package.path.map(file => env.asSourcePath(file.replace('?', base)));
         }
 
         for (const file of files) {
@@ -120,11 +121,14 @@ class ReleaseCompiler extends BaseCompiler {
         const war3map = await utils.readFile(env.asMapPath(globals.FILE_ENTRY));
         const code = [...this.files.entries()]
             .map(([file, body]) =>
-                templates.release.file({ name: utils.posixCase(path.relative(env.sourceFolder, file)), body })
+                templates.release.file({
+                    body,
+                    name: utils.posixCase(path.relative(env.sourceFolder, file))
+                })
             )
             .join('\n');
 
-        const out = luamin.minify(templates.release.main({ war3map, code }));
+        const out = luamin.minify(templates.release.main({ war3map, code, package: env.config.lua.package }));
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);

@@ -1,12 +1,25 @@
 --[[%= war3map %]] --
-local P = (function()
+package = {}
+package.path = '--[[%> print(package.path.join(";")) %]]'
+
+local P = (function(preloadType, load)
     local _G = _G
     local _PRELOADED = {}
+    local package = package
+
+    local function resolveFiles(module)
+        module = module:gsub('[./\\]+', '/')
+
+        return coroutine.wrap(function()
+            for item in package.path:gmatch('[^;]+') do
+                local file = item:gsub('^%.[/\\]+', ''):gsub('%?', module)
+                coroutine.yield(file)
+            end
+        end)
+    end
 
     local function findmodule(module, level)
-        local files = {module:gsub('%.+', '/') .. '.lua', module:gsub('%.+', '/') .. '/init.lua'}
-
-        for _, filename in ipairs(files) do
+        for filename in resolveFiles(module) do
             local code = _PRELOADED[filename]
             if code then
                 return code, filename
@@ -56,8 +69,8 @@ local P = (function()
 
     return setmetatable({}, {
         __newindex = function(t, k, v)
-            if type(v) ~= 'string' then
-                error('PRELOADED value must be string')
+            if type(v) ~= preloadType then
+                error('PRELOADED value must be ' .. preloadType)
             end
             _PRELOADED[k] = v
         end,
@@ -66,7 +79,7 @@ local P = (function()
         end,
         __metatable = false,
     })
-end)()
+end)('string', load)
 
 --[[%= code %]]
 

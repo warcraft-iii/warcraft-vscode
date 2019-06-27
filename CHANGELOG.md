@@ -1,3 +1,12 @@
+## [0.0.22](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.21...v0.0.22) (2019-06-27)
+
+
+### Features
+
+* Add API seterrorhandler geterrorhandler ([ab14f03](https://github.com/warcraft-iii/warcraft-vscode/commit/ab14f03))
+
+
+
 ## [0.0.21](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.20...v0.0.21) (2019-06-26)
 
 

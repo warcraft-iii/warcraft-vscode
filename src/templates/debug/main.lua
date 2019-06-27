@@ -1,15 +1,20 @@
 package = {}
 package.path = '--[[%> print(package.path.join(";")) %]]'
 
-local P = (function(preloadType, load, _errorhandler)
+local P
+do
+    local preloadType = 'string'
+    local preload = load
+
     local package = package
     local _G = _G
     local _PRELOADED = {}
     local _LOADING = {}
+    local _errorhandler
 
-    local function errorhandler(...)
-        if _errorhandler then
-            return _errorhandler(...)
+    local function errorhandler(msg)
+        if _errorhandler and msg then
+            return _errorhandler(msg)
         end
     end
 
@@ -43,7 +48,7 @@ local P = (function(preloadType, load, _errorhandler)
             error('critical dependency', 4)
         end
 
-        local f, err = load(code, '@' .. filename)
+        local f, err = preload(code, '@' .. filename)
         if not f then
             error(err, 4)
         end
@@ -55,7 +60,7 @@ local P = (function(preloadType, load, _errorhandler)
         _LOADING[filename] = nil
 
         if not ok then
-            return
+            error()
         end
         return ret or true
     end
@@ -73,7 +78,7 @@ local P = (function(preloadType, load, _errorhandler)
         if not code then
             error(string.format('cannot open %s: No such file or directory', filename), level + 1)
         end
-        return load(code, '@' .. filename, mode, env or _G)
+        return preload(code, '@' .. filename, mode, env or _G)
     end
 
     function require(module)
@@ -99,7 +104,58 @@ local P = (function(preloadType, load, _errorhandler)
         return _errorhandler
     end
 
-    return setmetatable({}, {
+    -- hook for errorhandler
+    do
+        local apis = {
+            {'TimerStart', 4, 4}, {'ForGroup', 2, 2}, {'ForForce', 2, 2}, {'Condition', 1, 1}, {'Filter', 1, 1},
+            {'EnumDestructablesInRect', 3, 3}, {'EnumItemsInRect', 3, 3}, {'TriggerAddAction', 2, 2},
+        }
+
+        local function genReturn(ok, ...)
+            if ok then
+                return ...
+            end
+        end
+
+        local gens = {}
+        local function gen(index, count)
+            local k = index << 16 | count
+            if gens[k] then
+                return gens[k]
+            end
+
+            local args = {}
+            for i = 1, count do
+                table.insert(args, 'ARG' .. i)
+            end
+            args = table.concat(args, ',')
+
+            local code = [[
+local o, r, e = ...
+return function({ARGS})
+    if ARG{N} then
+        local c = ARG{N}
+        ARG{N} = function(...)
+            return r(xpcall(c, e, ...))
+        end
+    end
+    return o({ARGS})
+end
+]]
+
+            code = code:gsub('{N}', tostring(index)):gsub('{ARGS}', args)
+
+            gens[k] = load(code)
+            return gens[k]
+        end
+
+        for _, v in ipairs(apis) do
+            local name, index, count = v[1], v[2], v[3]
+            _G[name] = gen(index, count)(_G[name], genReturn, errorhandler)
+        end
+    end
+
+    P = setmetatable({}, {
         __newindex = function(t, k, v)
             if type(v) ~= preloadType then
                 error('PRELOADED value must be ' .. preloadType)
@@ -111,11 +167,13 @@ local P = (function(preloadType, load, _errorhandler)
         end,
         __metatable = false,
     })
-end)('string', load, function(...)
-    return print(...)
-end)
+end
 
 --[[%= code %]]
+
+seterrorhandler(function(...)
+    return print(...)
+end)
 
 dofile('origwar3map.lua')
 
@@ -124,10 +182,10 @@ function main()
     xpcall(function()
         __main()
         dofile('main.lua')
-    end, function(...)
+    end, function(msg)
         local handler = geterrorhandler()
-        if handler then
-            return handler(...)
+        if handler and msg then
+            return handler(msg)
         end
     end)
 end

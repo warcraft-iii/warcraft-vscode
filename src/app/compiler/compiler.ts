@@ -20,15 +20,15 @@ export abstract class BaseCompiler implements Compiler {
         const comment = this.getCommentEqual(code);
         code = code
             .trimRight()
-            .replace(/--@remove@/g, `--[${comment}[@remove@`)
-            .replace(/--@end-remove@/g, `--@end-remove@]${comment}]`);
+            .replace(/--\s*@remove@/g, `--[${comment}[@remove@`)
+            .replace(/--\s*@end-remove@/g, `--@end-remove@]${comment}]`);
 
         if (this.type() === ConfigurationType.Release) {
             code = code
-                .replace(/--@debug@/g, `--[${comment}[@debug@`)
-                .replace(/--@end-debug@/g, `--@end-debug@]${comment}]`)
-                .replace(/--\[=*\[@non-debug@/g, '--@non-debug@')
-                .replace(/--@end-non-debug@\]=*\]/g, '--@end-non-debug@');
+                .replace(/--\s*@debug@/g, `--[${comment}[@debug@`)
+                .replace(/--\s*@end-debug@/g, `--@end-debug@]${comment}]`)
+                .replace(/--\s*\[=*\[@non-debug@/g, '--@non-debug@')
+                .replace(/--\s*@end-non-debug@\]=*\]/g, '--@end-non-debug@');
         }
         return code;
     }

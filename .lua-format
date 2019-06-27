@@ -1,0 +1,4 @@
+column_limit: 120
+keep_simple_block_one_line: false
+break_before_functioncall_rp: true
+extra_sep_at_table_end: true

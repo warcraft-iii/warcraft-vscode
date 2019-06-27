@@ -1,13 +1,19 @@
---[[%= war3map %]] --
 package = {}
 package.path = '--[[%> print(package.path.join(";")) %]]'
 
-local P = (function(preloadType, load)
+local P = (function(preloadType, load, _errorhandler)
+    local package = package
     local _G = _G
     local _PRELOADED = {}
-    local package = package
+    local _LOADING = {}
 
-    local function resolveFiles(module)
+    local function errorhandler(...)
+        if _errorhandler then
+            return _errorhandler(...)
+        end
+    end
+
+    local function resolvefiles(module)
         module = module:gsub('[./\\]+', '/')
 
         return coroutine.wrap(function()
@@ -19,37 +25,48 @@ local P = (function(preloadType, load)
     end
 
     local function findmodule(module, level)
-        for filename in resolveFiles(module) do
+        for filename in resolvefiles(module) do
             local code = _PRELOADED[filename]
             if code then
                 return code, filename
             end
         end
-
-        error('not found module ' .. module, level or 2)
     end
 
     local function domodule(module)
         local code, filename = findmodule(module, 5)
-        local f, err = load(code, '@' .. filename)
-        if not f then
-            error(err)
+        if not code then
+            error('not found module ' .. module, 4)
         end
 
-        local ret = f(module, filename)
+        if _LOADING[filename] then
+            error('critical dependency', 4)
+        end
+
+        local f, err = load(code, '@' .. filename)
+        if not f then
+            error(err, 4)
+        end
+
+        _LOADING[filename] = true
+
+        local ok, ret = xpcall(f, errorhandler, module, filename)
+
+        _LOADING[filename] = nil
+
+        if not ok then
+            return
+        end
         return ret or true
     end
 
     local _LOADED = setmetatable({}, {
         __index = function(t, k)
-            t[k] = domodule(k)
-            return t[k]
+            local m = domodule(k)
+            t[k] = m
+            return m
         end,
     })
-
-    function require(module)
-        return _LOADED[module]
-    end
 
     local function _loadfile(filename, mode, env, level)
         local code = _PRELOADED[filename]
@@ -59,12 +76,27 @@ local P = (function(preloadType, load)
         return load(code, '@' .. filename, mode, env or _G)
     end
 
+    function require(module)
+        return _LOADED[module]
+    end
+
     function loadfile(filename, mode, env)
         return _loadfile(filename, mode, env, 2)
     end
 
     function dofile(filename)
         _loadfile(filename, nil, nil, 2)()
+    end
+
+    function seterrorhandler(handler)
+        if type(handler) ~= 'function' then
+            error(string.format('bad argument #1 to `seterrorhandler` (function expected, got %s)', type(handler)), 2)
+        end
+        _errorhandler = handler
+    end
+
+    function geterrorhandler()
+        return _errorhandler
     end
 
     return setmetatable({}, {
@@ -79,17 +111,23 @@ local P = (function(preloadType, load)
         end,
         __metatable = false,
     })
-end)('string', load)
+end)('string', load, function(...)
+    return print(...)
+end)
 
 --[[%= code %]]
 
-local orig_main = main
+dofile('origwar3map.lua')
+
+local __main = main
 function main()
-    local ok, err = pcall(function()
-        orig_main()
+    xpcall(function()
+        __main()
         dofile('main.lua')
+    end, function(...)
+        local handler = geterrorhandler()
+        if handler then
+            return handler(...)
+        end
     end)
-    if not ok then
-        print(err)
-    end
 end

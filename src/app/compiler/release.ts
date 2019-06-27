@@ -20,7 +20,8 @@ import { globals, localize, ConfigurationType } from '../../globals';
 import { BaseCompiler } from './compiler';
 
 interface RequireItem {
-    name: string;
+    file: string;
+    name?: string;
     isRequire?: boolean;
 }
 
@@ -37,64 +38,81 @@ class ReleaseCompiler extends BaseCompiler {
         return ConfigurationType.Release;
     }
 
-    private async resolveFile(item: FileItem) {
-        let files: string[];
+    private convert(item: FileItem): RequireItem {
+        return isString(item) ? { file: item } : item;
+    }
 
-        if (isString(item)) {
-            files = [env.asSourcePath(item)];
-        } else if (!item.isRequire) {
-            files = [env.asSourcePath(item.name)];
+    private getMaybeFiles(item: RequireItem) {
+        if (item.isRequire) {
+            const name = item.file
+                .split('.')
+                .filter(word => word !== '')
+                .join('/');
+            return env.config.lua.package.path.map(finder => env.asSourcePath(finder.replace('?', name)));
         } else {
-            const base = item.name.replace(/\./g, '/');
-
-            files = env.config.lua.package.path.map(file => env.asSourcePath(file.replace('?', base)));
+            return [path.isAbsolute(item.file) ? item.file : env.asSourcePath(item.file)];
         }
+    }
 
+    private async resolveFile(item: RequireItem) {
+        const files = this.getMaybeFiles(item);
         for (const file of files) {
             if (await fs.pathExists(file)) {
                 return file;
             }
         }
 
-        throw Error(localize('error.notFound', 'Not found {0}', files[0]));
+        throw Error(localize('error.notFound', 'Not found {0}', item.file));
     }
 
-    private async processFiles(items: FileItem[]) {
-        const files = (await Promise.all(items.map(item => this.resolveFile(item)))).filter(
-            file => !this.files.has(file)
-        );
-
-        for (const file of files) {
-            const body = this.processCodeMacros(await utils.readFile(file));
-            const required: { name: string; isRequire: boolean }[] = [];
-
-            const ast = luaparse.parse(body, {
-                locations: true,
-                ranges: true,
-                scope: true,
-                onCreateNode: node => {
-                    if (node.type === 'CallExpression' && node.base.type === 'Identifier') {
-                        if (this.isRequireFunction(node.base.name)) {
-                            if (node.arguments.length !== 1) {
-                                return;
-                            }
-                            const arg = node.arguments[0];
-                            if (arg.type !== 'StringLiteral') {
-                                return;
-                            }
-                            required.push({
-                                name: arg.value,
-                                isRequire: node.base.name === 'require'
-                            });
-                        }
+    private async processFiles(...items: FileItem[]) {
+        await Promise.all(
+            items
+                .map(item => this.convert(item))
+                .map(async item => {
+                    const file = await this.resolveFile(item);
+                    const name = item.name || utils.posixCase(path.relative(env.sourceFolder, file));
+                    if (this.files.has(name)) {
+                        return;
                     }
-                }
-            });
+                    const body = this.processCodeMacros(await utils.readFile(file));
+                    if (this.files.has(name)) {
+                        return;
+                    }
+                    const required: RequireItem[] = [];
 
-            this.files.set(file, luamin.minify(ast));
+                    const ast = luaparse.parse(body, {
+                        locations: true,
+                        ranges: true,
+                        scope: true,
+                        onCreateNode: node => {
+                            if (node.type === 'CallExpression' && node.base.type === 'Identifier') {
+                                if (this.isRequireFunction(node.base.name)) {
+                                    if (node.arguments.length !== 1) {
+                                        return;
+                                    }
+                                    const arg = node.arguments[0];
+                                    if (arg.type !== 'StringLiteral') {
+                                        return;
+                                    }
+                                    required.push({
+                                        file: arg.value,
+                                        isRequire: node.base.name === 'require'
+                                    });
+                                }
+                            }
+                        }
+                    });
 
-            await this.processFiles(required);
-        }
+                    if (this.files.has(name)) {
+                        console.log(file);
+                    }
+
+                    this.files.set(name, luamin.minify(ast));
+
+                    await this.processFiles(...required);
+                })
+        );
     }
 
     private isRequireFunction(name: string) {
@@ -116,19 +134,14 @@ class ReleaseCompiler extends BaseCompiler {
 
         this.files.clear();
 
-        await this.processFiles(['main.lua', ...env.config.files]);
+        await this.processFiles(
+            'main.lua',
+            { name: 'origwar3map.lua', file: env.asMapPath(globals.FILE_ENTRY) },
+            ...env.config.files
+        );
 
-        const war3map = await utils.readFile(env.asMapPath(globals.FILE_ENTRY));
-        const code = [...this.files.entries()]
-            .map(([file, body]) =>
-                templates.release.file({
-                    body,
-                    name: utils.posixCase(path.relative(env.sourceFolder, file))
-                })
-            )
-            .join('\n');
-
-        const out = luamin.minify(templates.release.main({ war3map, code, package: env.config.lua.package }));
+        const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
+        const out = luamin.minify(templates.release.main({ code, package: env.config.lua.package }));
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);

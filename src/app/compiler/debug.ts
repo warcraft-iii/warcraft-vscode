@@ -34,7 +34,7 @@ class DebugCompiler extends BaseCompiler {
             ...(await Promise.all(
                 (await utils.getAllFiles(env.sourceFolder))
                     .filter(file => !utils.isHiddenFile(file) && utils.isLuaFile(file))
-                    .map(async file => this.genFile(file))
+                    .map(file => this.genFile(file))
             )),
             await this.genFile(env.asMapPath(globals.FILE_ENTRY), 'orig' + globals.FILE_ENTRY)
         ].join('\n');

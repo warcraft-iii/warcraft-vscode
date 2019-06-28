@@ -31,7 +31,7 @@ interface LuaConfig {
 
 interface WarcraftConfig {
     mapdir?: string;
-    files?: string[];
+    files: string[];
     lua: LuaConfig;
 }
 
@@ -40,7 +40,15 @@ function isStringArray(val: any) {
 }
 
 export class Config {
-    private projectConfig: WarcraftConfig = { lua: { package: { path: [] } } };
+    private defaultConfig: WarcraftConfig = {
+        files: [],
+        lua: {
+            package: {
+                path: ['./?.lua', './?/init.lua']
+            }
+        }
+    };
+    private projectConfig = this.defaultConfig;
     private waiter?: Promise<void>;
 
     constructor() {
@@ -53,7 +61,7 @@ export class Config {
             new Promise<void>(resolve => {
                 this.readProjectConfig()
                     .then(cfg => {
-                        this.projectConfig = cfg || { lua: { package: { path: [] } } };
+                        this.projectConfig = cfg || this.defaultConfig;
                         resolve();
                     })
                     .finally(() => {
@@ -98,10 +106,10 @@ export class Config {
 
         return {
             mapdir: json.mapdir,
-            files: json.files,
+            files: json.files || [],
             lua: {
                 package: {
-                    path: [...['?.lua', '?/init.lua'], ...(json['lua.package.path'] || [])]
+                    path: ['./?.lua', './?/init.lua', ...(json['lua.package.path'] || [])]
                 }
             }
         };
@@ -175,7 +183,7 @@ export class Config {
     }
 
     get files() {
-        return this.projectConfig.files || [];
+        return this.projectConfig.files;
     }
 
     get lua() {

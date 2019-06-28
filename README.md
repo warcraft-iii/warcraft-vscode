@@ -67,6 +67,11 @@ This extension is a Warcraft III map development tool set of Lua.
 -   [loadfile](https://www.lua.org/manual/5.3/manual.html#pdf-loadfile)
 -   [package.path](https://www.lua.org/manual/5.3/manual.html#pdf-package.path)
 
+> And added some functions for debug
+
+- seterrorhandler(func)
+- geterrorhandler()
+
 #### Macros
 
 > There are some macros in lua file.
@@ -88,10 +93,7 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## Libraries
 
--   [base](https://github.com/warcraft-iii/lib-base)
--   [native](https://github.com/warcraft-iii/lib-native)
--   [oop](https://github.com/warcraft-iii/lib-oop)
--   [observer](https://github.com/warcraft-iii/lib-observer)
+-   [stdlib](https://github.com/warcraft-iii/lib-stdlib)
 -   [console](https://github.com/warcraft-iii/lib-console)
 
 ## Known Issues

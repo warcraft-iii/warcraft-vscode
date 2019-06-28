@@ -1,3 +1,18 @@
+## [0.0.23](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.22...v0.0.23) (2019-06-28)
+
+
+### Bug Fixes
+
+* Identical files with different paths require multiple times ([e9f1943](https://github.com/warcraft-iii/warcraft-vscode/commit/e9f1943))
+
+
+### Features
+
+* Add config for define library remotes ([e8c13f6](https://github.com/warcraft-iii/warcraft-vscode/commit/e8c13f6))
+* Ignore archived repo ([d2aba2d](https://github.com/warcraft-iii/warcraft-vscode/commit/d2aba2d))
+
+
+
 ## [0.0.22](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.21...v0.0.22) (2019-06-27)
 
 

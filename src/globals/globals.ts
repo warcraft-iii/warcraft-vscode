@@ -28,3 +28,17 @@ export enum ConfigurationType {
     Debug,
     Release
 }
+
+export interface GithubOrgInfo {
+    name: string;
+    type?: 'organization';
+    ssh?: boolean;
+}
+
+export interface GithubUserInfo {
+    name: string;
+    type: 'user';
+    ssh?: boolean;
+}
+
+export type GithubOrgOrUserInfo = GithubOrgInfo | GithubUserInfo;

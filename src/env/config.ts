@@ -11,9 +11,11 @@ import * as utils from '../utils';
 
 import isArray from 'lodash-es/isArray';
 import isString from 'lodash-es/isString';
+import isBoolean from 'lodash-es/isBoolean';
+import isUndefined from 'lodash-es/isUndefined';
 import isPlainObject from 'lodash-es/isPlainObject';
 
-import { globals, localize, ConfigurationType } from '../globals';
+import { globals, localize, ConfigurationType, GithubOrgOrUserInfo } from '../globals';
 
 interface WarcraftJson {
     mapdir?: string;
@@ -188,5 +190,22 @@ export class Config {
 
     get lua() {
         return this.projectConfig.lua;
+    }
+
+    get libraryOrganizations(): GithubOrgOrUserInfo[] | undefined {
+        const setting = this.config.get('libraryOrganizations');
+        if (!setting || !isArray(setting)) {
+            return;
+        }
+
+        return setting
+            .map(item =>
+                utils.pick<GithubOrgOrUserInfo>(item, {
+                    name: isString,
+                    type: x => isUndefined(x) || (isString(x) && (x === 'user' || x === 'organization')),
+                    ssh: x => isUndefined(x) || isBoolean(x)
+                })
+            )
+            .filter(item => item.name);
     }
 }

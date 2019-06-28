@@ -13,56 +13,23 @@ import * as Octokit from '@octokit/rest';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { localize, globals } from '../../globals';
-
-export interface GithubOrgInfo {
-    name: string;
-    type?: 'org';
-    ssh?: boolean;
-}
-
-export interface GithubUserInfo {
-    name: string;
-    type: 'user';
-    ssh?: boolean;
-}
-
-export type GithubOrgOrUserInfo = GithubOrgInfo | GithubUserInfo;
+import { localize, globals, GithubOrgOrUserInfo } from '../../globals';
 
 interface RepoInfo {
     name: string;
     url: string;
 }
 
-const ORGS: GithubOrgOrUserInfo[] = [
-    {
-        name: 'warcraft-iii'
-    }
-];
-
 type ReposResponse = Octokit.Response<Octokit.ReposListForOrgResponseItem[]>;
 
 class Library {
     private repo = git(env.rootPath);
     private github = new Octokit();
-
-    private async askOrg() {
-        if (ORGS.length === 1) {
-            return ORGS[0];
+    private defaultOrgs: GithubOrgOrUserInfo[] = [
+        {
+            name: 'warcraft-iii'
         }
-
-        const result = await vscode.window.showQuickPick(
-            ORGS.map(item => ({
-                label: item.name,
-                description:
-                    item.type === 'user' ? localize('quick.User', 'User') : localize('quick.Org', 'Organization'),
-                value: item
-            })),
-            { ignoreFocusOut: true }
-        );
-
-        return result ? result.value : undefined;
-    }
+    ];
 
     private async getOrgRepos(org: GithubOrgOrUserInfo): Promise<RepoInfo[]> {
         const resp =
@@ -80,23 +47,29 @@ class Library {
             }));
     }
 
-    private async askRepo(org: GithubOrgOrUserInfo) {
-        const asyncRepos = async () => {
-            const exists = new Set(await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES)));
-            const repos = (await this.getOrgRepos(org)).filter(item => !exists.has(item.name));
+    private async getRemoteRepos() {
+        const exists = new Set(await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES)));
 
-            if (repos.length === 0) {
-                throw Error(localize('error.noMoreLibrary', 'No more libraries in {0}', org.name));
-            }
-
-            return repos.map(item => ({
-                label: item.name,
-                description: item.url,
-                value: item
+        return ([] as RepoInfo[])
+            .concat(
+                ...(await Promise.all(
+                    (env.config.libraryOrganizations || this.defaultOrgs).map(async org =>
+                        (await this.getOrgRepos(org)).filter(repo => !exists.has(repo.name))
+                    )
+                ))
+            )
+            .map(repo => ({
+                label: repo.name,
+                description: repo.url,
+                value: repo
             }));
-        };
+    }
 
-        const result = await vscode.window.showQuickPick(asyncRepos(), { ignoreFocusOut: true });
+    private async askRepo() {
+        const result = await vscode.window.showQuickPick(this.getRemoteRepos(), {
+            ignoreFocusOut: true,
+            placeHolder: localize('quick.loadingRepos', 'Loading Repos')
+        });
         if (!result) {
             return;
         }
@@ -141,12 +114,7 @@ class Library {
             }
         }
 
-        const org = await this.askOrg();
-        if (!org) {
-            return;
-        }
-
-        const repo = await this.askRepo(org);
+        const repo = await this.askRepo();
         if (!repo) {
             return;
         }

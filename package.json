@@ -113,6 +113,33 @@
             "Debug",
             "Release"
           ]
+        },
+        "warcraft.libraryOrganizations": {
+          "type": "array",
+          "description": "The Github organization or user for command 'Add Library'",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The item type org or user",
+                "enum": [
+                  "user",
+                  "organization"
+                ],
+                "default": "organization"
+              },
+              "name": {
+                "type": "string",
+                "description": "The Github organization or user name"
+              },
+              "ssh": {
+                "type": "boolean",
+                "description": "Use ssh proto?",
+                "default": false
+              }
+            }
+          }
         }
       }
     }

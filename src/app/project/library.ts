@@ -55,7 +55,7 @@ class Library {
             ORGS.map(item => ({
                 label: item.name,
                 description:
-                    item.type === 'user' ? localize('quick.Org', 'Organization') : localize('quick.User', 'User'),
+                    item.type === 'user' ? localize('quick.User', 'User') : localize('quick.Org', 'Organization'),
                 value: item
             })),
             { ignoreFocusOut: true }
@@ -73,7 +73,7 @@ class Library {
         const regex = /^lib[-._]/;
 
         return resp.data
-            .filter(item => regex.test(item.name))
+            .filter(item => !item.archived && regex.test(item.name))
             .map(item => ({
                 name: item.name.replace(regex, ''),
                 url: org.ssh ? item.ssh_url : item.clone_url

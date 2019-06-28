@@ -50,7 +50,7 @@ class Library {
     private async getRemoteRepos() {
         const exists = new Set(await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES)));
 
-        return ([] as RepoInfo[])
+        return Array.prototype
             .concat(
                 ...(await Promise.all(
                     (env.config.libraryOrganizations || this.defaultOrgs).map(async org =>

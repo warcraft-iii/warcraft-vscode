@@ -7,8 +7,10 @@ do
     local preload = load
 
     local package = package
+
     local _G = _G
     local _PRELOADED = {}
+    local _LOADED = {}
     local _LOADING = {}
     local _errorhandler
 
@@ -18,62 +20,18 @@ do
         end
     end
 
-    local function resolvefiles(module)
+    local function resolvefile(module)
         module = module:gsub('[./\\]+', '/')
 
-        return coroutine.wrap(function()
-            for item in package.path:gmatch('[^;]+') do
-                local file = item:gsub('^%.[/\\]+', ''):gsub('%?', module)
-                coroutine.yield(file)
-            end
-        end)
-    end
-
-    local function findmodule(module, level)
-        for filename in resolvefiles(module) do
-            local code = _PRELOADED[filename]
-            if code then
-                return code, filename
+        for item in package.path:gmatch('[^;]+') do
+            local filename = item:gsub('^%.[/\\]+', ''):gsub('%?', module)
+            if _PRELOADED[filename] then
+                return filename
             end
         end
     end
 
-    local function domodule(module)
-        local code, filename = findmodule(module, 5)
-        if not code then
-            error('not found module ' .. module, 4)
-        end
-
-        if _LOADING[filename] then
-            error('critical dependency', 4)
-        end
-
-        local f, err = preload(code, '@' .. filename)
-        if not f then
-            error(err, 4)
-        end
-
-        _LOADING[filename] = true
-
-        local ok, ret = xpcall(f, errorhandler, module, filename)
-
-        _LOADING[filename] = nil
-
-        if not ok then
-            error()
-        end
-        return ret or true
-    end
-
-    local _LOADED = setmetatable({}, {
-        __index = function(t, k)
-            local m = domodule(k)
-            t[k] = m
-            return m
-        end,
-    })
-
-    local function _loadfile(filename, mode, env, level)
+    local function compilefile(filename, mode, env, level)
         local code = _PRELOADED[filename]
         if not code then
             error(string.format('cannot open %s: No such file or directory', filename), level + 1)
@@ -82,15 +40,51 @@ do
     end
 
     function require(module)
-        return _LOADED[module]
+        local loaded = _LOADED[module]
+        if loaded then
+            return loaded
+        end
+
+        local filename = resolvefile(module)
+        if not filename then
+            error(string.format('module \'%s\' not found', module), 2)
+        end
+
+        loaded = _LOADED[filename]
+        if loaded then
+            return loaded
+        end
+
+        if _LOADING[filename] then
+            error('critical dependency', 2)
+        end
+
+        local f, err = compilefile(filename)
+        if not f then
+            error(err, 2)
+        end
+
+        _LOADING[filename] = true
+        local ok, ret = xpcall(f, errorhandler, module, filename)
+        _LOADING[filename] = false
+        if not ok then
+            error()
+        end
+
+        ret = ret or true
+
+        _LOADED[filename] = ret
+        _LOADED[module] = ret
+
+        return ret
     end
 
     function loadfile(filename, mode, env)
-        return _loadfile(filename, mode, env, 2)
+        return compilefile(filename, mode, env, 2)
     end
 
     function dofile(filename)
-        _loadfile(filename, nil, nil, 2)()
+        compilefile(filename, nil, nil, 2)()
     end
 
     function seterrorhandler(handler)
@@ -106,12 +100,7 @@ do
 
     -- hook for errorhandler
     do
-        local apis = {
-            {'TimerStart', 4, 4}, {'ForGroup', 2, 2}, {'ForForce', 2, 2}, {'Condition', 1, 1}, {'Filter', 1, 1},
-            {'EnumDestructablesInRect', 3, 3}, {'EnumItemsInRect', 3, 3}, {'TriggerAddAction', 2, 2},
-        }
-
-        local function genReturn(ok, ...)
+        local function tryreturn(ok, ...)
             if ok then
                 return ...
             end
@@ -142,16 +131,20 @@ return function({ARGS})
     return o({ARGS})
 end
 ]]
-
             code = code:gsub('{N}', tostring(index)):gsub('{ARGS}', args)
 
             gens[k] = load(code)
             return gens[k]
         end
 
+        local apis = {
+            {'TimerStart', 4, 4}, {'ForGroup', 2, 2}, {'ForForce', 2, 2}, {'Condition', 1, 1}, {'Filter', 1, 1},
+            {'EnumDestructablesInRect', 3, 3}, {'EnumItemsInRect', 3, 3}, {'TriggerAddAction', 2, 2},
+        }
+
         for _, v in ipairs(apis) do
             local name, index, count = v[1], v[2], v[3]
-            _G[name] = gen(index, count)(_G[name], genReturn, errorhandler)
+            _G[name] = gen(index, count)(_G[name], tryreturn, errorhandler)
         end
     end
 

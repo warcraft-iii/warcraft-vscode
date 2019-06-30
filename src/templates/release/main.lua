@@ -13,9 +13,12 @@ do
         end
     end
 
-    local package = package
-
     local _G = _G
+    local package = package
+    local string, table = string, table
+    local error, xpcall, type, setmetatable, tostring, ipairs, load = error, xpcall, type, setmetatable, tostring,
+                                                                      ipairs, load
+
     local _FILES = {}
     local _LOADED_MODULES = {}
     local _LOADED_FILES = {}
@@ -66,7 +69,7 @@ do
             error('critical dependency', 2)
         end
 
-        local f, err = compilefile(filename)
+        local f, err = compilefile(filename, nil, nil, 2)
         if not f then
             error(err, 2)
         end
@@ -113,13 +116,7 @@ do
             end
         end
 
-        local gens = {}
-        local function gen(index, count)
-            local k = index << 16 | count
-            if gens[k] then
-                return gens[k]
-            end
-
+        local function generate(index, count)
             local args = {}
             for i = 1, count do
                 table.insert(args, 'ARG' .. i)
@@ -140,8 +137,7 @@ end
 ]]
             code = code:gsub('{N}', tostring(index)):gsub('{ARGS}', args)
 
-            gens[k] = load(code)
-            return gens[k]
+            return load(code)
         end
 
         local apis = {
@@ -151,7 +147,7 @@ end
 
         for _, v in ipairs(apis) do
             local name, index, count = v[1], v[2], v[3]
-            _G[name] = gen(index, count)(_G[name], tryreturn, errorhandler)
+            _G[name] = generate(index, count)(_G[name], tryreturn, errorhandler)
         end
     end
 

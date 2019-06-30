@@ -44,7 +44,7 @@ do
     local function compilefile(filename, mode, env, level)
         local code = _FILES[filename]
         if not code then
-            error(string.format('cannot open %s: No such file or directory', filename), level + 1)
+            error(string.format('cannot open %s: No such file or directory', filename), (level or 1) + 1)
         end
         return preload(code, '@' .. filename, mode, env or _G)
     end

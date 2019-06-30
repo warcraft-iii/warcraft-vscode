@@ -3,16 +3,22 @@ package.path = '--[[%> print(package.path.join(";")) %]]'
 
 local P
 do
-    local preloadType = 'string'
-    local preload = load
+    local preloadType, preload, _errorhandler
+    do
+        preloadType = 'string'
+        preload = load
+        _errorhandler = function(msg)
+            return print(msg)
+        end
+    end
 
     local package = package
 
     local _G = _G
-    local _PRELOADED = {}
-    local _LOADED = {}
-    local _LOADING = {}
-    local _errorhandler
+    local _FILES = {}
+    local _LOADED_MODULES = {}
+    local _LOADED_FILES = {}
+    local _LOADING_FILES = {}
 
     local function errorhandler(msg)
         if _errorhandler and msg then
@@ -25,14 +31,14 @@ do
 
         for item in package.path:gmatch('[^;]+') do
             local filename = item:gsub('^%.[/\\]+', ''):gsub('%?', module)
-            if _PRELOADED[filename] then
+            if _FILES[filename] then
                 return filename
             end
         end
     end
 
     local function compilefile(filename, mode, env, level)
-        local code = _PRELOADED[filename]
+        local code = _FILES[filename]
         if not code then
             error(string.format('cannot open %s: No such file or directory', filename), level + 1)
         end
@@ -40,7 +46,7 @@ do
     end
 
     function require(module)
-        local loaded = _LOADED[module]
+        local loaded = _LOADED_MODULES[module]
         if loaded then
             return loaded
         end
@@ -50,12 +56,12 @@ do
             error(string.format('module \'%s\' not found', module), 2)
         end
 
-        loaded = _LOADED[filename]
+        loaded = _LOADED_FILES[filename]
         if loaded then
             return loaded
         end
 
-        if _LOADING[filename] then
+        if _LOADING_FILES[filename] then
             error('critical dependency', 2)
         end
 
@@ -64,17 +70,17 @@ do
             error(err, 2)
         end
 
-        _LOADING[filename] = true
+        _LOADING_FILES[filename] = true
         local ok, ret = xpcall(f, errorhandler, module, filename)
-        _LOADING[filename] = false
+        _LOADING_FILES[filename] = false
         if not ok then
             error()
         end
 
         ret = ret or true
 
-        _LOADED[filename] = ret
-        _LOADED[module] = ret
+        _LOADED_MODULES[module] = ret
+        _LOADED_FILES[filename] = ret
 
         return ret
     end
@@ -153,7 +159,7 @@ end
             if type(v) ~= preloadType then
                 error('PRELOADED value must be ' .. preloadType)
             end
-            _PRELOADED[k] = v
+            _FILES[k] = v
         end,
         __index = function(t, k)
             error('Can`t read')
@@ -163,10 +169,6 @@ end
 end
 
 --[[%= code %]]
-
-seterrorhandler(function(...)
-    return print(...)
-end)
 
 dofile('origwar3map.lua')
 

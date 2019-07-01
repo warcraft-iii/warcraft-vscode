@@ -4,10 +4,11 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## Install
 
-[![Marketplace Version](https://vsmarketplacebadge.apphb.com/version/Dencer.warcraft-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
-[![Installs](https://vsmarketplacebadge.apphb.com/installs/Dencer.warcraft-vscode.svg)](vscode:extension/Dencer.warcraft-vscode)
-[![Build Status](https://travis-ci.com/warcraft-iii/warcraft-vscode.svg?branch=master)](https://travis-ci.com/warcraft-iii/warcraft-vscode)
-[![Join the chat](https://discordapp.com/api/guilds/594229838869692466/embed.png?style=shield)](https://discord.gg/26N8ycP)
+[![](https://vsmarketplacebadge.apphb.com/version-short/Dencer.warcraft-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
+[![](https://vsmarketplacebadge.apphb.com/rating-short/Dencer.warcraft-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
+[![](https://vsmarketplacebadge.apphb.com/installs/Dencer.warcraft-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
+[![](https://travis-ci.com/warcraft-iii/warcraft-vscode.svg?branch=master)](https://travis-ci.com/warcraft-iii/warcraft-vscode)
+[![](https://discordapp.com/api/guilds/594229838869692466/embed.png?style=shield)](https://discord.gg/26N8ycP)
 
 ## Features
 

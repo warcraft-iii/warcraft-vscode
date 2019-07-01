@@ -192,13 +192,13 @@ export class Config {
         return this.projectConfig.lua;
     }
 
-    get libraryOrganizations(): GithubOrgOrUserInfo[] | undefined {
-        const setting = this.config.get('libraryOrganizations');
+    get libraryOrganizations() {
+        const setting = this.config.get<GithubOrgOrUserInfo[]>('libraryOrganizations');
         if (!setting || !isArray(setting)) {
             return;
         }
 
-        return setting
+        const orgs = setting
             .map(item =>
                 utils.pick<GithubOrgOrUserInfo>(item, {
                     name: isString,
@@ -207,5 +207,7 @@ export class Config {
                 })
             )
             .filter(item => item.name);
+
+        return orgs.length > 0 ? orgs : undefined;
     }
 }

@@ -93,7 +93,7 @@ export async function confirm(title: string, ok: string = 'Ok', alt?: string) {
     );
 
     if (!result) {
-        return;
+        return ConfirmResult.Cancel;
     }
     return result.value;
 }

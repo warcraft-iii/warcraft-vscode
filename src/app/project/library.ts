@@ -14,10 +14,12 @@ import * as utils from '../../utils';
 
 import { env } from '../../env';
 import { localize, globals, GithubOrgOrUserInfo } from '../../globals';
+import { ConfirmResult } from '../../utils';
 
 interface RepoInfo {
     name: string;
     url: string;
+    archived?: boolean;
 }
 
 type ReposResponse = Octokit.Response<Octokit.ReposListForOrgResponseItem[]>;
@@ -40,11 +42,21 @@ class Library {
         const regex = /^lib[-._]/;
 
         return resp.data
-            .filter(item => !item.archived && regex.test(item.name))
+            .filter(item => regex.test(item.name))
             .map(item => ({
                 name: item.name.replace(regex, ''),
-                url: org.ssh ? item.ssh_url : item.clone_url
-            }));
+                url: org.ssh ? item.ssh_url : item.clone_url,
+                archived: item.archived
+            }))
+            .sort((a, b) => {
+                if (a.archived === b.archived) {
+                    return a.name.localeCompare(b.name);
+                } else if (a.archived) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            });
     }
 
     private async getRemoteRepos() {
@@ -60,7 +72,8 @@ class Library {
             )
             .map(repo => ({
                 label: repo.name,
-                description: repo.url,
+                description: repo.archived ? localize('quick.repoDeprecated', 'DEPRECATED') : undefined,
+                detail: repo.url,
                 value: repo
             }));
     }
@@ -73,7 +86,16 @@ class Library {
         if (!result) {
             return;
         }
-        return result.value;
+
+        const repo = result.value as RepoInfo;
+        if (
+            repo.archived &&
+            (await utils.confirm(localize('quick.confirmDeprecated', 'Repo is DEPRECATED, to continue?'))) !==
+                ConfirmResult.Ok
+        ) {
+            return;
+        }
+        return repo;
     }
 
     private async askGit() {

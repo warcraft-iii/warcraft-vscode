@@ -67,7 +67,6 @@ This extension is a Warcraft III map development tool set of Lua.
 -   [require](https://www.lua.org/manual/5.3/manual.html#pdf-require)
 -   [dofile](https://www.lua.org/manual/5.3/manual.html#pdf-dofile)
 -   [loadfile](https://www.lua.org/manual/5.3/manual.html#pdf-loadfile)
--   [package.path](https://www.lua.org/manual/5.3/manual.html#pdf-package.path)
 
 > And added some functions for debug
 

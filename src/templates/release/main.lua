@@ -126,7 +126,7 @@ do
             local code = [[
 local o, r, e = ...
 return function({ARGS})
-    if ARG{N} then
+    if type(ARG{N}) == 'function' then
         local c = ARG{N}
         ARG{N} = function(...)
             return r(xpcall(c, e, ...))

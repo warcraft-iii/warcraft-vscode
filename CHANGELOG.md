@@ -1,3 +1,12 @@
+## [0.0.24](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.23...v0.0.24) (2019-07-02)
+
+
+### Bug Fixes
+
+* Add library ([7b3d371](https://github.com/warcraft-iii/warcraft-vscode/commit/7b3d371))
+
+
+
 ## [0.0.23](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.22...v0.0.23) (2019-06-28)
 
 

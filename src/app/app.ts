@@ -96,13 +96,21 @@ class App implements vscode.Disposable {
     @utils.debounce(100)
     private async reload() {
         await env.config.reload();
-        this.updateConfigurationButton();
+        await this.updateConfigurationButton();
     }
 
-    private updateConfigurationButton() {
-        const text = ConfigurationType[env.config.configuration];
-        this.configurationButton.text = '$(gear) ' + text;
-        this.configurationButton.tooltip = 'Warcraft Configuration: ' + text;
+    private async updateConfigurationButton() {
+        await env.config.waitLoaded();
+        try {
+            if (env.config.mapDir) {
+                const text = ConfigurationType[env.config.configuration];
+                this.configurationButton.text = '$(gear) ' + text;
+                this.configurationButton.tooltip = 'Warcraft Configuration: ' + text;
+                this.configurationButton.show();
+            }
+        } catch (error) {
+            this.configurationButton.hide();
+        }
     }
 }
 

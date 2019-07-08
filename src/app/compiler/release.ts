@@ -86,27 +86,37 @@ class ReleaseCompiler extends BaseCompiler {
                         ranges: true,
                         scope: true,
                         onCreateNode: node => {
-                            if (node.type === 'CallExpression' && node.base.type === 'Identifier') {
-                                if (this.isRequireFunction(node.base.name)) {
-                                    if (node.arguments.length !== 1) {
-                                        return;
-                                    }
-                                    const arg = node.arguments[0];
-                                    if (arg.type !== 'StringLiteral') {
-                                        return;
-                                    }
-                                    required.push({
-                                        file: arg.value,
-                                        isRequire: node.base.name === 'require'
-                                    });
+                            let arg: luaparse.Expression;
+
+                            if (
+                                node.type === 'CallExpression' &&
+                                node.base.type === 'Identifier' &&
+                                this.isRequireFunction(node.base.name)
+                            ) {
+                                if (node.arguments.length !== 1) {
+                                    return;
                                 }
+                                arg = node.arguments[0];
+                            } else if (
+                                node.type === 'StringCallExpression' &&
+                                node.base.type === 'Identifier' &&
+                                this.isRequireFunction(node.base.name)
+                            ) {
+                                arg = node.argument;
+                            } else {
+                                return;
                             }
+
+                            if (arg.type !== 'StringLiteral') {
+                                return;
+                            }
+
+                            required.push({
+                                file: arg.value,
+                                isRequire: node.base.name === 'require'
+                            });
                         }
                     });
-
-                    if (this.files.has(name)) {
-                        console.log(file);
-                    }
 
                     this.files.set(name, luamin.minify(ast));
 

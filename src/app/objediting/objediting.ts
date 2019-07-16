@@ -21,12 +21,20 @@ export class ObjEditing {
     }
 
     async checkDefine() {
-        const localVersion = this.readLocalVersion();
-        const exeVersion = this.readExeVersion();
+        const localVersion = await this.readLocalVersion();
+        const exeVersion = await this.readExeVersion();
+
+        if (localVersion !== exeVersion) {
+            this.updateDefine(exeVersion);
+        }
     }
 
-    async execute() {
-        await this.download();
+    async updateDefine(version: string) {
+        const url = await this.getRemoteUrl(version);
+        if (!url) {
+            return;
+        }
+        await utils.downloadZip(url, entry => env.asRootPath('.def', entry.fileName.replace(/^[^/]+\//g, '')));
     }
 
     readExeVersion() {
@@ -38,22 +46,24 @@ export class ObjEditing {
         if (!(await fs.pathExists(versionFile))) {
             return;
         }
-        return utils.readFile(versionFile);
+        return await utils.readFile(versionFile);
     }
 
-    async readRemoteVersions() {
-        const tags = (await this.github.repos.listReleases({
+    async getRemoteUrl(version: string) {
+        const tags = (await this.github.repos.listTags({
             owner: 'warcraft-iii',
             repo: 'ObjEditingDefine'
         })).data;
 
-        if (tags.length === 0) {
-            return;
+        for (const tag of tags) {
+            if (tag.name === version) {
+                return tag.zipball_url;
+            }
         }
-
-        const tag = tags[0];
-        return tag.zipball_url;
+        return undefined;
     }
+
+    async execute() {}
 
     async pack() {
         await utils.execFile(env.asExetensionPath('bin/ObjEditing.exe'), [
@@ -63,15 +73,6 @@ export class ObjEditing {
             env.buildFolder,
             env.asRootPath('objediting/main.lua')
         ]);
-    }
-
-    async download() {
-        const url = await this.readRemoteVersions();
-        if (!url) {
-            return;
-        }
-
-        await utils.downloadZip(url, entry => env.asRootPath('.def', entry.fileName.replace(/^[^/]+\//g, '')));
     }
 }
 

@@ -6,10 +6,7 @@
  */
 
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as fs from 'fs-extra';
-import * as got from 'got';
-import * as yauzl from 'yauzl-promise';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
@@ -53,27 +50,8 @@ class Project {
         }
     }
 
-    async download(output: string) {
-        const resp = await got(globals.TEMPLATE_URL, { encoding: null });
-        const zipFile = await yauzl.fromBuffer(resp.body);
-
-        await zipFile.walkEntries(entry => {
-            if (entry.fileName.endsWith('/')) {
-                return;
-            }
-            return new Promise((resolve, reject) => {
-                const outputPath = path.resolve(output, path.relative('warcraft-template-master', entry.fileName));
-
-                fs.mkdirp(path.dirname(outputPath))
-                    .then(() => entry.openReadStream())
-                    .then(stream =>
-                        stream
-                            .pipe(fs.createWriteStream(outputPath))
-                            .on('close', () => resolve())
-                            .on('error', err => reject(err))
-                    );
-            });
-        });
+    download(output: string) {
+        return utils.downloadZip(globals.TEMPLATE_URL, output, 'warcraft-template-master');
     }
 
     async toggleConfiguration() {

@@ -25,6 +25,7 @@
     "onCommand:extension.warcraft.project.clean",
     "onCommand:extension.warcraft.project.addlibrary",
     "onCommand:extension.warcraft.project.toggleConfiguration",
+    "onCommand:extension.warcraft.pack.object",
     "workspaceContains:warcraft.json"
   ],
   "main": "./out/extension.js",
@@ -74,6 +75,11 @@
       {
         "command": "extension.warcraft.project.toggleConfiguration",
         "title": "Toggle Configuration",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.pack.object",
+        "title": "Pack Objects",
         "category": "Warcraft"
       }
     ],

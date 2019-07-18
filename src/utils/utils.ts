@@ -110,10 +110,7 @@ export function pick<T>(object: any, predicate: PickPredicate) {
 
 type ResolvePath = (entry: yauzl.Entry) => string;
 
-export async function downloadZip(url: string, output: string | ResolvePath, relative?: string) {
-    const resp = await got(url, { encoding: null });
-    const zipFile = await yauzl.fromBuffer(resp.body);
-
+export async function extractFile(zipFile: yauzl.ZipFile, output: string | ResolvePath, relative?: string) {
     let resolvePath: ResolvePath;
 
     if (typeof output === 'string') {
@@ -140,4 +137,8 @@ export async function downloadZip(url: string, output: string | ResolvePath, rel
                 );
         });
     });
+}
+
+export async function downloadZip(url: string) {
+    return await yauzl.fromBuffer((await got(url, { encoding: null })).body);
 }

@@ -9,7 +9,9 @@ const Octokit = require('@octokit/rest');
 const got = require('got');
 const fs = require('fs-extra');
 
-async function main() {
+const versions = {};
+
+async function downloadObjEditingDefine() {
     const github = new Octokit();
 
     const releaseResp = await github.repos.getLatestRelease({
@@ -25,16 +27,30 @@ async function main() {
         throw Error('not found release assets');
     }
 
-    const asset = releaseResp.data.assets[0];
+    const release = releaseResp.data;
+    const asset = release.assets[0];
     const assetResp = await got(asset.browser_download_url, { encoding: null });
 
     if (assetResp.statusCode !== 200) {
         throw Error('download asset failed');
     }
 
-    await fs.writeFile(`res/${asset.name}`, assetResp.body);
+    const version = release.tag_name;
+    const outpath = 'res/def.zip';
+    await fs.writeFile(outpath, assetResp.body);
 
-    console.log(`download res/${asset.name} success`);
+    versions.def = version;
+
+    console.log(`download file ${outpath} version: ${version} success`);
+}
+
+async function writeVersions() {
+    await fs.writeJson('res/.version.json', versions);
+}
+
+async function main() {
+    await downloadObjEditingDefine();
+    await writeVersions();
 }
 
 main();

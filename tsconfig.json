@@ -26,6 +26,7 @@
     "skipLibCheck": true,
     "strictNullChecks": true,
     "stripInternal": true,
+    "resolveJsonModule": true,
     "suppressImplicitAnyIndexErrors": true
   },
   "include": ["src/**/*.ts", "bin/**/*.ts"],

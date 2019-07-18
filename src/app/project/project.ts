@@ -50,8 +50,8 @@ class Project {
         }
     }
 
-    download(output: string) {
-        return utils.downloadZip(globals.TEMPLATE_URL, output, 'warcraft-template-master');
+    async download(output: string) {
+        await utils.extractFile(await utils.downloadZip(globals.TEMPLATE_URL), output, 'warcraft-template-master');
     }
 
     async toggleConfiguration() {

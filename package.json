@@ -151,7 +151,8 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production",
+    "vscode:prepublish": "npm run build && node ./prepublish.js",
+    "build": "webpack --mode production",
     "compile": "webpack --mode development",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "postinstall": "node ./node_modules/vscode/bin/install",

@@ -70,6 +70,7 @@ class App implements vscode.Disposable {
         this.subscriptions.push(
             registerCommand('compile.debug', () => this.compiler.execute()),
             registerCommand('pack.debug', async () => {
+                await objediting.execute();
                 await this.compiler.execute();
                 await this.packer.execute();
             }),
@@ -78,6 +79,7 @@ class App implements vscode.Disposable {
                 if (!(await gameRunner.check())) {
                     return;
                 }
+                await objediting.execute();
                 await this.compiler.execute();
                 await this.packer.execute();
                 await gameRunner.execute();

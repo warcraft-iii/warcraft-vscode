@@ -11,7 +11,6 @@ import * as yauzl from 'yauzl-promise';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-// import { globals } from '../../globals';
 
 export class ObjEditing {
     constructor() {
@@ -48,15 +47,13 @@ export class ObjEditing {
     }
 
     async execute() {
-        await this.pack();
-    }
-
-    async pack() {
+        const outDir = env.asBuildPath('objediting');
+        await fs.emptyDir(outDir);
         await utils.execFile(env.asExetensionPath('bin/ObjEditing.exe'), [
             '-m',
             env.mapFolder,
             '-o',
-            env.buildFolder,
+            outDir,
             env.asRootPath('objediting/main.lua')
         ]);
     }

@@ -1,5 +1,5 @@
 /**
- * @File   : prepublish.js
+ * @File   : postinstall.js
  * @Author : Dencer (tdaddon@163.com)
  * @Link   : https://dengsir.github.io
  * @Date   : 7/19/2019, 12:31:34 AM
@@ -41,7 +41,7 @@ async function downloadObjEditingDefine() {
 
     versions.def = version;
 
-    console.log(`download file ${outpath} version: ${version} success`);
+    console.log(`Download file ${outpath} version: ${version} success`);
 }
 
 async function writeVersions() {

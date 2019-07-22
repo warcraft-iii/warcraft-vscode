@@ -151,11 +151,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build && node ./prepublish.js",
+    "vscode:prepublish": "npm run build",
     "build": "webpack --mode production",
     "compile": "webpack --mode development",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
-    "postinstall": "node ./node_modules/vscode/bin/install",
+    "postinstall": "node ./node_modules/vscode/bin/install && node ./postinstall.js",
     "test": "npm run compile",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
     "proto": "node ./node_modules/@apollo/protobufjs/bin/pbjs -t static-module -w CommonJS -o ./src/pb/product.js ./src/pb/product.proto && node ./node_modules/@apollo/protobufjs/bin/pbts -o ./src/pb/product.d.ts ./src/pb/product.js"

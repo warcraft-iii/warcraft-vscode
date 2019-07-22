@@ -7,6 +7,7 @@ src/**
 **/tslint.json
 **/*.map
 **/*.ts
+**/.gitkeep
 node_modules
 webpack.config.js
-**/.gitkeep
+postinstall.js

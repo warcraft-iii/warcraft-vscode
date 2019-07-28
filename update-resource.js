@@ -1,5 +1,5 @@
 /**
- * @File   : postinstall.js
+ * @File   : update-resource.js
  * @Author : Dencer (tdaddon@163.com)
  * @Link   : https://dengsir.github.io
  * @Date   : 7/19/2019, 12:31:34 AM

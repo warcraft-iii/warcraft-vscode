@@ -1,3 +1,17 @@
+## [0.0.25](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.24...v0.0.25) (2019-12-18)
+
+
+### Bug Fixes
+
+* string call expression ([c3e0832](https://github.com/warcraft-iii/warcraft-vscode/commit/c3e0832))
+
+
+### Features
+
+* Hide status bar item in non project ([fa203dc](https://github.com/warcraft-iii/warcraft-vscode/commit/fa203dc))
+
+
+
 ## [0.0.24](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.23...v0.0.24) (2019-07-02)
 
 

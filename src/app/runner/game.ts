@@ -15,6 +15,8 @@ import { localize } from '../../globals';
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
 
+import { getUID } from '../../utils/blizzard';
+
 class GameRunner extends BaseRunner {
     type() {
         return RunnerType.Game;
@@ -48,8 +50,14 @@ class GameRunner extends BaseRunner {
     async execute() {
         const mapPath = env.outFilePath;
         const docFolder = await this.getDocumentFolder();
-        const isPtr = await fs.pathExists(env.asGamePath('../Warcraft III Public Test Launcher.exe'));
-        const docMapFolder = path.resolve(docFolder, isPtr ? 'Warcraft III Public Test' : 'Warcraft III', 'Maps');
+        const uid = await getUID(env.asGamePath('../.product.db'));
+        const isBeta = uid === 'w3b';
+        const isPtr = uid === 'w3t';
+        const docMapFolder = path.resolve(
+            docFolder,
+            isBeta ? 'Warcraft III Beta' : isPtr ? 'Warcraft III Public Test' : 'Warcraft III',
+            'Maps'
+        );
         const targetPath = path.resolve(docMapFolder, 'Test', path.basename(mapPath));
         await fs.copy(mapPath, targetPath);
 

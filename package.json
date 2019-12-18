@@ -161,6 +161,7 @@
     "@types/yauzl-promise": "^2.1.0",
     "conventional-changelog-cli": "^2.0.21",
     "lodash": "^4.17.13",
+    "protobufjs-loader-webpack4": "0.0.2",
     "ts-loader": "^6.0.4",
     "tslint": "^5.18.0",
     "typescript": "^3.5.2",

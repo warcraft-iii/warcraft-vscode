@@ -175,7 +175,7 @@
     "@octokit/rest": "^16.28.2",
     "fs-extra": "^8.1.0",
     "got": "^9.6.0",
-    "lodash-es": "^4.17.11",
+    "lodash-es": "^4.17.14",
     "luamin": "git+https://github.com/DengSir/luamin.git",
     "luaparse": "^0.2.1",
     "simple-git": "^1.117.0",

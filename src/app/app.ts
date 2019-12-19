@@ -15,6 +15,7 @@ import { debugCompiler, releaseCompiler } from './compiler';
 import { debugPacker, releasePacker } from './packer';
 import { gameRunner, editorRunner } from './runner';
 import { project, library } from './project';
+import { objediting } from './objediting';
 
 class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];
@@ -69,13 +70,16 @@ class App implements vscode.Disposable {
         this.subscriptions.push(
             registerCommand('compile.debug', () => this.compiler.execute()),
             registerCommand('pack.debug', async () => {
+                await objediting.execute();
                 await this.compiler.execute();
                 await this.packer.execute();
             }),
+            registerCommand('pack.object', () => objediting.execute()),
             registerCheckedCommand('run.debug', async () => {
                 if (!(await gameRunner.check())) {
                     return;
                 }
+                await objediting.execute();
                 await this.compiler.execute();
                 await this.packer.execute();
                 await gameRunner.execute();

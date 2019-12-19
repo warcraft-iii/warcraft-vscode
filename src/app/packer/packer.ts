@@ -28,26 +28,48 @@ class Packer {
     async generatePackList() {
         const packList: PackItem[] = [];
         const libs = await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES));
+        const imports = [
+            globals.FOLDER_IMPORTS,
+            `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`
+        ];
 
-        packList.push([globals.FILE_ENTRY, env.asBuildPath(globals.FILE_ENTRY)]);
+        // map.w3x
         packList.push(...(await this.generatePackItems(env.mapFolder, file => !utils.isLuaFile(file))));
-        packList.push(...(await this.generatePackItems(env.asRootPath(globals.FOLDER_IMPORTS))));
 
-        for (const lib of libs) {
-            packList.push(
-                ...(await this.generatePackItems(
-                    env.asSourcePath(globals.FOLDER_LIBRARIES, lib, globals.FOLDER_IMPORTS)
-                )),
-                ...(await this.generatePackItems(
-                    env.asSourcePath(
-                        globals.FOLDER_LIBRARIES,
-                        lib,
-                        `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`
-                    )
-                ))
-            );
+        // imports
+        for (const imp of imports) {
+            for (const lib of libs) {
+                packList.push(...(await this.generatePackItems(env.asSourcePath(globals.FOLDER_LIBRARIES, lib, imp))));
+            }
+
+            packList.push(...(await this.generatePackItems(env.asRootPath(imp))));
         }
-        await fs.writeFile(env.asBuildPath(globals.FILE_PACKLIST), JSON.stringify(packList));
+
+        // objediting
+        packList.push(...(await this.generatePackItems(env.asBuildPath('objediting'))));
+
+        // war3map.lua
+        packList.push([globals.FILE_ENTRY, env.asBuildPath(globals.FILE_ENTRY)]);
+
+        const exists = new Set<string>();
+
+        await fs.writeFile(
+            env.asBuildPath(globals.FILE_PACKLIST),
+            JSON.stringify(
+                packList.reduceRight(
+                    (r, item) => {
+                        if (!exists.has(item[0])) {
+                            exists.add(item[0]);
+                            r.push(item);
+                        } else {
+                            console.log(item[0], item[1]);
+                        }
+                        return r;
+                    },
+                    [] as PackItem[]
+                )
+            )
+        );
     }
 
     async packByPackList() {

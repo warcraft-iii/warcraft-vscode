@@ -150,9 +150,11 @@
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "npm run compile",
-    "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md"
+    "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
+    "proto": "node ./node_modules/@apollo/protobufjs/bin/pbjs -t static-module -w CommonJS -o ./src/pb/product.js ./src/pb/product.proto && node ./node_modules/@apollo/protobufjs/bin/pbts -o ./src/pb/product.d.ts ./src/pb/product.js"
   },
   "devDependencies": {
+    "@apollo/protobufjs": "^1.0.3",
     "@types/fs-extra": "^8.0.0",
     "@types/got": "^9.6.0",
     "@types/lodash-es": "^4.17.3",
@@ -161,7 +163,6 @@
     "@types/yauzl-promise": "^2.1.0",
     "conventional-changelog-cli": "^2.0.21",
     "lodash": "^4.17.13",
-    "protobufjs-loader-webpack4": "0.0.2",
     "ts-loader": "^6.0.4",
     "tslint": "^5.18.0",
     "typescript": "^3.5.2",

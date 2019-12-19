@@ -1,3 +1,17 @@
+## [0.0.26](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.25...v0.0.26) (2019-12-19)
+
+
+### Bug Fixes
+
+* package.json merge error ([db37f85](https://github.com/warcraft-iii/warcraft-vscode/commit/db37f85))
+
+
+### Features
+
+* packing objects ([44b65de](https://github.com/warcraft-iii/warcraft-vscode/commit/44b65de))
+
+
+
 ## [0.0.25](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.24...v0.0.25) (2019-12-18)
 
 

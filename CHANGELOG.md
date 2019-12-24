@@ -1,3 +1,12 @@
+## [0.0.28](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.27...v0.0.28) (2019-12-24)
+
+
+### Bug Fixes
+
+* .def is no longer extracted when there are multiple folders in the workspace ([2032b2d](https://github.com/warcraft-iii/warcraft-vscode/commit/2032b2d))
+
+
+
 ## [0.0.27](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.26...v0.0.27) (2019-12-20)
 
 

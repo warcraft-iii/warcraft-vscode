@@ -5,6 +5,7 @@
  * @Date   : 7/16/2019, 2:42:02 PM
  */
 
+import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as yauzl from 'yauzl-promise';
 
@@ -18,6 +19,10 @@ export class ObjEditing {
     }
 
     async checkDefine() {
+        if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length > 1) {
+            return;
+        }
+
         const localVersion = await this.readProjectVersion();
         const projectVersion = await this.readCurrentVersion();
 

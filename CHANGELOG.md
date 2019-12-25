@@ -1,3 +1,12 @@
+## [0.0.29](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.28...v0.0.29) (2019-12-25)
+
+
+### Features
+
+* add simple code confusion ([ead7aa7](https://github.com/warcraft-iii/warcraft-vscode/commit/ead7aa7))
+
+
+
 ## [0.0.28](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.27...v0.0.28) (2019-12-24)
 
 

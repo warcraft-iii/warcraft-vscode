@@ -165,6 +165,14 @@ export class Config {
         this.config.update('configuration', ConfigurationType[value], vscode.ConfigurationTarget.Workspace);
     }
 
+    get codeConfusion() {
+        return this.config.get<boolean>('codeConfusion') || false;
+    }
+
+    set codeConfusion(value: boolean) {
+        this.config.update('codeConfusion', value, vscode.ConfigurationTarget.Global);
+    }
+
     get mapDir() {
         if (!this.projectConfig.mapdir) {
             throw Error(localize('error.noMapFolder', 'Not found: map folder'));

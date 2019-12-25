@@ -120,6 +120,10 @@
             "Release"
           ]
         },
+        "warcraft.codeConfusion": {
+          "type": "boolean",
+          "description": "Enable code confusion? (RELEASE ONLY) *EXPIRMENT*"
+        },
         "warcraft.libraryOrganizations": {
           "type": "array",
           "description": "The Github organization or user for command 'Add Library'",
@@ -185,6 +189,7 @@
     "fs-extra": "^8.1.0",
     "got": "^9.6.0",
     "lodash-es": "^4.17.15",
+    "luacodegen": "^1.0.1",
     "luamin": "git+https://github.com/DengSir/luamin.git",
     "luaparse": "^0.2.1",
     "simple-git": "^1.121.0",

@@ -18,6 +18,7 @@ import { env } from '../../env';
 import { globals, localize, ConfigurationType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
+import { SimpleConfuser } from '../../utils/confuser';
 
 interface RequireItem {
     file: string;
@@ -151,7 +152,15 @@ class ReleaseCompiler extends BaseCompiler {
         );
 
         const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
-        const out = luamin.minify(templates.release.main({ code, package: env.config.lua.package }));
+
+        let out = templates.release.main({ code, package: env.config.lua.package });
+
+        if (env.config.codeConfusion) {
+            out = SimpleConfuser.parse(out);
+        }
+
+        out = luamin.minify(out);
+
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);

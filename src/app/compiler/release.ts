@@ -156,10 +156,10 @@ class ReleaseCompiler extends BaseCompiler {
         let out = templates.release.main({ code, package: env.config.lua.package });
 
         if (env.config.codeConfusion) {
-            out = SimpleConfuser.parse(out);
+            out = luamin.minify(SimpleConfuser.parse(out));
+        } else {
+            out = luamin.minify(out);
         }
-
-        out = luamin.minify(out);
 
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));

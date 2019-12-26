@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 
-import { product } from '../pb/product';
+import { product } from './pb/product';
 
 export async function getUID(db: string) {
     try {

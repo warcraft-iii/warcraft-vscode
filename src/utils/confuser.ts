@@ -1,5 +1,4 @@
 import * as luaparse from 'luaparse';
-import * as luacodegen from 'luacodegen';
 
 export class SimpleConfuser {
     private static stringToByteString(str: string) {
@@ -159,13 +158,7 @@ export class SimpleConfuser {
 
     static parse(script: string) {
         const ast = luaparse.parse(script);
-
         this.formatStatementList(ast.body);
-
-        if (!ast.comments) {
-            ast.comments = [];
-        }
-
-        return luacodegen(ast);
+        return ast;
     }
 }

@@ -164,7 +164,7 @@
     "postinstall": "npm run install-vscode && npm run update-resource",
     "install-vscode": "node ./node_modules/vscode/bin/install",
     "update-resource": "node ./update-resource.js",
-    "proto": "node ./node_modules/@apollo/protobufjs/bin/pbjs -t static-module -w CommonJS -o ./src/pb/product.js ./src/pb/product.proto && node ./node_modules/@apollo/protobufjs/bin/pbts -o ./src/pb/product.d.ts ./src/pb/product.js"
+    "proto": "node ./node_modules/@apollo/protobufjs/bin/pbjs -t static-module -w CommonJS -o ./src/utils/pb/product.js ./src/utils/pb/product.proto && node ./node_modules/@apollo/protobufjs/bin/pbts -o ./src/utils/pb/product.d.ts ./src/utils/pb/product.js"
   },
   "devDependencies": {
     "@apollo/protobufjs": "^1.0.3",
@@ -189,7 +189,6 @@
     "fs-extra": "^8.1.0",
     "got": "^9.6.0",
     "lodash-es": "^4.17.15",
-    "luacodegen": "^1.0.1",
     "luamin": "git+https://github.com/DengSir/luamin.git",
     "luaparse": "^0.2.1",
     "simple-git": "^1.121.0",

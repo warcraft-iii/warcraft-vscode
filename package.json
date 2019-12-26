@@ -168,7 +168,7 @@
   },
   "devDependencies": {
     "@apollo/protobufjs": "^1.0.3",
-    "@types/fs-extra": "^8.0.0",
+    "@types/fs-extra": "^8.0.1",
     "@types/got": "^9.6.2",
     "@types/lodash-es": "^4.17.3",
     "@types/luaparse": "^0.2.0",
@@ -191,7 +191,7 @@
     "lodash-es": "^4.17.15",
     "luamin": "git+https://github.com/DengSir/luamin.git",
     "luaparse": "^0.2.1",
-    "simple-git": "^1.121.0",
+    "simple-git": "^1.129.0",
     "vscode-nls": "^4.1.1",
     "yauzl-promise": "^2.1.3"
   }

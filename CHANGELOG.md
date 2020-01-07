@@ -1,3 +1,12 @@
+## [0.0.30](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.29...v0.0.30) (2020-01-07)
+
+
+### Bug Fixes
+
+* Object generator sometimes do not need to execute ([40f8650](https://github.com/warcraft-iii/warcraft-vscode/commit/40f8650))
+
+
+
 ## [0.0.29](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.28...v0.0.29) (2019-12-25)
 
 

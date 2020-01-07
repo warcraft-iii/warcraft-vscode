@@ -8,10 +8,12 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as yauzl from 'yauzl-promise';
+import * as path from 'path';
 
 import * as utils from '../../utils';
 
 import { env } from '../../env';
+import { globals } from '../../globals';
 
 export class ObjEditing {
     constructor() {
@@ -20,6 +22,11 @@ export class ObjEditing {
 
     async checkDefine() {
         if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length > 1) {
+            return;
+        }
+
+        const file = path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.FILE_PROJECT);
+        if (!(await fs.pathExists(file))) {
             return;
         }
 
@@ -52,15 +59,13 @@ export class ObjEditing {
     }
 
     async execute() {
+        const lua = env.asRootPath('objediting/main.lua');
+        if (!(await fs.pathExists(lua))) {
+            return;
+        }
         const outDir = env.asBuildPath('objediting');
         await fs.emptyDir(outDir);
-        await utils.execFile(env.asExetensionPath('bin/ObjEditing.exe'), [
-            '-m',
-            env.mapFolder,
-            '-o',
-            outDir,
-            env.asRootPath('objediting/main.lua')
-        ]);
+        await utils.execFile(env.asExetensionPath('bin/ObjEditing.exe'), ['-m', env.mapFolder, '-o', outDir, lua]);
     }
 }
 

@@ -1,3 +1,7 @@
+## [0.0.31](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.30...v0.0.31) (2020-04-20)
+
+
+
 ## [0.0.30](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.29...v0.0.30) (2020-01-07)
 
 

@@ -46,9 +46,9 @@ export class Config {
         files: [],
         lua: {
             package: {
-                path: ['./?.lua', './?/init.lua']
-            }
-        }
+                path: ['./?.lua', './?/init.lua'],
+            },
+        },
     };
     private projectConfig = this.defaultConfig;
     private waiter?: Promise<void>;
@@ -60,9 +60,9 @@ export class Config {
     reload() {
         return (this.waiter =
             this.waiter ||
-            new Promise<void>(resolve => {
+            new Promise<void>((resolve) => {
                 this.readProjectConfig()
-                    .then(cfg => {
+                    .then((cfg) => {
                         this.projectConfig = cfg || this.defaultConfig;
                         resolve();
                     })
@@ -103,7 +103,7 @@ export class Config {
         const json = utils.pick<WarcraftJson>(content, {
             mapdir: isString,
             files: isStringArray,
-            'lua.package.path': isStringArray
+            'lua.package.path': isStringArray,
         });
 
         return {
@@ -111,9 +111,9 @@ export class Config {
             files: json.files || [],
             lua: {
                 package: {
-                    path: ['./?.lua', './?/init.lua', ...(json['lua.package.path'] || [])]
-                }
-            }
+                    path: ['./?.lua', './?/init.lua', ...(json['lua.package.path'] || [])],
+                },
+            },
         };
     }
 
@@ -141,12 +141,38 @@ export class Config {
         this.config.update('wePath', value, vscode.ConfigurationTarget.Global);
     }
 
+    private parseArguments(args: string[]) {
+        const result = [];
+        for (const argument of args) {
+            let arg = argument;
+            while (arg.length > 0) {
+                const hasQoutes = arg.startsWith('"');
+                const pos = arg.indexOf(hasQoutes ? '"' : ' ', hasQoutes ? 1 : 0);
+
+                if (pos < 0) {
+                    if (hasQoutes) {
+                        throw Error(localize('error.invalidGameArgs', `Invalid argument with qoutes ${argument}`));
+                    }
+                    result.push(arg);
+                    break;
+                } else {
+                    result.push(arg.substr(0, hasQoutes ? pos + 1 : pos));
+                    arg = arg.substr(pos + 1);
+                }
+            }
+        }
+
+        return result;
+    }
+
     get gameArgs() {
-        return this.config.get<string[]>('gameArgs') || [];
+        const gameArgs = this.config.get<string[]>('gameArgs') || [];
+        return this.parseArguments(gameArgs);
     }
 
     get weArgs() {
-        return this.config.get<string[]>('weArgs') || [];
+        const weArgs = this.config.get<string[]>('weArgs') || [];
+        return this.parseArguments(weArgs);
     }
 
     get autoCloseClient() {
@@ -207,14 +233,14 @@ export class Config {
         }
 
         const orgs = setting
-            .map(item =>
+            .map((item) =>
                 utils.pick<GithubOrgOrUserInfo>(item, {
                     name: isString,
-                    type: x => isUndefined(x) || (isString(x) && (x === 'user' || x === 'organization')),
-                    ssh: x => isUndefined(x) || isBoolean(x)
+                    type: (x) => isUndefined(x) || (isString(x) && (x === 'user' || x === 'organization')),
+                    ssh: (x) => isUndefined(x) || isBoolean(x),
                 })
             )
-            .filter(item => item.name);
+            .filter((item) => item.name);
 
         return orgs.length > 0 ? orgs : undefined;
     }

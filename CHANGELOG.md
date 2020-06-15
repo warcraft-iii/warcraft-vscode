@@ -1,3 +1,13 @@
+## [0.0.32](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.31...v0.0.32) (2020-06-15)
+
+
+### Bug Fixes
+
+* Invalid Game/WE launch parameter config ([429d506](https://github.com/warcraft-iii/warcraft-vscode/commit/429d506))
+* Object generator level values saved incorrect ([d26923f](https://github.com/warcraft-iii/warcraft-vscode/commit/d26923f))
+
+
+
 ## [0.0.31](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.30...v0.0.31) (2020-04-20)
 
 

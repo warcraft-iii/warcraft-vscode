@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import * as utils from '../utils';
 
 import { env } from '../env';
-import { globals, ConfigurationType } from '../globals';
+import { globals, ConfigurationType, WarcraftVersionType } from '../globals';
 import { registerCommand, registerCheckedCommand } from './command';
 import { debugCompiler, releaseCompiler } from './compiler';
 import { debugPacker, releasePacker } from './packer';
@@ -20,10 +20,12 @@ import { objediting } from './objediting';
 class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];
     private configurationButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
+    private warcraftVersionButton = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1);
 
     dispose() {
         this.configurationButton.dispose();
-        this.subscriptions.forEach(sub => sub.dispose());
+        this.warcraftVersionButton.dispose();
+        this.subscriptions.forEach((sub) => sub.dispose());
     }
 
     constructor() {
@@ -53,7 +55,7 @@ class App implements vscode.Disposable {
             );
         }
 
-        vscode.workspace.onDidChangeConfiguration(e => {
+        vscode.workspace.onDidChangeConfiguration((e) => {
             if (e.affectsConfiguration('warcraft')) {
                 this.reload();
             }
@@ -63,7 +65,10 @@ class App implements vscode.Disposable {
     private initStatusBar() {
         this.configurationButton.command = 'extension.warcraft.project.toggleConfiguration';
         this.configurationButton.show();
+        this.warcraftVersionButton.command = 'extension.warcraft.project.toggleWarcraftVersion';
+        this.warcraftVersionButton.show();
         this.updateConfigurationButton();
+        this.updateWarcraftVersionButton();
     }
 
     private initCommands() {
@@ -93,7 +98,8 @@ class App implements vscode.Disposable {
             registerCommand('project.create', () => project.create()),
             registerCommand('project.clean', () => project.clean()),
             registerCommand('project.addlibrary', () => library.add()),
-            registerCommand('project.toggleConfiguration', () => project.toggleConfiguration())
+            registerCommand('project.toggleConfiguration', () => project.toggleConfiguration()),
+            registerCommand('project.toggleWarcraftVersion', () => project.toggleWarcraftVersion())
         );
     }
 
@@ -101,6 +107,7 @@ class App implements vscode.Disposable {
     private async reload() {
         await env.config.reload();
         await this.updateConfigurationButton();
+        await this.updateWarcraftVersionButton();
     }
 
     private async updateConfigurationButton() {
@@ -114,6 +121,20 @@ class App implements vscode.Disposable {
             }
         } catch (error) {
             this.configurationButton.hide();
+        }
+    }
+
+    private async updateWarcraftVersionButton() {
+        await env.config.waitLoaded();
+        try {
+            if (env.config.mapDir) {
+                const text = WarcraftVersionType[env.config.warcraftVersion];
+                this.warcraftVersionButton.text = '$(gear) ' + text;
+                this.warcraftVersionButton.tooltip = 'Warcraft Version: ' + text;
+                this.warcraftVersionButton.show();
+            }
+        } catch (error) {
+            this.warcraftVersionButton.hide();
         }
     }
 }

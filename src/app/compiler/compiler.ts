@@ -5,7 +5,8 @@
  * @Date   : 5/23/2019, 10:45:09 AM
  */
 
-import { ConfigurationType } from '../../globals';
+import { ConfigurationType, WarcraftVersionType } from '../../globals';
+import { env } from '../../env';
 
 export interface Compiler {
     execute(): Promise<void>;
@@ -18,24 +19,42 @@ export abstract class BaseCompiler implements Compiler {
 
     protected processCodeMacros(code: string) {
         const comment = this.getCommentEqual(code);
-        code = code
-            .trimRight()
-            .replace(/--\s*@remove@/g, `--[${comment}[@remove@`)
-            .replace(/--\s*@end-remove@/g, `--@end-remove@]${comment}]`);
+
+        const ignores: string[] = [];
+        const accepts: string[] = [];
+
+        ignores.push('remove');
 
         if (this.type() === ConfigurationType.Release) {
-            code = code
-                .replace(/--\s*@debug@/g, `--[${comment}[@debug@`)
-                .replace(/--\s*@end-debug@/g, `--@end-debug@]${comment}]`)
-                .replace(/--\s*\[=*\[@non-debug@/g, '--@non-debug@')
-                .replace(/--\s*@end-non-debug@\]=*\]/g, '--@end-non-debug@');
+            ignores.push('debug');
+            accepts.push('non-debug');
         }
+
+        if (env.config.warcraftVersion === WarcraftVersionType.Classic) {
+            ignores.push('reforge');
+            accepts.push('non-reforge');
+        } else {
+            ignores.push('classic');
+            accepts.push('non-classic');
+        }
+
+        for (const key of ignores) {
+            code = code
+                .replace(RegExp(`--\\s*@${key}@`, 'g'), `--[${comment}[@${key}@`)
+                .replace(RegExp(`--\\s*@end-${key}@`, 'g'), `--@end-${key}@]${comment}]`);
+        }
+        for (const key of accepts) {
+            code = code
+                .replace(RegExp(`--\\s*\\[=*\\[@${key}@`, 'g'), `--@${key}@`)
+                .replace(RegExp(`--\\s*@end-${key}@\\]=*\\]`, 'g'), `--@end-${key}@`);
+        }
+
         return code;
     }
 
     protected getCommentEqual(code: string) {
         const m = code.match(/\[(=*)\[|\](=*)\]/g);
-        const exists = new Set(m ? m.map(x => x.length - 2) : []);
+        const exists = new Set(m ? m.map((x) => x.length - 2) : []);
 
         let length = 0;
         while (exists.has(length)) {

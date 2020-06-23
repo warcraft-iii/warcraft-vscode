@@ -25,6 +25,7 @@
     "onCommand:extension.warcraft.project.clean",
     "onCommand:extension.warcraft.project.addlibrary",
     "onCommand:extension.warcraft.project.toggleConfiguration",
+    "onCommand:extension.warcraft.project.toggleWarcraftVersion",
     "onCommand:extension.warcraft.pack.object",
     "workspaceContains:warcraft.json"
   ],
@@ -78,6 +79,11 @@
         "category": "Warcraft"
       },
       {
+        "command": "extension.warcraft.project.toggleWarcraftVersion",
+        "title": "Toggle Warcraft Version",
+        "category": "Warcraft"
+      },
+      {
         "command": "extension.warcraft.pack.object",
         "title": "Pack Objects",
         "category": "Warcraft"
@@ -118,6 +124,14 @@
           "enum": [
             "Debug",
             "Release"
+          ]
+        },
+        "warcraft.warcraftVersion": {
+          "type": "string",
+          "description": "Which version of Warcraft does compile?",
+          "enum": [
+            "Reforge",
+            "Classic"
           ]
         },
         "warcraft.codeConfusion": {

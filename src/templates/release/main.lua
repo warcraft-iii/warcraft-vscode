@@ -49,6 +49,10 @@ do
         return preload(code, '@' .. filename, mode, env or _G)
     end
 
+    -- @classic@
+    local orgRequire = require
+    -- @end-classic@
+
     function require(module)
         local loaded = _LOADED_MODULES[module]
         if loaded then
@@ -57,6 +61,11 @@ do
 
         local filename = resolvefile(module)
         if not filename then
+            -- @classic@
+            if orgRequire then
+                return orgRequire(module)
+            end
+            -- @end-classic@
             error(string.format('module \'%s\' not found', module), 2)
         end
 

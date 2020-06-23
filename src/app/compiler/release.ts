@@ -154,6 +154,7 @@ class ReleaseCompiler extends BaseCompiler {
         const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
 
         let out = templates.release.main({ code, package: env.config.lua.package });
+        out = this.processCodeMacros(out);
 
         if (env.config.codeConfusion) {
             out = luamin.minify(SimpleConfuser.parse(out));

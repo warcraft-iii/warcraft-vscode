@@ -15,7 +15,7 @@ import isBoolean from 'lodash-es/isBoolean';
 import isUndefined from 'lodash-es/isUndefined';
 import isPlainObject from 'lodash-es/isPlainObject';
 
-import { globals, localize, ConfigurationType, GithubOrgOrUserInfo } from '../globals';
+import { globals, localize, ConfigurationType, GithubOrgOrUserInfo, WarcraftVersionType } from '../globals';
 
 interface WarcraftJson {
     mapdir?: string;
@@ -189,6 +189,14 @@ export class Config {
 
     set configuration(value: ConfigurationType) {
         this.config.update('configuration', ConfigurationType[value], vscode.ConfigurationTarget.Workspace);
+    }
+
+    get warcraftVersion() {
+        return WarcraftVersionType[this.config.get<string>('warcraftVersion') || ''] || WarcraftVersionType.Reforge;
+    }
+
+    set warcraftVersion(value: WarcraftVersionType) {
+        this.config.update('warcraftVersion', WarcraftVersionType[value], vscode.ConfigurationTarget.Workspace);
     }
 
     get codeConfusion() {

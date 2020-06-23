@@ -10,10 +10,10 @@ import * as fs from 'fs-extra';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { globals, localize, ConfigurationType } from '../../globals';
+import { globals, localize, ConfigurationType, WarcraftVersionType } from '../../globals';
 
 class Project {
-    constructor() {}
+    constructor() { }
 
     @utils.report(localize('report.clean', 'Cleaning project'))
     clean() {
@@ -74,6 +74,28 @@ class Project {
         }
 
         env.config.configuration = result.value;
+    }
+
+    async toggleWarcraftVersion() {
+        const result = await vscode.window.showQuickPick(
+            [
+                {
+                    label: 'Reforge',
+                    value: WarcraftVersionType.Reforge
+                },
+                {
+                    label: 'Classic',
+                    value: WarcraftVersionType.Classic
+                }
+            ],
+            { placeHolder: localize('quick.toggleWarcraftVersion', 'Togggle Warcraft Version') }
+        );
+
+        if (!result) {
+            return;
+        }
+
+        env.config.warcraftVersion = result.value;
     }
 }
 

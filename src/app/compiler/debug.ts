@@ -33,13 +33,14 @@ class DebugCompiler extends BaseCompiler {
         const code = [
             ...(await Promise.all(
                 (await utils.getAllFiles(env.sourceFolder))
-                    .filter(file => !utils.isHiddenFile(file) && utils.isLuaFile(file))
-                    .map(file => this.genFile(file))
+                    .filter((file) => !utils.isHiddenFile(file) && utils.isLuaFile(file))
+                    .map((file) => this.genFile(file))
             )),
-            await this.genFile(env.asMapPath(globals.FILE_ENTRY), 'orig' + globals.FILE_ENTRY)
+            await this.genFile(env.asMapPath(globals.FILE_ENTRY), 'orig' + globals.FILE_ENTRY),
         ].join('\n');
 
-        const out = templates.debug.main({ code, package: env.config.lua.package });
+        let out = templates.debug.main({ code, package: env.config.lua.package });
+        out = this.processCodeMacros(out);
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);

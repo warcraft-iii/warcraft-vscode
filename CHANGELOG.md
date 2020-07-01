@@ -1,3 +1,12 @@
+## [0.0.33](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.32...v0.0.33) (2020-07-01)
+
+
+### Bug Fixes
+
+* **ObjEditing:** Miss object fields when load existing war3map.* file ([3e70411](https://github.com/warcraft-iii/warcraft-vscode/commit/3e70411))
+
+
+
 ## [0.0.32](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.31...v0.0.32) (2020-06-15)
 
 

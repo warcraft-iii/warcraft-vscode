@@ -37,7 +37,7 @@ class GameRunner extends BaseRunner {
         }
 
         const sys: Map<string, string> = new Map(
-            Object.keys(process.env).map(key => [key.toLowerCase(), process.env[key]])
+            Object.keys(process.env).map((key) => [key.toLowerCase(), process.env[key]])
         ) as Map<string, string>;
 
         return m[1].replace(/%([^%]+)%/g, (_, x) => {
@@ -50,7 +50,7 @@ class GameRunner extends BaseRunner {
     async execute() {
         const mapPath = env.outFilePath;
         const docFolder = await this.getDocumentFolder();
-        const uid = await getUID(env.asGamePath('../.product.db'));
+        const uid = await getUID(await env.productDB());
         const isBeta = uid === 'w3b';
         const isPtr = uid === 'w3t';
         const docMapFolder = path.resolve(

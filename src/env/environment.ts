@@ -7,6 +7,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as fs from 'fs-extra';
 
 import { Config } from './config';
 import { globals, localize, ConfigurationType } from '../globals';
@@ -81,6 +82,18 @@ class Environment {
 
     get mapExtName() {
         return path.extname(this.config.mapDir);
+    }
+
+    async productDB() {
+        let dbPath = env.asGamePath();
+        for (let i = 0; i < 3; i++) {
+            const db = path.resolve(dbPath, '.product.db');
+            if (await fs.pathExists(db)) {
+                return db;
+            }
+            dbPath = path.resolve(dbPath, '../');
+        }
+        return '';
     }
 }
 

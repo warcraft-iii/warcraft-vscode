@@ -15,7 +15,7 @@ import * as templates from '../../templates';
 import isString from 'lodash-es/isString';
 
 import { env } from '../../env';
-import { globals, localize, ConfigurationType } from '../../globals';
+import { globals, localize, ConfigurationType, WarcraftVersionType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
 import { SimpleConfuser } from '../../utils/confuser';
@@ -153,8 +153,10 @@ class ReleaseCompiler extends BaseCompiler {
 
         const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
 
-        let out = templates.release.main({ code, package: env.config.lua.package });
-        out = this.processCodeMacros(out);
+        let out = templates.release.main({
+            code, package: env.config.lua.package,
+            classic: env.config.warcraftVersion === WarcraftVersionType.Classic
+        });
 
         if (env.config.codeConfusion) {
             out = luamin.minify(SimpleConfuser.parse(out));

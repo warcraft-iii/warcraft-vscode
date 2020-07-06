@@ -30,7 +30,7 @@ class Packer {
         const libs = await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES));
         const imports = [
             globals.FOLDER_IMPORTS,
-            `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`,
+            `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`
         ];
 
         // map.w3x

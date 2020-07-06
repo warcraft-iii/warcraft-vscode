@@ -7,11 +7,11 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as utils from '../../utils';
-import * as templates from '../../templates';
 
 import { env } from '../../env';
-import { globals, localize, ConfigurationType } from '../../globals';
+import { ConfigurationType, globals, localize, WarcraftVersionType } from '../../globals';
+import * as templates from '../../templates';
+import * as utils from '../../utils';
 
 import { BaseCompiler } from './compiler';
 
@@ -36,11 +36,13 @@ class DebugCompiler extends BaseCompiler {
                     .filter((file) => !utils.isHiddenFile(file) && utils.isLuaFile(file))
                     .map((file) => this.genFile(file))
             )),
-            await this.genFile(env.asMapPath(globals.FILE_ENTRY), 'orig' + globals.FILE_ENTRY),
+            await this.genFile(env.asMapPath(globals.FILE_ENTRY), 'orig' + globals.FILE_ENTRY)
         ].join('\n');
 
-        let out = templates.debug.main({ code, package: env.config.lua.package });
-        out = this.processCodeMacros(out);
+        const out = templates.debug.main({
+            code, package: env.config.lua.package,
+            classic: env.config.warcraftVersion === WarcraftVersionType.Classic
+        });
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);

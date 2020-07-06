@@ -38,6 +38,8 @@ export abstract class BaseCompiler implements Compiler {
             accepts.push('non-classic');
         }
 
+        code = code.trimRight();
+
         for (const key of ignores) {
             code = code
                 .replace(RegExp(`--\\s*@${key}@`, 'g'), `--[${comment}[@${key}@`)

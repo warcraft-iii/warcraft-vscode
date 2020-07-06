@@ -48,9 +48,9 @@ do
         return preload(code, '@' .. filename, mode, env or _G)
     end
 
-    -- @classic@
+    --[[%>  if (!classic) { print('--[==['); } %]]
     local orgRequire = require
-    -- @end-classic@
+    --[[%>  if (!classic) { print(']==]--'); } %]]
 
     function require(module)
         local loaded = _LOADED_MODULES[module]
@@ -60,11 +60,11 @@ do
 
         local filename = resolvefile(module)
         if not filename then
-            -- @classic@
+            --[[%>  if (!classic) { print('--[==['); } %]]
             if orgRequire then
                 return orgRequire(module)
             end
-            -- @end-classic@
+            --[[%>  if (!classic) { print(']==]--'); } %]]
             error(string.format('module \'%s\' not found', module), 2)
         end
 
@@ -174,13 +174,15 @@ end
 end
 
 --[[%= code %]]
-
+--[[%>  if (classic) { print('--[==['); } %]]
 dofile('origwar3map.lua')
-
 local __main = main
+--[[%>  if (classic) { print(']==]--'); } %]]
 function main()
     xpcall(function()
+        --[[%>  if (classic) { print('--[==['); } %]]
         __main()
+        --[[%>  if (classic) { print(']==]--'); } %]]
         dofile('main.lua')
     end, function(msg)
         local handler = geterrorhandler()

@@ -23,6 +23,7 @@ export namespace globals {
     export const FOLDER_IMPORTS = 'imports';
     export const FOLDER_LIBRARIES = 'lib';
     export const FOLDER_SOURCE = 'src';
+    export const MAP_FILE_EXT = '*.w3x|*.w3m';
 }
 
 export enum ConfigurationType {

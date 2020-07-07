@@ -46,9 +46,9 @@ export class Config {
         files: [],
         lua: {
             package: {
-                path: ['./?.lua', './?/init.lua'],
-            },
-        },
+                path: ['./?.lua', './?/init.lua']
+            }
+        }
     };
     private projectConfig = this.defaultConfig;
     private waiter?: Promise<void>;
@@ -103,7 +103,7 @@ export class Config {
         const json = utils.pick<WarcraftJson>(content, {
             mapdir: isString,
             files: isStringArray,
-            'lua.package.path': isStringArray,
+            'lua.package.path': isStringArray
         });
 
         return {
@@ -111,9 +111,9 @@ export class Config {
             files: json.files || [],
             lua: {
                 package: {
-                    path: ['./?.lua', './?/init.lua', ...(json['lua.package.path'] || [])],
-                },
-            },
+                    path: ['./?.lua', './?/init.lua', ...(json['lua.package.path'] || [])]
+                }
+            }
         };
     }
 
@@ -223,11 +223,9 @@ export class Config {
             return;
         }
 
-        const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-
-        fs.writeJSON(path.resolve(rootPath, globals.FILE_PROJECT), this.projectConfig);
-
         this.projectConfig.mapdir = value;
+        const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        fs.writeJSON(path.resolve(rootPath, globals.FILE_PROJECT), this.projectConfig);
     }
 
     get files() {
@@ -249,7 +247,7 @@ export class Config {
                 utils.pick<GithubOrgOrUserInfo>(item, {
                     name: isString,
                     type: (x) => isUndefined(x) || (isString(x) && (x === 'user' || x === 'organization')),
-                    ssh: (x) => isUndefined(x) || isBoolean(x),
+                    ssh: (x) => isUndefined(x) || isBoolean(x)
                 })
             )
             .filter((item) => item.name);

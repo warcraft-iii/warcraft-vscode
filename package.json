@@ -27,6 +27,7 @@
     "onCommand:extension.warcraft.project.toggleConfiguration",
     "onCommand:extension.warcraft.project.toggleWarcraftVersion",
     "onCommand:extension.warcraft.pack.object",
+    "onCommand:extension.warcraft.project.choseMapFile",
     "workspaceContains:warcraft.json"
   ],
   "main": "./out/extension.js",
@@ -86,6 +87,11 @@
       {
         "command": "extension.warcraft.pack.object",
         "title": "Pack Objects",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.project.choseMapFile",
+        "title": "Chose a Map File",
         "category": "Warcraft"
       }
     ],

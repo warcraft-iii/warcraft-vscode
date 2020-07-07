@@ -97,6 +97,31 @@ class Project {
 
         env.config.warcraftVersion = result.value;
     }
+
+    async choseMapFile() {
+        const maps = await fs.readdir(env.asRootPath());
+
+        const menus = [];
+        for (const m of maps) {
+            if (m.endsWith('.w3x') || m.endsWith('.w3m')) {
+                menus.push({
+                    label: m,
+                    value: m
+                });
+            }
+        }
+
+        const result = await vscode.window.showQuickPick(
+            menus,
+            { placeHolder: localize('quick.choseMapFile', 'Chose a Map File') }
+        );
+
+        if (!result) {
+            return;
+        }
+
+        env.config.mapDir = result.value;
+    }
 }
 
 export const project = new Project();

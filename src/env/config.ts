@@ -199,6 +199,10 @@ export class Config {
         this.config.update('warcraftVersion', WarcraftVersionType[value], vscode.ConfigurationTarget.Workspace);
     }
 
+    get classic() {
+        return this.warcraftVersion === WarcraftVersionType.Classic;
+    }
+
     get codeConfusion() {
         return this.config.get<boolean>('codeConfusion') || false;
     }

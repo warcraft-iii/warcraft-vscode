@@ -15,7 +15,7 @@ import * as templates from '../../templates';
 import isString from 'lodash-es/isString';
 
 import { env } from '../../env';
-import { globals, localize, ConfigurationType, WarcraftVersionType } from '../../globals';
+import { globals, localize, ConfigurationType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
 import { SimpleConfuser } from '../../utils/confuser';
@@ -47,9 +47,9 @@ class ReleaseCompiler extends BaseCompiler {
         if (item.isRequire) {
             const name = item.file
                 .split('.')
-                .filter(word => word !== '')
+                .filter((word) => word !== '')
                 .join('/');
-            return env.config.lua.package.path.map(finder => env.asSourcePath(finder.replace('?', name)));
+            return env.config.lua.package.path.map((finder) => env.asSourcePath(finder.replace('?', name)));
         } else {
             return [path.isAbsolute(item.file) ? item.file : env.asSourcePath(item.file)];
         }
@@ -63,15 +63,23 @@ class ReleaseCompiler extends BaseCompiler {
             }
         }
 
-        throw Error(localize('error.notFound', 'Not found {0}', item.file));
+        if (!env.config.classic) {
+            throw Error(localize('error.notFound', 'Not found {0}', item.file));
+        }
+
+        // classic allow use inner package, likes jass.xxxx
+        return '';
     }
 
     private async processFiles(...items: FileItem[]) {
         await Promise.all(
             items
-                .map(item => this.convert(item))
-                .map(async item => {
+                .map((item) => this.convert(item))
+                .map(async (item) => {
                     const file = await this.resolveFile(item);
+                    if (file.length === 0) {
+                        return;
+                    }
                     const name = item.name || utils.posixCase(path.relative(env.sourceFolder, file));
                     if (this.files.has(name)) {
                         return;
@@ -86,7 +94,7 @@ class ReleaseCompiler extends BaseCompiler {
                         locations: true,
                         ranges: true,
                         scope: true,
-                        onCreateNode: node => {
+                        onCreateNode: (node) => {
                             let arg: luaparse.Expression;
 
                             if (
@@ -145,17 +153,18 @@ class ReleaseCompiler extends BaseCompiler {
 
         this.files.clear();
 
-        await this.processFiles(
-            'main.lua',
-            { name: 'origwar3map.lua', file: env.asMapPath(globals.FILE_ENTRY) },
-            ...env.config.files
-        );
+        await this.processFiles('main.lua', ...env.config.files);
+
+        if (!env.config.classic) {
+            await this.processFiles({ name: 'origwar3map.lua', file: env.asMapPath(globals.FILE_ENTRY) });
+        }
 
         const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
 
         let out = templates.release.main({
-            code, package: env.config.lua.package,
-            classic: env.config.warcraftVersion === WarcraftVersionType.Classic
+            code,
+            package: env.config.lua.package,
+            classic: env.config.classic
         });
 
         if (env.config.codeConfusion) {

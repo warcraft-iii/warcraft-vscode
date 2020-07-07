@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import { env } from '../../env';
-import { ConfigurationType, globals, localize, WarcraftVersionType } from '../../globals';
+import { ConfigurationType, globals, localize } from '../../globals';
 import * as templates from '../../templates';
 import * as utils from '../../utils';
 
@@ -30,18 +30,23 @@ class DebugCompiler extends BaseCompiler {
             throw Error(localize('error.noSrcFolder', 'Not found: source folder'));
         }
 
-        const code = [
+        const files = [
             ...(await Promise.all(
                 (await utils.getAllFiles(env.sourceFolder))
                     .filter((file) => !utils.isHiddenFile(file) && utils.isLuaFile(file))
                     .map((file) => this.genFile(file))
-            )),
-            await this.genFile(env.asMapPath(globals.FILE_ENTRY), 'orig' + globals.FILE_ENTRY)
-        ].join('\n');
+            ))
+        ];
+
+        if (!env.config.classic) {
+            files.push(await this.genFile(env.asMapPath(globals.FILE_ENTRY), 'orig' + globals.FILE_ENTRY));
+        }
+
+        const code = files.join('\n');
 
         const out = templates.debug.main({
             code, package: env.config.lua.package,
-            classic: env.config.warcraftVersion === WarcraftVersionType.Classic
+            classic: env.config.classic
         });
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));

@@ -99,7 +99,8 @@ class App implements vscode.Disposable {
             registerCommand('project.clean', () => project.clean()),
             registerCommand('project.addlibrary', () => library.add()),
             registerCommand('project.toggleConfiguration', () => project.toggleConfiguration()),
-            registerCommand('project.toggleWarcraftVersion', () => project.toggleWarcraftVersion())
+            registerCommand('project.toggleWarcraftVersion', () => project.toggleWarcraftVersion()),
+            registerCommand('project.choseMapFile', () => project.choseMapFile())
         );
     }
 

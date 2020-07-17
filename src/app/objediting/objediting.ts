@@ -58,14 +58,41 @@ export class ObjEditing {
         return (await utils.readFile(versionFile)).trim();
     }
 
+    async prepareObjectFiles() {
+        const outDir = env.asBuildPath('objediting.source');
+        await fs.emptyDir(outDir);
+        const extensions = ['w3u', 'w3t', 'w3b', 'w3h', 'w3d', 'w3a', 'w3q'];
+
+        for (const ext of extensions) {
+            const file = 'war3mp.' + ext;
+            if (env.config.classic) {
+                await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
+                    'extract',
+                    '-o',
+                    outDir,
+                    '-m',
+                    env.mapFolder,
+                    '-f',
+                    file,
+                ]);
+            } else {
+                await fs.copy(path.join(env.mapFolder, file), outDir);
+            }
+        }
+
+        return outDir;
+    }
+
     async execute() {
         const lua = env.asRootPath('objediting/main.lua');
         if (!(await fs.pathExists(lua))) {
             return;
         }
+        await env.checkMapFolder();
         const outDir = env.asBuildPath('objediting');
         await fs.emptyDir(outDir);
-        await utils.execFile(env.asExetensionPath('bin/ObjEditing.exe'), ['-m', env.mapFolder, '-o', outDir, lua]);
+        const sourceDir = await this.prepareObjectFiles();
+        await utils.execFile(env.asExetensionPath('bin/ObjEditing.exe'), ['-m', sourceDir, '-o', outDir, lua]);
     }
 }
 

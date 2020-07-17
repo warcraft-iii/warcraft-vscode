@@ -95,6 +95,13 @@ class Environment {
         }
         return '';
     }
+
+    async checkMapFolder() {
+        const p = this.mapFolder;
+        if (env.config.classic && !(await fs.stat(p)).isFile()) {
+            throw Error(localize('error.invalidMapFile', 'Classic version ONLY support .w3x/.w3m format map file.'));
+        }
+    }
 }
 
 export const env = new Environment();

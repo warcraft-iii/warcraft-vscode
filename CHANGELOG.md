@@ -1,3 +1,12 @@
+## [0.0.34](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.33...v0.0.34) (2020-07-17)
+
+
+### Bug Fixes
+
+* Invalid ".product.db" file path ([82ad861](https://github.com/warcraft-iii/warcraft-vscode/commit/82ad861))
+
+
+
 ## [0.0.33](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.32...v0.0.33) (2020-07-01)
 
 

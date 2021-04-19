@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as git from 'simple-git/promise';
-import * as Octokit from '@octokit/rest';
+import { Octokit } from '@octokit/rest';
 import * as utils from '../../utils';
 
 import { env } from '../../env';

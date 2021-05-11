@@ -2,7 +2,7 @@
   "name": "warcraft-vscode",
   "displayName": "warcraft-vscode",
   "description": "A Warcraft III map develop toolset",
-  "version": "0.0.34",
+  "version": "0.1.0",
   "publisher": "Dencer",
   "license": "SEE LICENSE IN LICENSE.md",
   "icon": "images/icon.png",
@@ -11,7 +11,7 @@
     "url": "https://github.com/warcraft-iii/warcraft-vscode.git"
   },
   "engines": {
-    "vscode": "^1.33.0"
+    "vscode": "^1.56.0"
   },
   "categories": [
     "Other"
@@ -217,7 +217,7 @@
     "@types/lodash-es": "^4.17.4",
     "@types/luaparse": "^0.2.7",
     "@types/node": "^10.17.58",
-    "@types/vscode": "^1.55.0",
+    "@types/vscode": "^1.56.0",
     "@types/yauzl-promise": "^2.1.0",
     "conventional-changelog-cli": "^2.1.1",
     "lodash": "^4.17.21",

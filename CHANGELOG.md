@@ -1,3 +1,19 @@
+# [0.1.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.34...v0.1.0) (2021-05-11)
+
+
+### Bug Fixes
+
+* Loading lua.package.path from warcraft.json is incorrect ([dfb90c3](https://github.com/warcraft-iii/warcraft-vscode/commit/dfb90c30c33e309c8ad30d1c1785eca8c148bc40))
+
+
+### Features
+
+* Add chose map file command ([baf4202](https://github.com/warcraft-iii/warcraft-vscode/commit/baf42024b0006164b85c407c243fa12d2333374d))
+* Pack map file as the YDWE format ([c2a9b3d](https://github.com/warcraft-iii/warcraft-vscode/commit/c2a9b3d8e5646abbe72da2c651655f21de0a72b4))
+* Support Warcraft III Classic Version (WIP) ([f9fc629](https://github.com/warcraft-iii/warcraft-vscode/commit/f9fc629b8321f16245edd5e8788ec9e7e71d3f75))
+
+
+
 ## [0.0.34](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.33...v0.0.34) (2020-07-17)
 
 

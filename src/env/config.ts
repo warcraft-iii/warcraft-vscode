@@ -46,9 +46,9 @@ export class Config {
         files: [],
         lua: {
             package: {
-                path: ['./?.lua', './?/init.lua']
-            }
-        }
+                path: ['./?.lua', './?/init.lua'],
+            },
+        },
     };
     private projectConfig = this.defaultConfig;
     private waiter?: Promise<void>;
@@ -103,7 +103,7 @@ export class Config {
         const json = utils.pick<WarcraftJson>(content, {
             mapdir: isString,
             files: isStringArray,
-            'lua.package.path': isStringArray
+            'lua.package.path': isStringArray,
         });
 
         return {
@@ -111,14 +111,14 @@ export class Config {
             files: json.files || [],
             lua: {
                 package: {
-                    path: ['./?.lua', './?/init.lua', ...(json['lua.package.path'] || [])]
-                }
-            }
+                    path: ['./?.lua', './?/init.lua', ...(json['lua.package.path'] || [])],
+                },
+            },
         };
     }
 
     get gamePath() {
-        const value = this.config.get<string>('gamePath');
+        const value = this.config.get<string>(this.classic ? 'gamePathClassic' : 'gamePath');
         if (!value) {
             throw Error(localize('error.noGamePath', 'Not found: Warcraft III.exe'));
         }
@@ -126,11 +126,11 @@ export class Config {
     }
 
     set gamePath(value: string) {
-        this.config.update('gamePath', value, vscode.ConfigurationTarget.Global);
+        this.config.update(this.classic ? 'gamePathClassic' : 'gamePath', value, vscode.ConfigurationTarget.Global);
     }
 
     get wePath() {
-        const value = this.config.get<string>('wePath');
+        const value = this.config.get<string>(this.classic ? 'wePathClassic' : 'wePath');
         if (!value) {
             throw Error(localize('error.noEditorPath', 'Not found: World Editor.exe'));
         }
@@ -138,7 +138,19 @@ export class Config {
     }
 
     set wePath(value: string) {
-        this.config.update('wePath', value, vscode.ConfigurationTarget.Global);
+        this.config.update(this.classic ? 'wePathClassic' : 'wePath', value, vscode.ConfigurationTarget.Global);
+    }
+
+    get ydwePath() {
+        const value = this.config.get<string>('ydwePath');
+        if (!value) {
+            throw Error(localize('error.noYDWEPath', 'Not found: YDWEConfig.exe'));
+        }
+        return value;
+    }
+
+    set ydwePath(value: string) {
+        this.config.update('ydwePath', value, vscode.ConfigurationTarget.Global);
     }
 
     private parseArguments(args: string[]) {
@@ -166,15 +178,15 @@ export class Config {
     }
 
     get gameArgs() {
-        const gameArgs = this.config.get<string[]>('gameArgs') || [];
+        const gameArgs = this.config.get<string[]>(this.classic ? 'gameArgsClassic' : 'gameArgs') || [];
         return this.parseArguments(gameArgs);
     }
 
     get weArgs() {
-        const weArgs = this.config.get<string[]>('weArgs') || [];
+        const weArgs = this.config.get<string[]>(this.classic ? 'weArgsClassic' : 'weArgs') || [];
         return this.parseArguments(weArgs);
     }
-
+    
     get autoCloseClient() {
         return this.config.get<boolean>('autoCloseClient') || false;
     }
@@ -247,7 +259,7 @@ export class Config {
                 utils.pick<GithubOrgOrUserInfo>(item, {
                     name: isString,
                     type: (x) => isUndefined(x) || (isString(x) && (x === 'user' || x === 'organization')),
-                    ssh: (x) => isUndefined(x) || isBoolean(x)
+                    ssh: (x) => isUndefined(x) || isBoolean(x),
                 })
             )
             .filter((item) => item.name);

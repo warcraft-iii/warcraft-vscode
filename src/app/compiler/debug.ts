@@ -35,7 +35,7 @@ class DebugCompiler extends BaseCompiler {
                 (await utils.getAllFiles(env.sourceFolder))
                     .filter((file) => !utils.isHiddenFile(file) && utils.isLuaFile(file))
                     .map((file) => this.genFile(file))
-            ))
+            )),
         ];
 
         if (!env.config.classic) {
@@ -45,12 +45,17 @@ class DebugCompiler extends BaseCompiler {
         const code = files.join('\n');
 
         const out = templates.debug.main({
-            code, package: env.config.lua.package,
-            classic: env.config.classic
+            code,
+            package: env.config.lua.package,
+            classic: env.config.classic,
         });
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);
+
+        if (env.config.classic) {
+            await this.injectWar3mapJass();
+        }
     }
 
     async genFile(file: string, name?: string) {

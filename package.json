@@ -120,6 +120,32 @@
             "type": "string"
           }
         },
+        "warcraft.gamePathClassic": {
+          "type": "string",
+          "description": "Where is Warcraft III Classic Execution?"
+        },
+        "warcraft.wePathClassic": {
+          "type": "string",
+          "description": "Where is World Editor Classic Execution?"
+        },
+        "warcraft.gameArgsClassic": {
+          "type": "array",
+          "description": "Arguments to added to run the game.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warcraft.weArgsClassic": {
+          "type": "array",
+          "description": "Arguments to added to run the world editor",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warcraft.ydwePath": {
+          "type": "string",
+          "description": "Where is YDWE Execution?"
+        },
         "warcraft.autoCloseClient": {
           "type": "boolean",
           "description": "Automatically close the client?"

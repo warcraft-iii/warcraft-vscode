@@ -69,7 +69,7 @@ export class ObjEditing {
                 await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
                     'extract',
                     '-o',
-                    outDir,
+                    path.join(outDir, file),
                     '-m',
                     env.mapFolder,
                     '-f',

@@ -14,19 +14,34 @@ import { env } from '../../env';
 import { localize } from '../../globals';
 
 interface ExecutionItem {
+    title: string;
     name: string;
     key: string;
+    selectFile: boolean;
 }
 
 const EXECUTION_FILES: ExecutionItem[] = [
     {
+        title: 'Warcraft III',
         name: 'Warcraft III.exe',
-        key: 'gamePath'
+        key: 'gamePath',
+        selectFile: false,
     },
     {
+        title: 'Warcraft III Editor',
         name: 'World Editor.exe',
-        key: 'wePath'
-    }
+        key: 'wePath',
+        selectFile: false,
+    },
+];
+
+const EXECUTION_FILES_YDWE: ExecutionItem[] = [
+    {
+        title: 'YDWE',
+        name: 'bin/YDWEConfig.exe',
+        key: 'ydwePath',
+        selectFile: true,
+    },
 ];
 
 class Checker {
@@ -54,16 +69,16 @@ class Checker {
     private async notify(notFounds: ExecutionItem[]) {
         if (
             !(await utils.confirm(
-                localize('confirm.setGamePath', 'Warcraft III path is not set or incorrect, to set?')
+                localize('confirm.setGamePath', notFounds[0].title + ' is not set or incorrect, to set?')
             ))
         ) {
             return;
         }
 
         const result = await vscode.window.showOpenDialog({
-            canSelectFolders: true,
-            canSelectFiles: false,
-            canSelectMany: false
+            canSelectFolders: !notFounds[0].selectFile,
+            canSelectFiles: notFounds[0].selectFile,
+            canSelectMany: false,
         });
 
         if (!result) {
@@ -74,9 +89,18 @@ class Checker {
         const names: string[] = [];
 
         for (const item of notFounds) {
-            const file = path.resolve(folder, item.name);
+            let file: string;
+            if (item.selectFile) {
+                file = path.resolve(path.dirname(folder), item.name);
+            } else {
+                file = path.resolve(folder, item.name);
+            }
             if ((await fs.pathExists(file)) && (await fs.stat(file)).isFile()) {
-                env.config[item.key] = file;
+                if (item.selectFile) {
+                    env.config[item.key] = folder;
+                } else {
+                    env.config[item.key] = file;
+                }
             } else {
                 names.push(item.name);
             }
@@ -98,7 +122,12 @@ class Checker {
 
         const notFounds: ExecutionItem[] = [];
 
-        for (const item of EXECUTION_FILES) {
+        const checkItems = EXECUTION_FILES;
+        if (env.config.classic) {
+            checkItems.push(...EXECUTION_FILES_YDWE);
+        }
+
+        for (const item of checkItems) {
             if (!(await this.checkPath(item.key))) {
                 notFounds.push(item);
             }

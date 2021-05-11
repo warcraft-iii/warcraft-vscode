@@ -1,3 +1,12 @@
+## [0.1.1](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.0...v0.1.1) (2021-05-11)
+
+
+### Features
+
+* Open map files with YDWE ([bbc6546](https://github.com/warcraft-iii/warcraft-vscode/commit/bbc65469a50c06a2f2002e625c9485fdf5aa407a))
+
+
+
 # [0.1.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.0.34...v0.1.0) (2021-05-11)
 
 

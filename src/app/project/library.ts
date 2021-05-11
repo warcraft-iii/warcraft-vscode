@@ -22,41 +22,42 @@ interface RepoInfo {
     archived?: boolean;
 }
 
-type ReposResponse = Octokit.Response<Octokit.ReposListForOrgResponseItem[]>;
-
 class Library {
     private repo = git(env.rootPath);
     private github = new Octokit();
     private defaultOrgs: GithubOrgOrUserInfo[] = [
         {
-            name: 'warcraft-iii'
-        }
+            name: 'warcraft-iii',
+        },
     ];
 
     private async getOrgRepos(org: GithubOrgOrUserInfo): Promise<RepoInfo[]> {
         const resp =
             org.type === 'user'
-                ? ((await this.github.repos.listForUser({ username: org.name })) as ReposResponse)
+                ? await this.github.repos.listForUser({
+                      username: org.name,
+                  })
                 : await this.github.repos.listForOrg({ org: org.name, type: 'public' });
 
         const regex = /^lib[-._]/;
 
-        return resp.data
-            .filter(item => regex.test(item.name))
-            .map(item => ({
-                name: item.name.replace(regex, ''),
-                url: org.ssh ? item.ssh_url : item.clone_url,
-                archived: item.archived
+        const result = resp.data
+            .filter((item) => regex.test(item.name))
+            .map((item) => ({
+                name: item.name?.replace(regex, ''),
+                url: (org.ssh ? item.ssh_url : item.clone_url) || '',
+                archived: item.archived,
             }))
             .sort((a, b) => {
                 if (a.archived === b.archived) {
                     return a.name.localeCompare(b.name);
                 } else if (a.archived) {
                     return 1;
-                } else {
-                    return -1;
                 }
+                return -1;
             });
+
+        return result;
     }
 
     private async getRemoteRepos() {
@@ -65,23 +66,23 @@ class Library {
         return Array.prototype
             .concat(
                 ...(await Promise.all(
-                    (env.config.libraryOrganizations || this.defaultOrgs).map(async org =>
-                        (await this.getOrgRepos(org)).filter(repo => !exists.has(repo.name))
+                    (env.config.libraryOrganizations || this.defaultOrgs).map(async (org) =>
+                        (await this.getOrgRepos(org)).filter((repo) => !exists.has(repo.name))
                     )
                 ))
             )
-            .map(repo => ({
+            .map((repo) => ({
                 label: repo.name,
                 description: repo.archived ? localize('quick.repoDeprecated', 'DEPRECATED') : undefined,
                 detail: repo.url,
-                value: repo
+                value: repo,
             }));
     }
 
     private async askRepo() {
         const result = await vscode.window.showQuickPick(this.getRemoteRepos(), {
             ignoreFocusOut: true,
-            placeHolder: localize('quick.loadingRepos', 'Loading Repos')
+            placeHolder: localize('quick.loadingRepos', 'Loading Repos'),
         });
         if (!result) {
             return;

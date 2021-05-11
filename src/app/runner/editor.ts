@@ -20,7 +20,11 @@ class EditorRunner extends BaseRunner {
 
     @utils.report(localize('report.openEditor', 'Starting world editor'))
     async execute() {
-        this.process = utils.spawn(env.config.wePath, [...env.config.weArgs, '-loadfile', env.mapFolder]);
+        this.process = utils.spawn(env.config.classic ? env.config.ydwePath : env.config.wePath, [
+            ...env.config.weArgs,
+            '-loadfile',
+            env.mapFolder,
+        ]);
     }
 
     async check() {

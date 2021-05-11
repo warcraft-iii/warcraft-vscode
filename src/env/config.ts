@@ -17,12 +17,6 @@ import isPlainObject from 'lodash-es/isPlainObject';
 
 import { globals, localize, ConfigurationType, GithubOrgOrUserInfo, WarcraftVersionType } from '../globals';
 
-interface WarcraftJson {
-    mapdir?: string;
-    files?: string[];
-    'lua.package.path'?: string[];
-}
-
 interface LuaPackage {
     path: string[];
 }
@@ -35,10 +29,6 @@ interface WarcraftConfig {
     mapdir?: string;
     files: string[];
     lua: LuaConfig;
-}
-
-function isStringArray(val: any) {
-    return isArray(val) && val.every(isString);
 }
 
 export class Config {
@@ -95,23 +85,17 @@ export class Config {
             return;
         }
 
-        const content = await fs.readJson(file);
-        if (!isPlainObject(content)) {
+        const json: WarcraftConfig = await fs.readJson(file);
+        if (!isPlainObject(json)) {
             return;
         }
-
-        const json = utils.pick<WarcraftJson>(content, {
-            mapdir: isString,
-            files: isStringArray,
-            'lua.package.path': isStringArray,
-        });
 
         return {
             mapdir: json.mapdir,
             files: json.files || [],
             lua: {
                 package: {
-                    path: ['./?.lua', './?/init.lua', ...(json['lua.package.path'] || [])],
+                    path: ['./?.lua', './?/init.lua', ...(json.lua?.package?.path || [])],
                 },
             },
         };
@@ -186,7 +170,7 @@ export class Config {
         const weArgs = this.config.get<string[]>(this.classic ? 'weArgsClassic' : 'weArgs') || [];
         return this.parseArguments(weArgs);
     }
-    
+
     get autoCloseClient() {
         return this.config.get<boolean>('autoCloseClient') || false;
     }

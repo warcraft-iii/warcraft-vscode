@@ -1,3 +1,12 @@
+## [0.1.2](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.1...v0.1.2) (2021-05-11)
+
+
+### Bug Fixes
+
+* **classic:** Unable to pack map when opening WE ([a2c92d4](https://github.com/warcraft-iii/warcraft-vscode/commit/a2c92d4e238fc905031daccbf336248f1caa3728))
+
+
+
 ## [0.1.1](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.0...v0.1.1) (2021-05-11)
 
 

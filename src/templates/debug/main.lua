@@ -3,6 +3,24 @@ package.path = '--[[%> print(package.path.join(";")) %]]'
 
 local P
 do
+    --[[%>  if (!classic) { print('--[==['); } %]]
+    do
+        local runtime = require 'jass.runtime'
+        local console = require 'jass.console'
+        console.enable = true
+        print = console.write
+        runtime.handle_level = 0
+        runtime.sleep = false
+        function runtime.error_handle(msg)
+            print("---------------------------------------")
+            print(tostring(msg) .. "\n")
+            print(debug.traceback())
+            print("---------------------------------------")
+        end
+        print('===========' .. os.date '%m-%d %H:%M:%S' .. '===========')
+    end
+    --[[%>  if (!classic) { print(']==]--'); } %]]
+
     local preloadType, preload, _errorhandler
     do
         preloadType = 'string'
@@ -191,3 +209,7 @@ function main()
         end
     end)
 end
+
+--[[%>  if (!classic) { print('--[==['); } %]]
+main()
+--[[%>  if (!classic) { print(']==]--'); } %]]

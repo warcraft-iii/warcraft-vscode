@@ -192,3 +192,7 @@ function main()
         end
     end)
 end
+
+--[[%>  if (!classic) { print('--[==['); } %]]
+main()
+--[[%>  if (!classic) { print(']==]--'); } %]]

@@ -66,7 +66,7 @@ export class ObjEditing {
         for (const ext of extensions) {
             const file = 'war3mp.' + ext;
             if (env.config.classic) {
-                await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
+                await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), [
                     'extract',
                     '-o',
                     path.join(outDir, file),

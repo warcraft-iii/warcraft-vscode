@@ -71,7 +71,7 @@ export abstract class BaseCompiler implements Compiler {
     private async extractFileFromMap(outPath: string, fileName: string) {
         await fs.remove(outPath);
         await fs.mkdirp(path.dirname(outPath));
-        await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), [
+        await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), [
             'extract',
             '-o',
             outPath,

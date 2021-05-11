@@ -85,13 +85,13 @@ class Packer {
 
             args.push('-o', env.outFilePath);
             args.push('-i', env.asBuildPath(globals.FILE_PACKLIST));
-            await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), args);
+            await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), args);
         } else {
             await fs.copy(env.mapFolder, env.outFilePath);
             args.push('pack');
             args.push('-m', env.outFilePath);
             args.push('-i', env.asBuildPath(globals.FILE_PACKLIST));
-            await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), args);
+            await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), args);
         }
     }
 

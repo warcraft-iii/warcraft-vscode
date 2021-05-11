@@ -53,6 +53,10 @@ class Environment {
         return this.asRootPath(globals.FOLDER_SOURCE, ...args);
     }
 
+    asYDWEPath(...args: string[]) {
+        return path.resolve(path.dirname(this.config.ydwePath), ...args);
+    }
+
     get rootPath() {
         if (!vscode.workspace.workspaceFolders) {
             return;

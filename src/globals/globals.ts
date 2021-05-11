@@ -16,6 +16,7 @@ export namespace globals {
     export const FILE_RELEASE_MAP = 'release';
     export const FILE_ENTRY = 'war3map.lua';
     export const FILE_ENTRY_JASS = 'war3map.j';
+    export const FILE_ENTRY_SCRIPTS_JASS = 'scripts\\war3map.j';
     export const FILE_PACKLIST = 'packlist.json';
     export const FILE_PROJECT = 'warcraft.json';
 

@@ -30,7 +30,7 @@ class Packer {
         const libs = await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES));
         const imports = [
             globals.FOLDER_IMPORTS,
-            `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`
+            `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`,
         ];
 
         // map.w3x
@@ -50,6 +50,10 @@ class Packer {
 
         // war3map.lua
         packList.push([globals.FILE_ENTRY, env.asBuildPath(globals.FILE_ENTRY)]);
+
+        if (env.config.classic) {
+            packList.push([globals.FILE_ENTRY_JASS, env.asBuildPath(globals.FILE_ENTRY_JASS)]);
+        }
 
         const exists = new Set<string>();
 
@@ -72,17 +76,23 @@ class Packer {
     async packByPackList() {
         const args: string[] = [];
 
-        args.push('generate');
+        if (!env.config.classic) {
+            args.push('generate');
 
-        if (this.type() === ConfigurationType.Debug) {
-            args.push('-f');
+            if (this.type() === ConfigurationType.Debug) {
+                args.push('-f');
+            }
+
+            args.push('-o', env.outFilePath);
+            args.push('-i', env.asBuildPath(globals.FILE_PACKLIST));
+            await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), args);
+        } else {
+            await fs.copy(env.mapFolder, env.outFilePath);
+            args.push('pack');
+            args.push('-m', env.outFilePath);
+            args.push('-i', env.asBuildPath(globals.FILE_PACKLIST));
+            await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), args);
         }
-
-        args.push('-o', env.outFilePath);
-
-        args.push('-i', env.asBuildPath(globals.FILE_PACKLIST));
-
-        await utils.execFile(env.asExetensionPath('bin/MopaqPack.exe'), args);
     }
 
     @utils.report(localize('report.pack', 'Packing map'))

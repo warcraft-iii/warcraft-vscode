@@ -28,7 +28,7 @@ class GameRunner extends BaseRunner {
             'query',
             'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders',
             '/v',
-            'Personal'
+            'Personal',
         ]);
 
         const m = output.match(/Personal\s+REG_EXPAND_SZ\s+([^\r\n]+)/);
@@ -48,24 +48,34 @@ class GameRunner extends BaseRunner {
 
     @utils.report(localize('report.openGame', 'Starting game'))
     async execute() {
-        const mapPath = env.outFilePath;
-        const docFolder = await this.getDocumentFolder();
-        const uid = await getUID(await env.productDB());
-        const isBeta = uid === 'w3b';
-        const isPtr = uid === 'w3t';
-        const docMapFolder = path.resolve(
-            docFolder,
-            isBeta ? 'Warcraft III Beta' : isPtr ? 'Warcraft III Public Test' : 'Warcraft III',
-            'Maps'
-        );
-        const targetPath = path.resolve(docMapFolder, 'Test', path.basename(mapPath));
-        await fs.copy(mapPath, targetPath);
+        let mapPath = env.outFilePath;
+        let exec: string;
 
-        this.process = utils.spawn(env.config.gamePath, [
-            ...env.config.gameArgs,
-            '-loadfile',
-            path.relative(docMapFolder, targetPath)
-        ]);
+        if (env.config.classic) {
+            exec = env.asYDWEPath('bin/YDWEConfig.exe');
+        } else {
+            exec = env.config.gamePath;
+            const docFolder = await this.getDocumentFolder();
+            const uid = await getUID(await env.productDB());
+            const isBeta = uid === 'w3b';
+            const isPtr = uid === 'w3t';
+            const mapFolder = path.resolve(
+                docFolder,
+                isBeta ? 'Warcraft III Beta' : isPtr ? 'Warcraft III Public Test' : 'Warcraft III',
+                'Maps'
+            );
+            const targetPath = path.resolve(mapFolder, 'Test', path.basename(mapPath));
+            await fs.copy(mapPath, targetPath);
+            mapPath = path.relative(mapFolder, targetPath);
+        }
+
+        const args: string[] = [...env.config.gameArgs, '-loadfile', mapPath];
+
+        if (env.config.classic) {
+            args.push('-launchwar3');
+        }
+
+        this.process = utils.spawn(exec, args);
     }
 
     async check() {

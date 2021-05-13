@@ -1,3 +1,12 @@
+## [0.1.4](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.3...v0.1.4) (2021-05-13)
+
+
+### Features
+
+* **classic:** Specify the path to the war3map.j file or use it in the map file. ([b01dc79](https://github.com/warcraft-iii/warcraft-vscode/commit/b01dc792d29dfec8c7536e39fbf9885856991d22))
+
+
+
 ## [0.1.3](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.2...v0.1.3) (2021-05-13)
 
 

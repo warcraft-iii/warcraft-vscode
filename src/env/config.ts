@@ -28,6 +28,7 @@ interface LuaConfig {
 interface WarcraftConfig {
     mapdir?: string;
     files: string[];
+    jassfile?: string;
     lua: LuaConfig;
 }
 
@@ -93,6 +94,7 @@ export class Config {
         return {
             mapdir: json.mapdir,
             files: json.files || [],
+            jassfile: json.jassfile,
             lua: {
                 package: {
                     path: ['./?.lua', './?/init.lua', ...(json.lua?.package?.path || [])],
@@ -226,6 +228,13 @@ export class Config {
 
     get files() {
         return this.projectConfig.files;
+    }
+
+    get jassfile() {
+        if (vscode.workspace.workspaceFolders && this.projectConfig.jassfile) {
+            return path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, this.projectConfig.jassfile);
+        }
+        return null;
     }
 
     get lua() {

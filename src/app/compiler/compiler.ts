@@ -80,7 +80,11 @@ export abstract class BaseCompiler implements Compiler {
 
     protected async injectWar3mapJass() {
         const outPath = env.asBuildPath(globals.FILE_ENTRY_JASS);
-        await this.extractWar3mapJass(outPath);
+        if (env.config.jassfile && (await fs.pathExists(env.config.jassfile))) {
+            await fs.copyFile(env.config.jassfile, outPath);
+        } else {
+            await this.extractWar3mapJass(outPath);
+        }
         const jass = (await fs.readFile(outPath)).toString().split('\r\n');
 
         let mainFunc = false;

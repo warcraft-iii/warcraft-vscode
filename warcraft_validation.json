@@ -13,6 +13,10 @@
         "type": "string"
       }
     },
+    "jassfile": {
+      "description": "*CLASSIC* Specify the path to the war3map.j file or use it in the map file.",
+      "type": "string"
+    },
     "lua.package.path": {
       "description": "Define package.path in Lua",
       "type": "array",

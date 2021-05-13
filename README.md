@@ -56,6 +56,7 @@ This extension is a Warcraft III map development tool set of Lua.
 {
     "mapdir": "map.w3x",
     "files": ["main.lua"],
+    "jassfile": "", // *CLASSIC* Specify the path to the war3map.j file or use it in the map file.
     "lua.package.path": ["./lib/?.lua", "./lib/?/init.lua"]
 }
 ```

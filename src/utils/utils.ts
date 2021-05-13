@@ -11,9 +11,11 @@ import * as vscode from 'vscode';
 import * as got from 'got';
 import * as yauzl from 'yauzl-promise';
 import pickBy from 'lodash-es/pickBy';
+import { env } from '../env';
+import * as proc from './proc';
 
 async function _getAllFiles(root: string, r: string[], isDir: boolean, recursive: boolean) {
-    const files = (await fs.readdir(root)).map(file => path.resolve(root, file));
+    const files = (await fs.readdir(root)).map((file) => path.resolve(root, file));
 
     for (const file of files) {
         const stat = await fs.stat(file);
@@ -36,7 +38,7 @@ async function _getAllFiles(root: string, r: string[], isDir: boolean, recursive
 export enum ConfirmResult {
     Cancel,
     Ok,
-    Alt
+    Alt,
 }
 
 export function getAllFiles(root: string, isDir: boolean = false, recursive: boolean = true) {
@@ -44,7 +46,7 @@ export function getAllFiles(root: string, isDir: boolean = false, recursive: boo
 }
 
 export function sleep(n: number) {
-    return new Promise<void>(resolve => setTimeout(() => resolve(), n));
+    return new Promise<void>((resolve) => setTimeout(() => resolve(), n));
 }
 
 export function isLuaFile(file: string) {
@@ -75,21 +77,21 @@ export async function confirm(title: string, ok: string = 'Ok', alt?: string) {
     const items = [
         {
             title: ok,
-            value: ConfirmResult.Ok
-        }
+            value: ConfirmResult.Ok,
+        },
     ];
 
     if (alt) {
         items.push({
             title: alt,
-            value: ConfirmResult.Alt
+            value: ConfirmResult.Alt,
         });
     }
 
     const result = await vscode.window.showInformationMessage(
         title,
         {
-            modal: true
+            modal: true,
         },
         ...items
     );
@@ -121,7 +123,7 @@ export async function extractFile(zipFile: yauzl.ZipFile, output: string | Resol
         resolvePath = output;
     }
 
-    await zipFile.walkEntries(entry => {
+    await zipFile.walkEntries((entry) => {
         if (entry.fileName.endsWith('/')) {
             return;
         }
@@ -129,11 +131,11 @@ export async function extractFile(zipFile: yauzl.ZipFile, output: string | Resol
             const outputPath = resolvePath(entry);
             fs.mkdirp(path.dirname(outputPath))
                 .then(() => entry.openReadStream())
-                .then(stream =>
+                .then((stream) =>
                     stream
                         .pipe(fs.createWriteStream(outputPath))
                         .on('close', () => resolve())
-                        .on('error', err => reject(err))
+                        .on('error', (err) => reject(err))
                 );
         });
     });
@@ -141,4 +143,19 @@ export async function extractFile(zipFile: yauzl.ZipFile, output: string | Resol
 
 export async function downloadZip(url: string) {
     return await yauzl.fromBuffer((await got(url, { encoding: null })).body);
+}
+
+export async function extractFileFromMap(outPath: string, fileName: string) {
+    await fs.remove(outPath);
+    await fs.mkdirp(path.dirname(outPath));
+    await proc.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), [
+        'extract',
+        '-o',
+        outPath,
+        '-m',
+        env.mapFolder,
+        '-f',
+        fileName,
+    ]);
+    return await fs.pathExists(outPath);
 }

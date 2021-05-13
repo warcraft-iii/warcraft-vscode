@@ -64,17 +64,9 @@ export class ObjEditing {
         const extensions = ['w3u', 'w3t', 'w3b', 'w3h', 'w3d', 'w3a', 'w3q'];
 
         for (const ext of extensions) {
-            const file = 'war3mp.' + ext;
+            const file = 'war3map.' + ext;
             if (env.config.classic) {
-                await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), [
-                    'extract',
-                    '-o',
-                    path.join(outDir, file),
-                    '-m',
-                    env.mapFolder,
-                    '-f',
-                    file,
-                ]);
+                await utils.extractFileFromMap(path.join(outDir, file), file);
             } else {
                 await fs.copy(path.join(env.mapFolder, file), outDir);
             }

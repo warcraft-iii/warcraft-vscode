@@ -9,7 +9,6 @@ import { globals, ConfigurationType, WarcraftVersionType, localize } from '../..
 import { env } from '../../env';
 import * as utils from '../../utils';
 import * as fs from 'fs-extra';
-import * as path from 'path';
 
 export interface Compiler {
     execute(): Promise<void>;
@@ -68,24 +67,9 @@ export abstract class BaseCompiler implements Compiler {
         return '='.repeat(length);
     }
 
-    private async extractFileFromMap(outPath: string, fileName: string) {
-        await fs.remove(outPath);
-        await fs.mkdirp(path.dirname(outPath));
-        await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), [
-            'extract',
-            '-o',
-            outPath,
-            '-m',
-            env.mapFolder,
-            '-f',
-            fileName,
-        ]);
-        return await fs.pathExists(outPath);
-    }
-
     protected async extractWar3mapJass(outPath: string) {
-        if (!(await this.extractFileFromMap(outPath, globals.FILE_ENTRY_JASS))) {
-            if (await this.extractFileFromMap(outPath, globals.FILE_ENTRY_SCRIPTS_JASS)) {
+        if (!(await utils.extractFileFromMap(outPath, globals.FILE_ENTRY_JASS))) {
+            if (await utils.extractFileFromMap(outPath, globals.FILE_ENTRY_SCRIPTS_JASS)) {
                 return true;
             } else {
                 throw Error(localize('error.noMapScriptFile', 'Not found: War3map.j file'));

@@ -1,3 +1,12 @@
+## [0.1.3](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.2...v0.1.3) (2021-05-13)
+
+
+### Bug Fixes
+
+* **Objediting:** Merge built-in object config failure ([5b9fda1](https://github.com/warcraft-iii/warcraft-vscode/commit/5b9fda1d96f9e680a500c617830b5ecbca000149))
+
+
+
 ## [0.1.2](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.1...v0.1.2) (2021-05-11)
 
 

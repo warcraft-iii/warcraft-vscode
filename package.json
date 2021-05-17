@@ -207,6 +207,7 @@
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "test": "npm run compile",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
+    "postinstall": "npm run update-resource",
     "update-resource": "node ./update-resource.js",
     "proto": "node ./node_modules/@apollo/protobufjs/bin/pbjs -t static-module -w CommonJS -o ./src/utils/pb/product.js ./src/utils/pb/product.proto && node ./node_modules/@apollo/protobufjs/bin/pbts -o ./src/utils/pb/product.d.ts ./src/utils/pb/product.js"
   },

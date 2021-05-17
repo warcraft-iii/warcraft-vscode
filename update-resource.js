@@ -12,7 +12,7 @@ const fs = require('fs-extra');
 const versions = {};
 
 async function downloadObjEditingDefine() {
-    const github = new Octokit();
+    const github = new Octokit.Octokit();
 
     const releaseResp = await github.repos.getLatestRelease({
         owner: 'warcraft-iii',

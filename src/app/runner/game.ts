@@ -53,6 +53,7 @@ class GameRunner extends BaseRunner {
 
         if (env.config.classic) {
             exec = env.asYDWEPath('bin/YDWEConfig.exe');
+            await fs.mkdirp(env.asGamePath('Maps', 'Test'));
         } else {
             exec = env.config.gamePath;
             const docFolder = await this.getDocumentFolder();

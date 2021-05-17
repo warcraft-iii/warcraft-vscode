@@ -1,3 +1,12 @@
+## [0.1.5](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.4...v0.1.5) (2021-05-17)
+
+
+### Bug Fixes
+
+* Duplicate lua package path configuration content when switching map files ([9ef702c](https://github.com/warcraft-iii/warcraft-vscode/commit/9ef702c824b6cf69f2f91c23b6822ff3d493e769))
+
+
+
 ## [0.1.4](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.3...v0.1.4) (2021-05-13)
 
 

@@ -1,3 +1,12 @@
+## [0.1.7](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.6...v0.1.7) (2021-05-17)
+
+
+### Bug Fixes
+
+* Objediting`s def files are not deployed ([4d51528](https://github.com/warcraft-iii/warcraft-vscode/commit/4d51528a2eed0791e1c0072b0e4465531a567ac9))
+
+
+
 ## [0.1.6](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.5...v0.1.6) (2021-05-17)
 
 

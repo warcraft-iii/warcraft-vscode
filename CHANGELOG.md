@@ -1,3 +1,12 @@
+## [0.1.6](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.5...v0.1.6) (2021-05-17)
+
+
+### Bug Fixes
+
+* **classic:** No Maps/Test directory created cause failed to start map ([3a695f7](https://github.com/warcraft-iii/warcraft-vscode/commit/3a695f70727ef3291999e96ee5b1b8d67817fdaf))
+
+
+
 ## [0.1.5](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.4...v0.1.5) (2021-05-17)
 
 

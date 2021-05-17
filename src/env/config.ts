@@ -97,7 +97,7 @@ export class Config {
             jassfile: json.jassfile,
             lua: {
                 package: {
-                    path: ['./?.lua', './?/init.lua', ...(json.lua?.package?.path || [])],
+                    path: [...(json.lua?.package?.path || ['./?.lua', './?/init.lua'])],
                 },
             },
         };
@@ -223,7 +223,7 @@ export class Config {
 
         this.projectConfig.mapdir = value;
         const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-        fs.writeJSON(path.resolve(rootPath, globals.FILE_PROJECT), this.projectConfig);
+        fs.writeFile(path.resolve(rootPath, globals.FILE_PROJECT), JSON.stringify(this.projectConfig, undefined, 2));
     }
 
     get files() {

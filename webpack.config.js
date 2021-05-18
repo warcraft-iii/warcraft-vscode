@@ -46,6 +46,24 @@ const config = {
                         }
                     }
                 ]
+            },
+            {
+                test: /\.proto$/i,
+                use: {
+                    loader: "pbjs-loader",
+                    options: {
+                        create: true,
+                        encode: true,
+                        decode: true,
+                        verify: false,
+                        convert: true,
+                        delimited: false,
+                        beautify: false,
+                        comments: false,
+                        wrap: 'commonjs', // by default
+                        target: 'static-module' // by default
+                    },
+                }
             }
         ]
     }

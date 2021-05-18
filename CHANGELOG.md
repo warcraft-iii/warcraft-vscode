@@ -1,3 +1,13 @@
+## [0.1.8](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.7...v0.1.8) (2021-05-18)
+
+
+### Bug Fixes
+
+* **classic:** Check the game running status failure ([5edaced](https://github.com/warcraft-iii/warcraft-vscode/commit/5edaced51146911a63760067fda416e7339fc99f))
+* Incorrect object editing path ([2f7171d](https://github.com/warcraft-iii/warcraft-vscode/commit/2f7171dd24c8a24fa6ad5030cc0e1bbb520cb0c0))
+
+
+
 ## [0.1.7](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.6...v0.1.7) (2021-05-17)
 
 

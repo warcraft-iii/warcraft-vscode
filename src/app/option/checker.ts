@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { localize } from '../../globals';
+import { localize, globals } from '../../globals';
 
 interface ExecutionItem {
     title: string;
@@ -38,7 +38,7 @@ const EXECUTION_FILES: ExecutionItem[] = [
 const EXECUTION_FILES_YDWE: ExecutionItem[] = [
     {
         title: 'YDWE',
-        name: 'bin/YDWEConfig.exe',
+        name: globals.FILE_YDWE_CONFIG,
         key: 'ydwePath',
         selectFile: true,
     },

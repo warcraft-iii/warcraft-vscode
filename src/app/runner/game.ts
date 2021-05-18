@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { localize } from '../../globals';
+import { localize, globals } from '../../globals';
 
 import { RunnerType } from './runner';
 import { BaseRunner } from './private';
@@ -52,7 +52,7 @@ class GameRunner extends BaseRunner {
         let exec: string;
 
         if (env.config.classic) {
-            exec = env.asYDWEPath('bin/YDWEConfig.exe');
+            exec = env.asYDWEPath(globals.FILE_YDWE_CONFIG);
             await fs.mkdirp(env.asGamePath('Maps', 'Test'));
         } else {
             exec = env.config.gamePath;
@@ -76,7 +76,7 @@ class GameRunner extends BaseRunner {
             args.push('-launchwar3');
         }
 
-        this.process = utils.spawn(exec, args);
+        this.process = utils.spawn(exec, args, env.config.classic);
     }
 
     async check() {

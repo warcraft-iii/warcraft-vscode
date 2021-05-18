@@ -25,16 +25,18 @@ export namespace globals {
     export const FOLDER_LIBRARIES = 'lib';
     export const FOLDER_SOURCE = 'src';
     export const MAP_FILE_EXT = '*.w3x|*.w3m';
+
+    export const FILE_YDWE_CONFIG = 'bin/YDWEConfig.exe';
 }
 
 export enum ConfigurationType {
     Debug,
-    Release
+    Release,
 }
 
 export enum WarcraftVersionType {
     Reforge,
-    Classic
+    Classic,
 }
 
 export interface GithubOrgInfo {

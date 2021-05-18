@@ -68,7 +68,10 @@ export class ObjEditing {
             if (env.config.classic) {
                 await utils.extractFileFromMap(path.join(outDir, file), file);
             } else {
-                await fs.copy(path.join(env.mapFolder, file), outDir);
+                const p = path.join(env.mapFolder, file);
+                if (await fs.pathExists(p)) {
+                    await fs.copy(p, path.join(outDir, file));
+                }
             }
         }
 

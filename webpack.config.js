@@ -40,7 +40,7 @@ const config = {
                 use: [
                     {
                         loader: "underscore-template-loader",
-                        query: {
+                        options: {
                             interpolate: /\-\-\[\[%\=([\s\S]+?)%\]\]/g,
                             evaluate: /\-\-\[\[%\>([\s\S]+?)%\]\]/g
                         }

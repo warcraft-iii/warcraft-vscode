@@ -207,7 +207,7 @@
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "test": "npm run compile",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
-    "postinstall": "npm run update-resource",
+    "postinstall": "npm run update-resource && npm run proto",
     "update-resource": "node ./update-resource.js",
     "proto": "node ./node_modules/@apollo/protobufjs/bin/pbjs -t static-module -w CommonJS -o ./src/utils/pb/product.js ./src/utils/pb/product.proto && node ./node_modules/@apollo/protobufjs/bin/pbts -o ./src/utils/pb/product.d.ts ./src/utils/pb/product.js"
   },
@@ -222,12 +222,12 @@
     "@types/yauzl-promise": "^2.1.0",
     "conventional-changelog-cli": "^2.1.1",
     "lodash": "^4.17.21",
-    "ts-loader": "^6.2.2",
+    "ts-loader": "^9.1.2",
     "tslint": "^5.20.1",
     "typescript": "^4.2.4",
     "underscore-template-loader": "^1.1.0",
-    "webpack": "^4.46.0",
-    "webpack-cli": "^3.3.12"
+    "webpack": "^5.37.0",
+    "webpack-cli": "^4.7.0"
   },
   "dependencies": {
     "@octokit/rest": "^18.5.3",

@@ -207,8 +207,8 @@
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "test": "npm run compile",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
-    "postinstall": "npm run update-resource",
-    "update-resource": "node ./update-resource.js"
+    "postinstall": "npm run prepare",
+    "prepare": "node ./prepare.js"
   },
   "devDependencies": {
     "@types/fs-extra": "^8.1.1",

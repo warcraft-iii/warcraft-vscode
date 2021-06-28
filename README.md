@@ -7,7 +7,7 @@ This extension is a Warcraft III map development tool set of Lua.
 [![](https://vsmarketplacebadge.apphb.com/version-short/Dencer.warcraft-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
 [![](https://vsmarketplacebadge.apphb.com/rating-short/Dencer.warcraft-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
 [![](https://vsmarketplacebadge.apphb.com/installs/Dencer.warcraft-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
-[![](https://travis-ci.com/warcraft-iii/warcraft-vscode.svg?branch=master)](https://travis-ci.com/warcraft-iii/warcraft-vscode)
+[![Node.js](https://github.com/warcraft-iii/warcraft-vscode/actions/workflows/node.js.yml/badge.svg)](https://github.com/warcraft-iii/warcraft-vscode/actions/workflows/node.js.yml)
 [![](https://discordapp.com/api/guilds/594229838869692466/embed.png?style=shield)](https://discord.gg/26N8ycP)
 
 ## Features

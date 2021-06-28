@@ -18,7 +18,6 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm install
     - run: npm ci
     - run: npm test
     - name: Deploy
@@ -26,5 +25,6 @@ jobs:
       env:
         VS_TOKEN: ${{ secrets.VS_TOKEN }}
       run: |
+        npm install
         npm install -g vsce
         vsce publish -p $VS_TOKEN

@@ -53,8 +53,8 @@ async function main() {
         {
             owner: 'warcraft-iii',
             repo: 'ObjEditingDefine',
-            out: 'res/def.zip',
-            json: 'res/.version.json',
+            out: path.join('./res', 'def.zip'),
+            json: path.join('./res', '.version.json'),
         }
     ];
 

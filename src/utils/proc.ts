@@ -62,8 +62,13 @@ export class Process {
             }
             sodu.exec(command + this.childprocess.pid, {
                 name: 'Warcraft VSCode',
+            }, () => {
+                this.childprocess = undefined;
             });
-            this.childprocess = undefined;
+
+            while (!!this.childprocess) {
+                await utils.sleep(100);
+            }
         }
     }
 

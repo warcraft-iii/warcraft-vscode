@@ -1,3 +1,12 @@
+## [0.1.10](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.9...v0.1.10) (2021-08-19)
+
+
+### Bug Fixes
+
+* **classic:** Re-executing "Run Map" did not close the last launched game client correctly ([956aa3d](https://github.com/warcraft-iii/warcraft-vscode/commit/956aa3d5783f024f1a4af2fcbababbe53db9cef1))
+
+
+
 ## [0.1.9](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.8...v0.1.9) (2021-06-28)
 
 

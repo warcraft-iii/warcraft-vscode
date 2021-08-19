@@ -56,9 +56,12 @@ This extension is a Warcraft III map development tool set of Lua.
 {
     "mapdir": "map.w3x",
     "files": ["main.lua"],
-    "jassfile": "", // *CLASSIC* Specify the path to the war3map.j file or use it in the map file.
+    "jassfile": "",
     "lua.package.path": ["./lib/?.lua", "./lib/?/init.lua"]
 }
+```
+```
+jassfile - *CLASSIC* Specify the path to the war3map.j file or use it in the map file.
 ```
 
 #### Lua API
@@ -78,16 +81,40 @@ This extension is a Warcraft III map development tool set of Lua.
 
 > There are some macros in lua file.
 
-1. In Release
+```lua
+---Only compile into debug mode
+--@debug@
+Debug()
+--@end-debug@
 
-    - `--@debug@` turn into `--[===[@debug@`
-    - `--@end-debug@` turn into `--@end-debug@]===]`
-    - `--[===[@non-debug@` turn into `--@non-debug@`
-    - `--@end-non-debug@]===]` turn into `--@end-non-debug`
+---Only compile into non debug mode
+--@non-debug@
+NotDebug()
+--@end-non-debug@
 
-2. In Debug & Release
-    - `--@remove@` turn into `--[===[@remove@`
-    - `--@end-remove@` turn into `--@end-remove@]===]`
+---Not compile
+--@remove@
+OnlyInEditor()
+--@end-remove@
+
+---Only Compile into Classic
+--@classic@
+Classic()
+--@end-classic@
+
+--@non-reforge@
+Classic()
+--@end-non-reforge@
+
+---Only Compile into Reforge
+--@reforge@
+Reforge()
+--@end-reforge
+
+--@non-classic@
+Reforge()
+--@end-non-classic@
+```
 
 #### Pack
 
@@ -102,7 +129,7 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## TODOs
 
--   For Release
+-   ~For Release~
 -   Use other github users or organizations to add libraries
 -   Support compile time
 -   Support for macOS

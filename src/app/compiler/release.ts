@@ -76,60 +76,64 @@ class ReleaseCompiler extends BaseCompiler {
             items
                 .map((item) => this.convert(item))
                 .map(async (item) => {
-                    const file = await this.resolveFile(item);
-                    if (file.length === 0) {
-                        return;
-                    }
-                    const name = item.name || utils.posixCase(path.relative(env.sourceFolder, file));
-                    if (this.files.has(name)) {
-                        return;
-                    }
-                    const body = this.processCodeMacros(await utils.readFile(file));
-                    if (this.files.has(name)) {
-                        return;
-                    }
-                    const required: RequireItem[] = [];
+                    try {
+                        const file = await this.resolveFile(item);
+                        if (file.length === 0) {
+                            return;
+                        }
+                        const name = item.name || utils.posixCase(path.relative(env.sourceFolder, file));
+                        if (this.files.has(name)) {
+                            return;
+                        }
+                        const body = this.processCodeMacros(await utils.readFile(file));
+                        if (this.files.has(name)) {
+                            return;
+                        }
+                        const required: RequireItem[] = [];
 
-                    const ast = luaparse.parse(body, {
-                        locations: true,
-                        ranges: true,
-                        scope: true,
-                        onCreateNode: (node) => {
-                            let arg: luaparse.Expression;
+                        const ast = luaparse.parse(body, {
+                            locations: true,
+                            ranges: true,
+                            scope: true,
+                            onCreateNode: (node) => {
+                                let arg: luaparse.Expression;
 
-                            if (
-                                node.type === 'CallExpression' &&
-                                node.base.type === 'Identifier' &&
-                                this.isRequireFunction(node.base.name)
-                            ) {
-                                if (node.arguments.length !== 1) {
+                                if (
+                                    node.type === 'CallExpression' &&
+                                    node.base.type === 'Identifier' &&
+                                    this.isRequireFunction(node.base.name)
+                                ) {
+                                    if (node.arguments.length !== 1) {
+                                        return;
+                                    }
+                                    arg = node.arguments[0];
+                                } else if (
+                                    node.type === 'StringCallExpression' &&
+                                    node.base.type === 'Identifier' &&
+                                    this.isRequireFunction(node.base.name)
+                                ) {
+                                    arg = node.argument;
+                                } else {
                                     return;
                                 }
-                                arg = node.arguments[0];
-                            } else if (
-                                node.type === 'StringCallExpression' &&
-                                node.base.type === 'Identifier' &&
-                                this.isRequireFunction(node.base.name)
-                            ) {
-                                arg = node.argument;
-                            } else {
-                                return;
+
+                                if (arg.type !== 'StringLiteral') {
+                                    return;
+                                }
+
+                                required.push({
+                                    file: arg.value,
+                                    isRequire: node.base.name === 'require'
+                                });
                             }
+                        });
 
-                            if (arg.type !== 'StringLiteral') {
-                                return;
-                            }
+                        this.files.set(name, luamin.minify(ast));
 
-                            required.push({
-                                file: arg.value,
-                                isRequire: node.base.name === 'require'
-                            });
-                        }
-                    });
-
-                    this.files.set(name, luamin.minify(ast));
-
-                    await this.processFiles(...required);
+                        await this.processFiles(...required);
+                    } catch (error) {
+                        throw Error(localize('error.processFilesFailure', ['Item: ' + item.file, 'Error: ' + error.message, 'Stack: ' + error.stack].join('\n')));
+                    }
                 })
         );
     }

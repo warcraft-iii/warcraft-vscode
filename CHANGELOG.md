@@ -1,3 +1,12 @@
+## [0.1.11](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.10...v0.1.11) (2021-08-25)
+
+
+### Bug Fixes
+
+* When compile lua files failed then throw the details ([f3c1377](https://github.com/warcraft-iii/warcraft-vscode/commit/f3c137717736194f42b87b47cf7c1b39108aa368))
+
+
+
 ## [0.1.10](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.9...v0.1.10) (2021-08-19)
 
 

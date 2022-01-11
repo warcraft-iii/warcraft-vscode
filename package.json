@@ -1,0 +1,256 @@
+{
+  "name": "warcraft-vscode-modify",
+  "displayName": "warcraft-vscode-modify",
+  "description": "A Warcraft III map develop toolset",
+  "version": "0.1.11",
+  "publisher": "Hai",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/haixs/warcraft-cscode-modify.git"
+  },
+  "engines": {
+    "vscode": "^1.56.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:extension.warcraft.compile.debug",
+    "onCommand:extension.warcraft.pack.debug",
+    "onCommand:extension.warcraft.run.debug",
+    "onCommand:extension.warcraft.run.editor",
+    "onCommand:extension.warcraft.project.create",
+    "onCommand:extension.warcraft.project.clean",
+    "onCommand:extension.warcraft.project.addlibrary",
+    "onCommand:extension.warcraft.project.toggleConfiguration",
+    "onCommand:extension.warcraft.project.toggleWarcraftVersion",
+    "onCommand:extension.warcraft.pack.object",
+    "onCommand:extension.warcraft.project.choseMapFile",
+    "workspaceContains:warcraft.json"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "jsonValidation": [
+      {
+        "fileMatch": "warcraft.json",
+        "url": "./warcraft_validation.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "extension.warcraft.compile.debug",
+        "title": "Compile Script",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.pack.debug",
+        "title": "Pack Map",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.run.debug",
+        "title": "Run Map",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.run.editor",
+        "title": "Open World Editor",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.project.create",
+        "title": "Create Project",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.project.clean",
+        "title": "Clean Project",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.project.addlibrary",
+        "title": "Add Library",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.project.toggleConfiguration",
+        "title": "Toggle Configuration",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.project.toggleWarcraftVersion",
+        "title": "Toggle Warcraft Version",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.pack.object",
+        "title": "Pack Objects",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.project.choseMapFile",
+        "title": "Chose a Map File",
+        "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.export.data",
+        "title": "Export Data",
+        "category": "Warcraft"
+      }
+    ],
+    "configuration": {
+      "title": "Warcraft",
+      "properties": {
+        "warcraft.gamePath": {
+          "type": "string",
+          "description": "Where is Warcraft III Execution?"
+        },
+        "warcraft.wePath": {
+          "type": "string",
+          "description": "Where is World Editor Execution?"
+        },
+        "warcraft.gameArgs": {
+          "type": "array",
+          "description": "Arguments to added to run the game.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warcraft.weArgs": {
+          "type": "array",
+          "description": "Arguments to added to run the world editor",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warcraft.gamePathClassic": {
+          "type": "string",
+          "description": "Where is Warcraft III Classic Execution?"
+        },
+        "warcraft.wePathClassic": {
+          "type": "string",
+          "description": "Where is World Editor Classic Execution?"
+        },
+        "warcraft.gameArgsClassic": {
+          "type": "array",
+          "description": "Arguments to added to run the game.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warcraft.weArgsClassic": {
+          "type": "array",
+          "description": "Arguments to added to run the world editor",
+          "items": {
+            "type": "string"
+          }
+        },
+        "warcraft.ydwePath": {
+          "type": "string",
+          "description": "Where is YDWE Execution?"
+        },
+        "warcraft.autoCloseClient": {
+          "type": "boolean",
+          "description": "Automatically close the client?"
+        },
+        "warcraft.configuration": {
+          "type": "string",
+          "description": "Which configuration, debug or release?",
+          "enum": [
+            "Debug",
+            "Release"
+          ]
+        },
+        "warcraft.warcraftVersion": {
+          "type": "string",
+          "description": "Which version of Warcraft does compile?",
+          "enum": [
+            "Reforge",
+            "Classic"
+          ]
+        },
+        "warcraft.codeConfusion": {
+          "type": "boolean",
+          "description": "Enable code confusion? (RELEASE ONLY) *EXPIRMENT*"
+        },
+        "warcraft.compilerPath": {
+          "type": "string",
+          "description": "Where is object compiler Execution?"
+        },
+        "warcraft.libraryOrganizations": {
+          "type": "array",
+          "description": "The Github organization or user for command 'Add Library'",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "The item type org or user",
+                "enum": [
+                  "user",
+                  "organization"
+                ],
+                "default": "organization"
+              },
+              "name": {
+                "type": "string",
+                "description": "The Github organization or user name"
+              },
+              "ssh": {
+                "type": "boolean",
+                "description": "Use ssh proto?",
+                "default": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "webpack --mode production",
+    "compile": "webpack --mode development",
+    "watch": "webpack --mode development --watch --info-verbosity verbose",
+    "test": "npm run compile",
+    "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
+    "postinstall": "npm run prepare",
+    "prepare": "node ./prepare.js"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^8.1.1",
+    "@types/got": "^9.6.11",
+    "@types/is-running": "^2.1.0",
+    "@types/lodash-es": "^4.17.4",
+    "@types/luaparse": "^0.2.7",
+    "@types/node": "^10.17.58",
+    "@types/vscode": "^1.56.0",
+    "@types/yauzl-promise": "^2.1.0",
+    "@types/ps-node": "^0.1.0",
+    "conventional-changelog-cli": "^2.1.1",
+    "lodash": "^4.17.21",
+    "pbjs-loader": "^0.2.1",
+    "ts-loader": "^9.1.2",
+    "tslint": "^5.20.1",
+    "typescript": "^4.2.4",
+    "underscore-template-loader": "^1.1.0",
+    "webpack": "^5.37.0",
+    "webpack-cli": "^4.7.0"
+  },
+  "dependencies": {
+    "@octokit/rest": "^18.5.3",
+    "fs-extra": "^8.1.0",
+    "got": "^9.6.0",
+    "is-running": "^2.1.0",
+    "lodash-es": "^4.17.21",
+    "luamin": "git+https://github.com/DengSir/luamin.git",
+    "luaparse": "^0.2.1",
+    "ps-node": "^0.1.6",
+    "simple-git": "^1.132.0",
+    "sudo-prompt": "^9.2.1",
+    "vscode-nls": "^5.0.0",
+    "yauzl-promise": "^2.1.3"
+  }
+}

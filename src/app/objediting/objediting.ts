@@ -59,7 +59,7 @@ export class ObjEditing {
         return (await utils.readFile(versionFile)).trim();
     }
 
-    async prepareObjectFiles(args: string) {
+    async prepareObjectFiles(args: string, mapDir:string|undefined) {
         const outDir = env.asBuildPath(args, 'objediting.source');
         await fs.emptyDir(outDir);
         const extensions = ['w3u', 'w3t', 'w3b', 'w3h', 'w3d', 'w3a', 'w3q'];
@@ -67,7 +67,7 @@ export class ObjEditing {
         for (const ext of extensions) {
             const file = 'war3map.' + ext;
             if (env.config.classic) {
-                await utils.extractFileFromMap(path.join(outDir, file), file, undefined);
+                await utils.extractFileFromMap(path.join(outDir, file), file, mapDir);
             } else {
                 const p = path.join(env.mapFolder, file);
                 if (await fs.pathExists(p)) {
@@ -87,7 +87,7 @@ export class ObjEditing {
         await env.checkMapFolder();
         const outDir = env.asBuildPath('objediting'); //d:\\war3Map\\map1\\.build\\objediting
         await fs.emptyDir(outDir);
-        const sourceDir = await this.prepareObjectFiles(''); //d:\\war3Map\\map1\\.build\\objediting.source
+        const sourceDir = await this.prepareObjectFiles('', undefined); //d:\\war3Map\\map1\\.build\\objediting.source
         await utils.execFile(env.asExetensionPath('bin/ObjEditing.exe'), ['-m', sourceDir, '-o', outDir, lua]);
 
         const modules: SubModulesConfig[] = env.submodules || [];
@@ -96,7 +96,7 @@ export class ObjEditing {
                 const lua = env.asRootPath(env.asRootPath(module.obpath, 'main.lua'));
                 const outDir = env.asBuildPath(module.path, module.id.toString(), 'objediting'); //d:\\war3Map\\map1\\.build\\objediting
                 await fs.emptyDir(outDir);
-                const sourceDir = await this.prepareObjectFiles(module.path + '/' + module.id.toString()); //d:\\war3Map\\map1\\.build\\objediting.source
+                const sourceDir = await this.prepareObjectFiles(module.path + '/' + module.id.toString(), path.resolve(env.rootPath || '', globals.FOLADER_MODULES, module.path, module.mapdir)); //d:\\war3Map\\map1\\.build\\objediting.source
                 await utils.execFile(env.asExetensionPath('bin/ObjEditing.exe'), ['-m', sourceDir, '-o', outDir, lua]);                
             }
         }

@@ -87,15 +87,15 @@ class ReleaseCompiler extends BaseCompiler {
             try {
                 const [file, isSource] = await this.resolveFile(item, relativePath);
                 if (file.length === 0) {
-                    return;
+                    continue;
                 }
                 const name = item.name || utils.posixCase(path.relative(isSource?env.sourceFolder:relativePath, file));
                 if (this.files.has(name)) {
-                    return;
+                    continue;
                 }
                 const body = this.processCodeMacros(await utils.readFile(file)); //lua comment
                 if (this.files.has(name)) {
-                    return;
+                    continue;
                 }
                 const required: RequireItem[] = [];
 

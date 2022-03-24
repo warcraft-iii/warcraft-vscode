@@ -28,12 +28,20 @@ interface LuaConfig {
 export interface SubModulesConfig {
     path: string;
     files?: string[];
+    remove?: string[];
     res?: string[];
     mapdir: string;
-    out?: string;
+    out: string;
     relativePath?: string;
-    id:number;
+    id: number;
     obpath?: string;
+    luacopy?: number;
+}
+export interface MpqConfig {
+    path: string;
+    out?: string;
+    obpath?: string;
+    res?: string[];
 }
 
 interface WarcraftConfig {
@@ -45,6 +53,9 @@ interface WarcraftConfig {
     submodules?: SubModulesConfig[];
     gameroot: string;
     version: string;
+    mpq?: MpqConfig;
+    obpath?: string;
+    remove?: string[];
 }
 
 export class Config {
@@ -56,7 +67,7 @@ export class Config {
             },
         },
         version: '0.0.0',
-        gameroot:"Test",
+        gameroot: 'Test',
     };
     private projectConfig = this.defaultConfig;
     private waiter?: Promise<void>;
@@ -111,14 +122,27 @@ export class Config {
         for (let m of json.submodules || []) {
             submodules.push({
                 files: m.files || [],
-                path: m.path,
+                path: m.path || 'SubModules',
                 mapdir: m.mapdir,
                 out: m.out,
                 res: m.res || [],
                 id: m.id,
-                obpath: m.obpath
+                luacopy: m.luacopy,
+                obpath: m.obpath,
+                remove:m.remove || [],
             });
         }
+
+        let mpq: MpqConfig = { path: '' };
+
+        if (json.mpq) {
+            const jmpq = json.mpq;
+            mpq.path = jmpq.path;
+            mpq.res = jmpq.res || [];
+            mpq.out = jmpq.out;
+            mpq.obpath = jmpq.obpath;
+        }
+
         return {
             mapdir: json.mapdir,
             files: json.files || [],
@@ -131,7 +155,9 @@ export class Config {
             out: json.out,
             submodules: submodules,
             version: json.version,
-            gameroot:json.gameroot || "Test",
+            gameroot: json.gameroot || 'Test',
+            mpq: json.mpq && mpq,
+            remove:json.remove || [],
         };
     }
 
@@ -310,7 +336,16 @@ export class Config {
         return value;
     }
 
-    get gameRoot(){
-        return this.projectConfig.gameroot
+    get gameRoot() {
+        return this.projectConfig.gameroot;
+    }
+    get mpq(): MpqConfig | undefined {
+        return this.projectConfig.mpq;
+    }
+    get objectingPath() {
+        return this.projectConfig.obpath;
+    }
+    get removeFile() {
+        return this.projectConfig.remove;
     }
 }

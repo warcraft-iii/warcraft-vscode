@@ -18,7 +18,10 @@ export namespace globals {
     export const FILE_ENTRY_JASS = 'war3map.j';
     export const FILE_ENTRY_SCRIPTS_JASS = 'scripts\\war3map.j';
     export const FILE_PACKLIST = 'packlist.json';
+    export const FILE_MPQPACKLIST = 'mpqpacklist.json';
     export const FILE_PROJECT = 'warcraft.json';
+    export const MAP_RES_MPQ = 'map_res.mpq';
+    export const FILE_WAR3 = 'War3.exe';
 
     export const FOLDER_BUILD = '.build';
     export const FOLDER_IMPORTS = 'imports';

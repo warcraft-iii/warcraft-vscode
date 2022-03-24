@@ -127,6 +127,15 @@ class Environment {
     get gameRoot() {
         return this.config.gameRoot;
     }
+    get mpq() {
+        return this.config.mpq;
+    }
+    get objectingPath() {
+        return this.config.objectingPath;
+    }
+    get removeFile() {
+        return this.config.removeFile;
+    }
 }
 
 export const env = new Environment();

@@ -88,27 +88,38 @@ class DebugCompiler extends BaseCompiler {
         const modules: SubModulesConfig[] = env.submodules || [];
         for (let module of modules) {
             const mpath = path.resolve(rootPath, module.path);
-            const allFiles = await this.getAllLuaFiles(mpath);
-            const fileSet = new Set<string>();
-            allFiles.forEach((file) => fileSet.add(path.relative(mpath, file[0])));
-            for (const file of module.files || []) {
-                const filepath = path.resolve(env.rootPath || '', file);
+            if (!module.luacopy) {
+                const allFiles = await this.getAllLuaFiles(mpath);
+                const fileSet = new Set<string>();
+                allFiles.forEach((file) => fileSet.add(path.relative(mpath, file[0])));
+                for (const file of module.files || []) {
+                    const filepath = path.resolve(env.rootPath || '', file);
                     if ((await fs.stat(filepath)).isDirectory()) {
                         const af = await this.getAllLuaFiles(filepath, true);
-                        af.filter(file=>!fileSet.has(path.relative(env.sourceFolder, file[0])))
+                        af.filter((file) => !fileSet.has(path.relative(env.sourceFolder, file[0])));
                         allFiles.push(...af);
-                    } else if(!fileSet.has(path.relative(env.sourceFolder, filepath)))  {
+                    } else if (!fileSet.has(path.relative(env.sourceFolder, filepath))) {
                         allFiles.push([filepath, true]);
                     }
-            }
+                }
 
-            await this.writeFiles(allFiles, {
-                path: module.path + '/' + module.id,
-                out: env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY),
-                mapdir: path.resolve(mpath, module.mapdir),
-                relativePath: mpath,
-                id: module.id,
-            });
+                await this.writeFiles(allFiles, {
+                    path: module.path + '/' + module.id,
+                    out: env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY),
+                    mapdir: path.resolve(mpath, module.mapdir),
+                    relativePath: mpath,
+                    id: module.id,
+                });
+            } else {
+                let outputPath = env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY)
+                let inputPath = env.asBuildPath(module.path, module.luacopy.toString(), globals.FILE_ENTRY)
+                let file = await utils.readFile(inputPath);
+                await fs.mkdirp(path.dirname(outputPath));
+                await fs.writeFile(outputPath, file.replace(/MAP_ID *= *\d*/m, `MAP_ID = ${module.id}`));
+                if (env.config.classic) {
+                    await this.injectWar3mapJass(module.path + '/' + module.id, path.resolve(mpath, module.mapdir));
+                }
+            }
         }
     }
 

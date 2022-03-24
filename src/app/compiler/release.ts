@@ -44,29 +44,28 @@ class ReleaseCompiler extends BaseCompiler {
         return isString(item) ? { file: item } : item;
     }
 
-    private getMaybeFiles(item: RequireItem, relativePath:string) {
+    private getMaybeFiles(item: RequireItem, relativePath: string) {
         if (item.isRequire) {
             const name = item.file
                 .split('.')
                 .filter((word) => word !== '')
                 .join('/');
-            return env.config.lua.package.path.map((finder) => path.resolve(relativePath,finder.replace('?', name)));
+            return env.config.lua.package.path.map((finder) => path.resolve(relativePath, finder.replace('?', name)));
         } else {
-            return [path.isAbsolute(item.file) ? item.file : path.resolve(relativePath,item.file)];
+            return [path.isAbsolute(item.file) ? item.file : path.resolve(relativePath, item.file)];
         }
     }
 
-    private async resolveFile(item: RequireItem, relativePath:string):Promise<[string, boolean]> {
+    private async resolveFile(item: RequireItem, relativePath: string): Promise<[string, boolean]> {
         let files = this.getMaybeFiles(item, relativePath);
         for (const file of files) {
             if (await fs.pathExists(file)) {
                 return [file, false];
-            }
-            else{
+            } else {
                 files = this.getMaybeFiles(item, env.sourceFolder);
                 for (const file of files) {
                     if (await fs.pathExists(file)) {
-                        return [file,true];
+                        return [file, true];
                     }
                 }
             }
@@ -77,10 +76,10 @@ class ReleaseCompiler extends BaseCompiler {
         }
 
         // classic allow use inner package, likes jass.xxxx
-        return ['',false];
+        return ['', false];
     }
 
-    private async processFiles(relativePath:string, ...items: FileItem[]) {
+    private async processFiles(relativePath: string, ...items: FileItem[]) {
         const itemsList = items.map((item) => this.convert(item));
 
         for (const item of itemsList) {
@@ -89,7 +88,8 @@ class ReleaseCompiler extends BaseCompiler {
                 if (file.length === 0) {
                     continue;
                 }
-                const name = item.name || utils.posixCase(path.relative(isSource?env.sourceFolder:relativePath, file));
+                const name =
+                    item.name || utils.posixCase(path.relative(isSource ? env.sourceFolder : relativePath, file));
                 if (this.files.has(name)) {
                     continue;
                 }
@@ -172,7 +172,10 @@ class ReleaseCompiler extends BaseCompiler {
         await this.processFiles(env.sourceFolder, 'main.lua', ...env.config.files);
 
         if (!env.config.classic) {
-            await this.processFiles(env.sourceFolder, { name: 'origwar3map.lua', file: env.asMapPath(globals.FILE_ENTRY) });
+            await this.processFiles(env.sourceFolder, {
+                name: 'origwar3map.lua',
+                file: env.asMapPath(globals.FILE_ENTRY),
+            });
         }
 
         const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
@@ -182,7 +185,7 @@ class ReleaseCompiler extends BaseCompiler {
             package: env.config.lua.package,
             classic: env.config.classic,
             version: env.version,
-            id: 0
+            id: 0,
         });
 
         if (env.config.codeConfusion) {
@@ -207,34 +210,43 @@ class ReleaseCompiler extends BaseCompiler {
         const modules: SubModulesConfig[] = env.submodules || [];
         for (let module of modules) {
             const mpath = path.resolve(rootPath, module.path);
-            this.files.clear();
-            await this.processFiles(mpath, 'main.lua');
-            // if (!env.config.classic) {
-            //     await this.processFiles(mpath, { name: 'origwar3map.lua', file: env.asMapPath(globals.FILE_ENTRY) });
-            // }
-    
-            const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
-    
-            let out = templates.release.main({
-                code,
-                package: env.config.lua.package,
-                classic: env.config.classic,
-                version: env.version,
-                id: module.id
-            });
-    
-            if (env.config.codeConfusion) {
-                out = luamin.minify(SimpleConfuser.parse(out));
-            } else {
-                out = luamin.minify(out);
-            }
-    
-            const outputPath = env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY);
-            await fs.mkdirp(path.dirname(outputPath));
-            await fs.writeFile(outputPath, out);
+            if (!module.luacopy) {
+                this.files.clear();
+                await this.processFiles(mpath, 'main.lua');
+                // if (!env.config.classic) {
+                //     await this.processFiles(mpath, { name: 'origwar3map.lua', file: env.asMapPath(globals.FILE_ENTRY) });
+                // }
 
-            if (env.config.classic) {
-                await this.injectWar3mapJass(module.path + '/' + module.id, path.resolve(mpath, module.mapdir));
+                const code = [...this.files.entries()]
+                    .map(([name, body]) => templates.release.file({ body, name }))
+                    .join('\n');
+
+                let out = templates.release.main({
+                    code,
+                    package: env.config.lua.package,
+                    classic: env.config.classic,
+                    version: env.version,
+                    id: module.id,
+                });
+
+                if (env.config.codeConfusion) {
+                    out = luamin.minify(SimpleConfuser.parse(out));
+                } else {
+                    out = luamin.minify(out);
+                }
+
+                const outputPath = env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY);
+                await fs.mkdirp(path.dirname(outputPath));
+                await fs.writeFile(outputPath, out);
+            } else {
+                let outputPath = env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY);
+                let inputPath = env.asBuildPath(module.path, module.luacopy.toString(), globals.FILE_ENTRY);
+                let file = await utils.readFile(inputPath);
+                await fs.mkdirp(path.dirname(outputPath));
+                await fs.writeFile(outputPath, file.replace(/MAP_ID *= *\d*/m, `MAP_ID = ${module.id}`));
+                if (env.config.classic) {
+                    await this.injectWar3mapJass(module.path + '/' + module.id, path.resolve(mpath, module.mapdir));
+                }
             }
         }
     }

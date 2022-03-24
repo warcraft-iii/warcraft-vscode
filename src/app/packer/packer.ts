@@ -25,6 +25,53 @@ class Packer {
     type() {
         return this._type;
     }
+    async generateMpqPackList() {
+        if (!env.mpq) {
+            return;
+        }
+        const packList: PackItem[] = [];
+        const libs = await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES));
+
+        // map.w3x
+        packList.push(...(await this.generatePackItems(env.mapFolder, (file) => !utils.isLuaFile(file))));
+
+        // imports
+        for (const lib of libs) {
+            packList.push(
+                ...(await this.generatePackItems(
+                    env.asSourcePath(globals.FOLDER_LIBRARIES, lib, globals.FOLDER_IMPORTS)
+                ))
+            );
+        }
+
+        packList.push(...(await this.generatePackItems(env.asRootPath(env.mpq.path))));
+
+        // objediting
+        packList.push(...(await this.generatePackItems(env.asBuildPath('mpq/objediting'))));
+
+        // res
+        const res: string[] = env.mpq.res || [];
+        for (let r of res) {
+            packList.push([path.relative('./', r), env.asBuildPath(r)]);
+        }
+
+        const exists = new Set<string>();
+
+        await fs.writeFile(
+            env.asBuildPath(globals.FILE_MPQPACKLIST),
+            JSON.stringify(
+                packList.reduceRight((r, item) => {
+                    if (!exists.has(item[0])) {
+                        exists.add(item[0]);
+                        r.push(item);
+                    } else {
+                        console.log(item[0], item[1]);
+                    }
+                    return r;
+                }, [] as PackItem[])
+            )
+        );
+    }
 
     async generatePackList() {
         const packList: PackItem[] = [];
@@ -39,15 +86,19 @@ class Packer {
 
         // imports
         for (const imp of imports) {
-            for (const lib of libs) {
-                packList.push(...(await this.generatePackItems(env.asSourcePath(globals.FOLDER_LIBRARIES, lib, imp))));
+            if (!env.mpq) {
+                for (const lib of libs) {
+                    packList.push(
+                        ...(await this.generatePackItems(env.asSourcePath(globals.FOLDER_LIBRARIES, lib, imp)))
+                    );
+                }
             }
-
             packList.push(...(await this.generatePackItems(env.asRootPath(imp))));
         }
-
         // objediting
-        packList.push(...(await this.generatePackItems(env.asBuildPath('objediting'))));
+        if (env.objectingPath) {
+            packList.push(...(await this.generatePackItems(env.asBuildPath('objediting'))));
+        }
 
         // war3map.lua
         packList.push([globals.FILE_ENTRY, env.asBuildPath(globals.FILE_ENTRY)]);
@@ -89,23 +140,38 @@ class Packer {
 
             // imports
             for (const imp of imports) {
-                for (const lib of libs) {
-                    packList.push(
-                        ...(await this.generatePackItems(env.asSourcePath(globals.FOLDER_LIBRARIES, lib, imp)))
-                    );
+                if (!env.mpq) {
+                    for (const lib of libs) {
+                        packList.push(
+                            ...(await this.generatePackItems(env.asSourcePath(globals.FOLDER_LIBRARIES, lib, imp)))
+                        );
+                    }
                 }
                 packList.push(...(await this.generatePackItems(path.resolve(mpath, imp))));
             }
 
             // objediting
-            packList.push(...(await this.generatePackItems(env.asBuildPath(module.path, module.id.toString(), 'objediting'))));
-
+            if (module.obpath) {
+                packList.push(
+                    ...(await this.generatePackItems(env.asBuildPath(module.path, module.id.toString(), 'objediting')))
+                );
+            }
             // war3map.lua
+            // if (module.luacopy) {
+            //     packList.push([
+            //         globals.FILE_ENTRY,
+            //         env.asBuildPath(module.path, module.luacopy.toString(), globals.FILE_ENTRY),
+            //     ]);
+            // } else {
             packList.push([globals.FILE_ENTRY, env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY)]);
+            // }
 
             // war3map.j
             if (env.config.classic) {
-                packList.push([globals.FILE_ENTRY_JASS, env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY_JASS)]);
+                packList.push([
+                    globals.FILE_ENTRY_JASS,
+                    env.asBuildPath(module.path, module.id.toString(), globals.FILE_ENTRY_JASS),
+                ]);
             }
 
             for (const file of module.res || []) {
@@ -143,6 +209,21 @@ class Packer {
         }
     }
 
+    async packMpqByPackList() {
+        if (!env.mpq) {
+            return;
+        }
+        const args: string[] = [];
+        args.push('generate');
+        if (this.type() === ConfigurationType.Debug) {
+            args.push('-f');
+        }
+        args.push('-o', env.asBuildPath(env.mpq.out || globals.MAP_RES_MPQ));
+        args.push('-i', env.asBuildPath(globals.FILE_MPQPACKLIST));
+
+        await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), args);
+    }
+
     async packByPackList() {
         const args: string[] = [];
 
@@ -158,6 +239,9 @@ class Packer {
             args.push('pack');
             args.push('-m', env.outFilePath);
             args.push('-i', env.asBuildPath(globals.FILE_PACKLIST));
+            if (env.removeFile && env.removeFile.length > 0) {
+                args.push('-r', env.removeFile.join(';'));
+            }
         }
 
         await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), args);
@@ -182,6 +266,12 @@ class Packer {
                 args.push('pack');
                 args.push('-m', outPath);
                 args.push('-i', env.asBuildPath(module.path, module.id.toString(), globals.FILE_PACKLIST));
+                if (module.remove && module.remove.length > 0) {
+                    let files = await utils.getAllFiles(env.asBuildPath('mpq/objediting'));
+                    if (files.length > 0) {
+                        args.push('-r', module.remove.join(';'));
+                    }
+                }
             }
 
             await utils.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), args);
@@ -190,10 +280,12 @@ class Packer {
 
     @utils.report(localize('report.pack', 'Packing map'))
     async execute() {
-        await this.generatePackList();
         await this.generateSubPackList();
+        await this.generatePackList();
+        await this.generateMpqPackList();
         await this.packByPackList();
         await this.packSubByPackList();
+        await this.packMpqByPackList();
     }
 
     private async generatePackItems(root: string, filter?: (file: string) => boolean, relativePath?: string) {

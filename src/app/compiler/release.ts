@@ -37,7 +37,7 @@ class ReleaseCompiler extends BaseCompiler {
     }
 
     type() {
-        return ConfigurationType.Release;
+        return ConfigurationType.Release; 
     }
 
     private convert(item: FileItem): RequireItem {
@@ -61,13 +61,12 @@ class ReleaseCompiler extends BaseCompiler {
         for (const file of files) {
             if (await fs.pathExists(file)) {
                 return [file, false];
-            } else {
-                files = this.getMaybeFiles(item, env.sourceFolder);
-                for (const file of files) {
-                    if (await fs.pathExists(file)) {
-                        return [file, true];
-                    }
-                }
+            }
+        }
+        files = this.getMaybeFiles(item, env.sourceFolder);
+        for (const file of files) {
+            if (await fs.pathExists(file)) {
+                return [file, true];
             }
         }
 
@@ -81,8 +80,8 @@ class ReleaseCompiler extends BaseCompiler {
 
     private async processFiles(relativePath: string, ...items: FileItem[]) {
         const itemsList = items.map((item) => this.convert(item));
-
-        for (const item of itemsList) {
+ 
+        for (const item of  itemsList) {
             try {
                 const [file, isSource] = await this.resolveFile(item, relativePath);
                 if (file.length === 0) {
@@ -134,7 +133,7 @@ class ReleaseCompiler extends BaseCompiler {
                             isRequire: node.base.name === 'require',
                         });
                     },
-                });
+                }); 
 
                 this.files.set(name, luamin.minify(ast));
 

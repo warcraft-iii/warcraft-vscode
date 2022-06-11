@@ -66,12 +66,21 @@ This extension is a Warcraft III map development tool set of Lua.
     {
         "files": [],
         "res": [],
-        "obpath":"objediting path",
-        "path":"module path",
-        "mapdir":"map path",
-        "out":"out path",
-        "id":"map id"
-    }]
+        "obpath":"",//物编路径
+        "path":"",//子模块路径
+        "mapdir":"",//地图路径
+        "out":"",//输出路径
+        "id":0,//输出的地图id，用来标识一个地图
+        "remove": [""], //删除指定war3资源
+        "luacopy":0 //"复制id标识的lua代码"
+    }],
+    "mpq": {
+        "path": "",//mpa的路径
+        "out":"",//输出路径
+        "obpath":"",//物编路径
+        "res": [""]//额外要打包进mpq的资源（非mpq路径下的）
+    },
+    "remove": []
 }
 ```
 ```

@@ -2,7 +2,7 @@
   "name": "warcraft-vscode-modify",
   "displayName": "warcraft-vscode-modify",
   "description": "A Warcraft III map develop toolset",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "Hai",
   "license": "SEE LICENSE IN LICENSE.md",
   "icon": "images/icon.png",

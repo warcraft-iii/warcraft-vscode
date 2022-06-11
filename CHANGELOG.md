@@ -1,3 +1,18 @@
+## 0.2.2 (2022-06-11)
+
+
+### Bug Fixes
+
+* release打包修改 ([60a97b8](https://gitee.com/haixs/warcraft-cscode-modify/commits/60a97b8acadd98ebeeb23e85646049e2fd0c6e1e))
+* release打包修改 ([366b849](https://gitee.com/haixs/warcraft-cscode-modify/commits/366b8493f90b6834afc750bfc5d9071404134302))
+
+
+### Features
+
+* 魔兽争霸打包插件修改版 ([67ef03b](https://gitee.com/haixs/warcraft-cscode-modify/commits/67ef03b7b9bfcd59ceccc5a20ce268617ab3f289))
+
+
+
 ## [0.1.11](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.10...v0.1.11) (2021-08-25)
 
 

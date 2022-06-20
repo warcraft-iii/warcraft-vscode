@@ -1,3 +1,12 @@
+## [0.2.3](https://gitee.com/haixs/warcraft-cscode-modify/compare/v0.2.2...v0.2.3) (2022-06-20)
+
+
+### Bug Fixes
+
+* 打包依赖 ([3b65ae8](https://gitee.com/haixs/warcraft-cscode-modify/commits/3b65ae8170358092f9b3f8f85498cb78608870cc))
+
+
+
 ## 0.2.2 (2022-06-11)
 
 

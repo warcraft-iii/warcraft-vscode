@@ -235,7 +235,7 @@
   "dependencies": {
     "@octokit/rest": "^18.5.3",
     "fs-extra": "^8.1.0",
-    "got": "^9.6.0",
+    "got": "^11.8.5",
     "is-running": "^2.1.0",
     "lodash-es": "^4.17.21",
     "luamin": "git+https://github.com/DengSir/luamin.git",

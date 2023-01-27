@@ -241,7 +241,7 @@
     "luamin": "git+https://github.com/DengSir/luamin.git",
     "luaparse": "^0.2.1",
     "ps-node": "^0.1.6",
-    "simple-git": "^3.5.0",
+    "simple-git": "^3.16.0",
     "sudo-prompt": "^9.2.1",
     "vscode-nls": "^5.0.0",
     "yauzl-promise": "^2.1.3"

@@ -1,6 +1,9 @@
 package = {}
 package.path = '--[[%> print(package.path.join(";")) %]]'
 
+CURRENT_VERSION = '--[[%= version %]]'
+--[[%> print("MAP_ID = ", id) %]]
+
 local P
 do
     local preloadType, preload, _errorhandler

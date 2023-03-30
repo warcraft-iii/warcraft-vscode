@@ -49,11 +49,21 @@ class GameRunner extends BaseRunner {
     @utils.report(localize('report.openGame', 'Starting game'))
     async execute() {
         let mapPath = env.outFilePath;
+        let mpqPath;
         let exec: string;
 
         if (env.config.classic) {
-            exec = env.asYDWEPath(globals.FILE_YDWE_CONFIG);
-            await fs.mkdirp(env.asGamePath('Maps', 'Test'));
+            exec = env.asGamePath(globals.FILE_WAR3);
+            const mapRootPath = env.asGamePath('Maps', env.gameRoot);
+            await fs.mkdirp(mapRootPath);
+
+            await fs.copy(mapPath, path.resolve(mapRootPath, env.outPath));
+            if (env.mpq){
+                mpqPath = path.resolve(mapRootPath, env.mpq.out || globals.MAP_RES_MPQ);
+                await fs.copy(env.asBuildPath(env.mpq.out || globals.MAP_RES_MPQ), mpqPath);
+            }
+            
+            mapPath = path.resolve(mapRootPath, env.outPath);
         } else {
             exec = env.config.gamePath;
             const docFolder = await this.getDocumentFolder();
@@ -70,10 +80,10 @@ class GameRunner extends BaseRunner {
             mapPath = path.relative(mapFolder, targetPath);
         }
 
-        const args: string[] = [...env.config.gameArgs, '-loadfile', mapPath];
+        const args: string[] = [...env.config.gameArgs, '-loadfile', `${mapPath}`];
 
-        if (env.config.classic) {
-            args.push('-launchwar3');
+        if (mpqPath){
+            args.push(`-loadres=${mpqPath}`)
         }
 
         this.process = utils.spawn(exec, args, env.config.classic);

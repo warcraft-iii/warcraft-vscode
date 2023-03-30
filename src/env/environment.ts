@@ -71,17 +71,24 @@ class Environment {
     get mapFolder() {
         return this.asRootPath(this.config.mapDir);
     }
+    get mapDir() {
+        return this.config.mapDir;
+    }
 
     get buildFolder() {
         return this.asRootPath(globals.FOLDER_BUILD);
     }
 
     get outFilePath() {
-        const fileName =
+        return this.asBuildPath(this.outPath);
+    }
+    get outPath() {
+        return (
+            this.config.out ||
             (this.config.configuration === ConfigurationType.Release
                 ? globals.FILE_RELEASE_MAP
-                : globals.FILE_DEBUG_MAP) + this.mapExtName;
-        return this.asBuildPath(fileName);
+                : globals.FILE_DEBUG_MAP) + this.mapExtName
+        );
     }
 
     get mapExtName() {
@@ -105,6 +112,29 @@ class Environment {
         if (env.config.classic && !(await fs.stat(p)).isFile()) {
             throw Error(localize('error.invalidMapFile', 'Classic version ONLY support .w3x/.w3m format map file.'));
         }
+    }
+
+    get version() {
+        return this.config.version;
+    }
+
+    get submodules() {
+        return this.config.submodules;
+    }
+    get compilerPath() {
+        return this.config.compilerPath;
+    }
+    get gameRoot() {
+        return this.config.gameRoot;
+    }
+    get mpq() {
+        return this.config.mpq;
+    }
+    get objectingPath() {
+        return this.config.objectingPath;
+    }
+    get removeFile() {
+        return this.config.removeFile;
     }
 }
 

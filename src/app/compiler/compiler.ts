@@ -67,9 +67,9 @@ export abstract class BaseCompiler implements Compiler {
         return '='.repeat(length);
     }
 
-    protected async extractWar3mapJass(outPath: string) {
-        if (!(await utils.extractFileFromMap(outPath, globals.FILE_ENTRY_JASS))) {
-            if (await utils.extractFileFromMap(outPath, globals.FILE_ENTRY_SCRIPTS_JASS)) {
+    protected async extractWar3mapJass(outPath: string, mapDir:string) {
+        if (!(await utils.extractFileFromMap(outPath, globals.FILE_ENTRY_JASS, mapDir))) {
+            if (await utils.extractFileFromMap(outPath, globals.FILE_ENTRY_SCRIPTS_JASS, mapDir)) {
                 return true;
             } else {
                 throw Error(localize('error.noMapScriptFile', 'Not found: War3map.j file'));
@@ -78,12 +78,12 @@ export abstract class BaseCompiler implements Compiler {
         return false;
     }
 
-    protected async injectWar3mapJass() {
-        const outPath = env.asBuildPath(globals.FILE_ENTRY_JASS);
+    protected async injectWar3mapJass(outputPath: string, mapDir: string) {
+        const outPath = env.asBuildPath(outputPath, globals.FILE_ENTRY_JASS);
         if (env.config.jassfile && (await fs.pathExists(env.config.jassfile))) {
             await fs.copyFile(env.config.jassfile, outPath);
         } else {
-            await this.extractWar3mapJass(outPath);
+            await this.extractWar3mapJass(outPath, mapDir);
         }
         const jass = (await fs.readFile(outPath)).toString().split('\r\n');
 

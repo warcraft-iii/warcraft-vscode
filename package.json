@@ -93,6 +93,11 @@
         "command": "extension.warcraft.project.choseMapFile",
         "title": "Chose a Map File",
         "category": "Warcraft"
+      },
+      {
+        "command": "extension.warcraft.export.data",
+        "title": "Export Data",
+        "category": "Warcraft"
       }
     ],
     "configuration": {
@@ -169,6 +174,10 @@
         "warcraft.codeConfusion": {
           "type": "boolean",
           "description": "Enable code confusion? (RELEASE ONLY) *EXPIRMENT*"
+        },
+        "warcraft.compilerPath": {
+          "type": "string",
+          "description": "Where is object compiler Execution?"
         },
         "warcraft.libraryOrganizations": {
           "type": "array",

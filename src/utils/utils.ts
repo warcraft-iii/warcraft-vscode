@@ -41,8 +41,8 @@ export enum ConfirmResult {
     Alt,
 }
 
-export function getAllFiles(root: string, isDir: boolean = false, recursive: boolean = true) {
-    return _getAllFiles(root, [], isDir, recursive);
+export async function getAllFiles(root: string, isDir: boolean = false, recursive: boolean = true) {
+    return await _getAllFiles(root, [], isDir, recursive);
 }
 
 export function sleep(n: number) {
@@ -145,7 +145,7 @@ export async function downloadZip(url: string) {
     return await yauzl.fromBuffer((await got(url, { encoding: null })).body);
 }
 
-export async function extractFileFromMap(outPath: string, fileName: string) {
+export async function extractFileFromMap(outPath: string, fileName: string, mapDir:string|undefined) {
     await fs.remove(outPath);
     await fs.mkdirp(path.dirname(outPath));
     await proc.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), [
@@ -153,9 +153,11 @@ export async function extractFileFromMap(outPath: string, fileName: string) {
         '-o',
         outPath,
         '-m',
-        env.mapFolder,
+        mapDir || env.mapFolder,
         '-f',
         fileName,
     ]);
     return await fs.pathExists(outPath);
 }
+
+

@@ -100,7 +100,10 @@ class App implements vscode.Disposable {
             registerCommand('project.addlibrary', () => library.add()),
             registerCommand('project.toggleConfiguration', () => project.toggleConfiguration()),
             registerCommand('project.toggleWarcraftVersion', () => project.toggleWarcraftVersion()),
-            registerCommand('project.choseMapFile', () => project.choseMapFile())
+            registerCommand('project.choseMapFile', () => project.choseMapFile()),
+            registerCommand('export.data', async () => {
+                await utils.spawn(env.compilerPath + "/make.bat")
+            })
         );
     }
 

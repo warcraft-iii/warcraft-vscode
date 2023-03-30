@@ -25,11 +25,37 @@ interface LuaConfig {
     package: LuaPackage;
 }
 
+export interface SubModulesConfig {
+    path: string;
+    files?: string[];
+    remove?: string[];
+    res?: string[];
+    mapdir: string;
+    out: string;
+    relativePath?: string;
+    id: number;
+    obpath?: string;
+    luacopy?: number;
+}
+export interface MpqConfig {
+    path: string;
+    out?: string;
+    obpath?: string;
+    res?: string[];
+}
+
 interface WarcraftConfig {
     mapdir?: string;
     files: string[];
     jassfile?: string;
     lua: LuaConfig;
+    out?: string;
+    submodules?: SubModulesConfig[];
+    gameroot: string;
+    version: string;
+    mpq?: MpqConfig;
+    obpath?: string;
+    remove?: string[];
 }
 
 export class Config {
@@ -40,6 +66,8 @@ export class Config {
                 path: ['./?.lua', './?/init.lua'],
             },
         },
+        version: '0.0.0',
+        gameroot: 'Test',
     };
     private projectConfig = this.defaultConfig;
     private waiter?: Promise<void>;
@@ -90,6 +118,30 @@ export class Config {
         if (!isPlainObject(json)) {
             return;
         }
+        const submodules: SubModulesConfig[] = [];
+        for (let m of json.submodules || []) {
+            submodules.push({
+                files: m.files || [],
+                path: m.path || 'SubModules',
+                mapdir: m.mapdir,
+                out: m.out,
+                res: m.res || [],
+                id: m.id,
+                luacopy: m.luacopy,
+                obpath: m.obpath,
+                remove:m.remove || [],
+            });
+        }
+
+        let mpq: MpqConfig = { path: '' };
+
+        if (json.mpq) {
+            const jmpq = json.mpq;
+            mpq.path = jmpq.path;
+            mpq.res = jmpq.res || [];
+            mpq.out = jmpq.out;
+            mpq.obpath = jmpq.obpath;
+        }
 
         return {
             mapdir: json.mapdir,
@@ -100,6 +152,12 @@ export class Config {
                     path: [...(json.lua?.package?.path || ['./?.lua', './?/init.lua'])],
                 },
             },
+            out: json.out,
+            submodules: submodules,
+            version: json.version,
+            gameroot: json.gameroot || 'Test',
+            mpq: json.mpq && mpq,
+            remove:json.remove || [],
         };
     }
 
@@ -241,6 +299,16 @@ export class Config {
         return this.projectConfig.lua;
     }
 
+    get submodules() {
+        return this.projectConfig.submodules;
+    }
+    get version() {
+        return this.projectConfig.version;
+    }
+    get out() {
+        return this.projectConfig.out;
+    }
+
     get libraryOrganizations() {
         const setting = this.config.get<GithubOrgOrUserInfo[]>('libraryOrganizations');
         if (!setting || !isArray(setting)) {
@@ -258,5 +326,26 @@ export class Config {
             .filter((item) => item.name);
 
         return orgs.length > 0 ? orgs : undefined;
+    }
+
+    get compilerPath() {
+        const value = this.config.get<string>('compilerPath');
+        if (!value || value == '') {
+            throw Error(localize('error.noGamePath', 'Not found: Warcraft III.exe'));
+        }
+        return value;
+    }
+
+    get gameRoot() {
+        return this.projectConfig.gameroot;
+    }
+    get mpq(): MpqConfig | undefined {
+        return this.projectConfig.mpq;
+    }
+    get objectingPath() {
+        return this.projectConfig.obpath;
+    }
+    get removeFile() {
+        return this.projectConfig.remove;
     }
 }

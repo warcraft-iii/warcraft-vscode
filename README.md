@@ -2,6 +2,8 @@
 
 This extension is a Warcraft III map development tool set of Lua.
 
+## New Commands
+    -  Export Data
 ## Install
 
 [![](https://vsmarketplacebadge.apphb.com/version-short/Dencer.warcraft-vscode.svg)](https://marketplace.visualstudio.com/items?itemName=Dencer.warcraft-vscode)
@@ -20,6 +22,8 @@ This extension is a Warcraft III map development tool set of Lua.
 
 ## Commands
 
+-   **Warcraft: Export Data**
+    -  Export Data
 -   **Warcraft: Create Project**
     -   Create a map project for Warcraft III
 -   **Warcraft: Clean Project**
@@ -57,7 +61,26 @@ This extension is a Warcraft III map development tool set of Lua.
     "mapdir": "map.w3x",
     "files": ["main.lua"],
     "jassfile": "",
-    "lua.package.path": ["./lib/?.lua", "./lib/?/init.lua"]
+    "lua.package.path": ["./lib/?.lua", "./lib/?/init.lua"],
+    "submodules": [
+    {
+        "files": [],
+        "res": [],
+        "obpath":"",//物编路径
+        "path":"",//子模块路径
+        "mapdir":"",//地图路径
+        "out":"",//输出路径
+        "id":0,//输出的地图id，用来标识一个地图
+        "remove": [""], //删除指定war3资源
+        "luacopy":0 //"复制id标识的lua代码"
+    }],
+    "mpq": {
+        "path": "",//mpa的路径
+        "out":"",//输出路径
+        "obpath":"",//物编路径
+        "res": [""]//额外要打包进mpq的资源（非mpq路径下的）
+    },
+    "remove": []
 }
 ```
 ```

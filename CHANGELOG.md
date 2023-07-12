@@ -1,3 +1,13 @@
+## [0.1.12](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.11...v0.1.12) (2023-07-12)
+
+
+### Bug Fixes
+
+* **deps:** build failed with protobufjs 6.11.3 ([2388287](https://github.com/warcraft-iii/warcraft-vscode/commit/2388287ceedb4d28676648808102665a00008c11))
+* simple-git ([d8c3a41](https://github.com/warcraft-iii/warcraft-vscode/commit/d8c3a4182a9cf6b53d0d89aae1ceb7aba8753093))
+
+
+
 ## [0.1.11](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.10...v0.1.11) (2021-08-25)
 
 

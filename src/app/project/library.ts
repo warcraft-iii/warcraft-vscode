@@ -8,7 +8,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as git from 'simple-git/promise';
+import * as git from 'simple-git';
 import { Octokit } from '@octokit/rest';
 import * as utils from '../../utils';
 
@@ -23,7 +23,7 @@ interface RepoInfo {
 }
 
 class Library {
-    private repo = git(env.rootPath);
+    private repo = git.gitP(env.rootPath);
     private github = new Octokit();
     private defaultOrgs: GithubOrgOrUserInfo[] = [
         {

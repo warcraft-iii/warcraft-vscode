@@ -1,3 +1,12 @@
+## [0.1.14](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.13...v0.1.14) (2024-03-25)
+
+
+### Features
+
+* Create Project support use classic template ([ddb1b6e](https://github.com/warcraft-iii/warcraft-vscode/commit/ddb1b6e2f82b9f5ecef93cafefa3087b4c28ffd4))
+
+
+
 ## [0.1.13](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.12...v0.1.13) (2023-07-12)
 
 

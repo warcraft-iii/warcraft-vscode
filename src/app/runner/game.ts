@@ -52,7 +52,7 @@ class GameRunner extends BaseRunner {
         let exec: string;
 
         if (env.config.classic) {
-            exec = env.asYDWEPath(globals.FILE_YDWE_CONFIG);
+            exec = env.asKKWEPath(globals.FILE_KKWE_CONFIG);
             await fs.mkdirp(env.asGamePath('Maps', 'Test'));
         } else {
             exec = env.config.gamePath;

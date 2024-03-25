@@ -9,6 +9,7 @@ export namespace globals {
     export const LUA = '.lua';
 
     export const TEMPLATE_URL = 'https://github.com/warcraft-iii/warcraft-template/archive/master.zip';
+    export const TEMPLATE_CLASSIC_URL = 'https://github.com/warcraft-iii/warcraft-template-classic/archive/main.zip';
 
     export const EXTENSION_ID = 'Dencer.warcraft-vscode';
 
@@ -26,7 +27,7 @@ export namespace globals {
     export const FOLDER_SOURCE = 'src';
     export const MAP_FILE_EXT = '*.w3x|*.w3m';
 
-    export const FILE_YDWE_CONFIG = 'bin/YDWEConfig.exe';
+    export const FILE_KKWE_CONFIG = 'bin/YDWEConfig.exe';
 }
 
 export enum ConfigurationType {

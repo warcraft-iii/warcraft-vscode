@@ -95,7 +95,8 @@ class App implements vscode.Disposable {
                 }
                 await editorRunner.execute();
             }),
-            registerCommand('project.create', () => project.create()),
+            registerCommand('project.create', () => project.create(true)),
+            registerCommand('project.createClassic', () => project.create(false)),
             registerCommand('project.clean', () => project.clean()),
             registerCommand('project.addlibrary', () => library.add()),
             registerCommand('project.toggleConfiguration', () => project.toggleConfiguration()),

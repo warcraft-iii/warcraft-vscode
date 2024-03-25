@@ -65,6 +65,11 @@
         "category": "Warcraft"
       },
       {
+        "command": "extension.warcraft.project.createClassic",
+        "title": "Create Classic Project",
+        "category": "Warcraft"
+      },
+      {
         "command": "extension.warcraft.project.clean",
         "title": "Clean Project",
         "category": "Warcraft"
@@ -142,9 +147,9 @@
             "type": "string"
           }
         },
-        "warcraft.ydwePath": {
+        "warcraft.kkwePath": {
           "type": "string",
-          "description": "Where is YDWE Execution?"
+          "description": "Where is KKWE Execution?"
         },
         "warcraft.autoCloseClient": {
           "type": "boolean",

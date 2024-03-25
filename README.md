@@ -18,7 +18,9 @@ This extension is a Warcraft III map development tool set of Lua.
 ## Commands
 
 -   **Warcraft: Create Project**
-    -   Create a map project for Warcraft III
+    -   Create a map project for Warcraft III Reforge
+-   **Warcraft: Create Classic Project**
+    -   Create a map project for Warcraft III Classic
 -   **Warcraft: Clean Project**
     -   Remove the `.build` folder
 -   **Warcraft: Add Library**

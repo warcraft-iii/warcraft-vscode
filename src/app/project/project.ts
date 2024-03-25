@@ -21,7 +21,7 @@ class Project {
     }
 
     @utils.report(localize('report.create', 'Creating project'))
-    async create() {
+    async create(reforge = true) {
         const result = await vscode.window.showOpenDialog({
             canSelectFiles: false,
             canSelectFolders: true,
@@ -43,15 +43,15 @@ class Project {
             }
         }
 
-        await this.download(output);
+        await this.download(output, reforge);
 
         if (await utils.confirm(localize('confirm.openProject', 'Create project success, to open?'))) {
             vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(output), true);
         }
     }
 
-    async download(output: string) {
-        await utils.extractFile(await utils.downloadZip(globals.TEMPLATE_URL), output, 'warcraft-template-master');
+    async download(output: string, reforge: boolean) {
+        await utils.extractFile(await utils.downloadZip(reforge ? globals.TEMPLATE_URL : globals.TEMPLATE_CLASSIC_URL), output, reforge ? 'warcraft-template-master' : 'warcraft-template-classic-main');
     }
 
     async toggleConfiguration() {

@@ -127,16 +127,16 @@ export class Config {
         this.config.update(this.classic ? 'wePathClassic' : 'wePath', value, vscode.ConfigurationTarget.Global);
     }
 
-    get ydwePath() {
-        const value = this.config.get<string>('ydwePath');
+    get kkwePath() {
+        const value = this.config.get<string>('kkwePath');
         if (!value) {
-            throw Error(localize('error.noYDWEPath', 'Not found: YDWEConfig.exe'));
+            throw Error(localize('error.noKKWEPath', 'Not found: YDWEConfig.exe'));
         }
         return value;
     }
 
-    set ydwePath(value: string) {
-        this.config.update('ydwePath', value, vscode.ConfigurationTarget.Global);
+    set kkwePath(value: string) {
+        this.config.update('kkwePath', value, vscode.ConfigurationTarget.Global);
     }
 
     private parseArguments(args: string[]) {

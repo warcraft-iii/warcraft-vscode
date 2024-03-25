@@ -53,8 +53,8 @@ class Environment {
         return this.asRootPath(globals.FOLDER_SOURCE, ...args);
     }
 
-    asYDWEPath(...args: string[]) {
-        return path.resolve(path.dirname(this.config.ydwePath), ...args);
+    asKKWEPath(...args: string[]) {
+        return path.resolve(path.dirname(this.config.kkwePath), ...args);
     }
 
     get rootPath() {

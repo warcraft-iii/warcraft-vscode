@@ -35,11 +35,11 @@ const EXECUTION_FILES: ExecutionItem[] = [
     },
 ];
 
-const EXECUTION_FILES_YDWE: ExecutionItem[] = [
+const EXECUTION_FILES_KKWE: ExecutionItem[] = [
     {
-        title: 'YDWE',
-        name: globals.FILE_YDWE_CONFIG,
-        key: 'ydwePath',
+        title: 'KKWE',
+        name: globals.FILE_KKWE_CONFIG,
+        key: 'kkwePath',
         selectFile: true,
     },
 ];
@@ -124,7 +124,7 @@ class Checker {
 
         const checkItems = EXECUTION_FILES;
         if (env.config.classic) {
-            checkItems.push(...EXECUTION_FILES_YDWE);
+            checkItems.push(...EXECUTION_FILES_KKWE);
         }
 
         for (const item of checkItems) {

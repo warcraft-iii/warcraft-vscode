@@ -1,3 +1,7 @@
+## [0.1.15](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.14...v0.1.15) (2024-03-29)
+
+
+
 ## [0.1.14](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.13...v0.1.14) (2024-03-25)
 
 

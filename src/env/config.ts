@@ -102,7 +102,7 @@ export class Config {
                     path: [...(json.lua?.package?.path || ['./?.lua', './?/init.lua'])],
                 },
             },
-            source: json.source,
+            source: json.source || 'src',
         };
     }
 

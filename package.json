@@ -96,7 +96,7 @@
       },
       {
         "command": "extension.warcraft.project.choseMapFile",
-        "title": "Chose a Map File",
+        "title": "Select Map Folder",
         "category": "Warcraft"
       }
     ],

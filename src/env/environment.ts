@@ -50,7 +50,7 @@ class Environment {
     }
 
     asSourcePath(...args: string[]) {
-        return this.asRootPath(globals.FOLDER_SOURCE, ...args);
+        return this.asRootPath(this.sourceFolder, ...args);
     }
 
     asKKWEPath(...args: string[]) {
@@ -65,7 +65,7 @@ class Environment {
     }
 
     get sourceFolder() {
-        return this.asRootPath(globals.FOLDER_SOURCE);
+        return this.asRootPath(this.config.source);
     }
 
     get mapFolder() {

@@ -30,6 +30,7 @@ interface WarcraftConfig {
     files: string[];
     jassfile?: string;
     lua: LuaConfig;
+    source: string;
 }
 
 export class Config {
@@ -40,6 +41,7 @@ export class Config {
                 path: ['./?.lua', './?/init.lua'],
             },
         },
+        source: 'src',
     };
     private projectConfig = this.defaultConfig;
     private waiter?: Promise<void>;
@@ -100,6 +102,7 @@ export class Config {
                     path: [...(json.lua?.package?.path || ['./?.lua', './?/init.lua'])],
                 },
             },
+            source: json.source,
         };
     }
 
@@ -207,6 +210,10 @@ export class Config {
 
     set codeConfusion(value: boolean) {
         this.config.update('codeConfusion', value, vscode.ConfigurationTarget.Global);
+    }
+
+    get source() {
+        return this.projectConfig.source;
     }
 
     get mapDir() {

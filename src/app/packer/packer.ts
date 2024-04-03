@@ -27,7 +27,7 @@ class Packer {
 
     async generatePackList() {
         const packList: PackItem[] = [];
-        const libs = await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES));
+        const libs = await fs.readdir(env.asRootPath(globals.FOLDER_LIBRARIES));
         const imports = [
             globals.FOLDER_IMPORTS,
             `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`,
@@ -39,7 +39,7 @@ class Packer {
         // imports
         for (const imp of imports) {
             for (const lib of libs) {
-                packList.push(...(await this.generatePackItems(env.asSourcePath(globals.FOLDER_LIBRARIES, lib, imp))));
+                packList.push(...(await this.generatePackItems(env.asRootPath(globals.FOLDER_LIBRARIES, lib, imp))));
             }
 
             packList.push(...(await this.generatePackItems(env.asRootPath(imp))));

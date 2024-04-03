@@ -61,7 +61,7 @@ class Library {
     }
 
     private async getRemoteRepos() {
-        const exists = new Set(await fs.readdir(env.asSourcePath(globals.FOLDER_LIBRARIES)));
+        const exists = new Set(await fs.readdir(env.asRootPath(globals.FOLDER_LIBRARIES)));
 
         return Array.prototype
             .concat(
@@ -126,7 +126,7 @@ class Library {
         }
         return await this.repo.submoduleAdd(
             repo.url,
-            utils.posixCase(path.relative(env.rootPath, env.asSourcePath(globals.FOLDER_LIBRARIES, repo.name)))
+            utils.posixCase(path.relative(env.rootPath, env.asRootPath(globals.FOLDER_LIBRARIES, repo.name)))
         );
     }
 

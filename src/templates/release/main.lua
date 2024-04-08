@@ -177,20 +177,28 @@ end
 --[[%= code %]]
 --[[%>  if (classic) { print('--[==['); } %]]
 dofile('origwar3map.lua')
+dofile('root.lua')
 local __main = main
 --[[%>  if (classic) { print(']==]--'); } %]]
+local __config = config
+
+function config()
+    __config()
+    dofile('config.lua')
+end
+
 function main()
-    xpcall(function()
+    --xpcall(function()
         --[[%>  if (classic) { print('--[==['); } %]]
         __main()
         --[[%>  if (classic) { print(']==]--'); } %]]
         dofile('main.lua')
-    end, function(msg)
-        local handler = geterrorhandler()
-        if handler and msg then
-            return handler(msg)
-        end
-    end)
+    --end, function(msg)
+        --local handler = geterrorhandler()
+        --if handler and msg then
+            --return handler(msg)
+        --end
+    --end)
 end
 
 --[[%>  if (!classic) { print('--[==['); } %]]

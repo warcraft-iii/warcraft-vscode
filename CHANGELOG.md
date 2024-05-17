@@ -1,3 +1,12 @@
+## [0.1.16](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.15...v0.1.16) (2024-05-17)
+
+
+### Features
+
+* **packer:** `imports` support for specific Warcraft versions (ex. imports.reforge) ([51af8f2](https://github.com/warcraft-iii/warcraft-vscode/commit/51af8f25b604445476790d6db4435d457025b00b))
+
+
+
 ## [0.1.15](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.14...v0.1.15) (2024-03-29)
 
 

@@ -5,7 +5,6 @@
  * @Date   : 5/26/2019, 12:39:42 AM
  */
 
-import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as git from 'simple-git';
@@ -15,6 +14,7 @@ import * as utils from '../../utils';
 import { env } from '../../env';
 import { localize, globals, GithubOrgOrUserInfo } from '../../globals';
 import { ConfirmResult } from '../../utils';
+import { runtime } from '../../env/runtime';
 
 interface RepoInfo {
     name: string;
@@ -80,7 +80,7 @@ class Library {
     }
 
     private async askRepo() {
-        const result = await vscode.window.showQuickPick(this.getRemoteRepos(), {
+        const result = await runtime.showQuickPick(this.getRemoteRepos(), {
             ignoreFocusOut: true,
             placeHolder: localize('quick.loadingRepos', 'Loading Repos'),
         });

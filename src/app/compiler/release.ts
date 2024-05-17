@@ -160,7 +160,8 @@ class ReleaseCompiler extends BaseCompiler {
         await this.processFiles('main.lua', ...env.config.files);
 
         if (!env.config.classic) {
-            await this.processFiles({ name: 'origwar3map.lua', file: env.asMapPath(globals.FILE_ENTRY) });
+            const scriptFile = await this.getOriginMapScript();
+            await this.processFiles({ name: 'origwar3map.lua', file: scriptFile });
         }
 
         const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
@@ -180,6 +181,10 @@ class ReleaseCompiler extends BaseCompiler {
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
         await fs.writeFile(outputPath, out);
+
+        if (env.config.classic) {
+            await this.injectWar3mapJass();
+        }
     }
 }
 

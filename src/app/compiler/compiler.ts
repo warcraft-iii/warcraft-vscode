@@ -67,12 +67,12 @@ export abstract class BaseCompiler implements Compiler {
         return '='.repeat(length);
     }
 
-    protected async extractWar3mapJass(outPath: string) {
-        if (!(await utils.extractFileFromMap(outPath, globals.FILE_ENTRY_JASS))) {
-            if (await utils.extractFileFromMap(outPath, globals.FILE_ENTRY_SCRIPTS_JASS)) {
+    protected async extractWar3mapJass(outPath: string, fileName: string) {
+        if (!(await utils.extractFileFromMap(outPath, fileName))) {
+            if (await utils.extractFileFromMap(outPath, 'scripts\\' + fileName)) {
                 return true;
             } else {
-                throw Error(localize('error.noMapScriptFile', 'Not found: War3map.j file'));
+                throw Error(localize('error.noMapScriptFile', `Not found: ${fileName} file`));
             }
         }
         return false;
@@ -83,7 +83,7 @@ export abstract class BaseCompiler implements Compiler {
         if (env.config.jassfile && (await fs.pathExists(env.config.jassfile))) {
             await fs.copyFile(env.config.jassfile, outPath);
         } else {
-            await this.extractWar3mapJass(outPath);
+            await this.extractWar3mapJass(outPath, globals.FILE_ENTRY_JASS);
         }
         const jass = (await fs.readFile(outPath)).toString().split('\r\n');
 
@@ -103,5 +103,16 @@ export abstract class BaseCompiler implements Compiler {
             throw Error(localize('error.noMapScriptFileMain', 'Not found: main function in War3map.j file'));
         }
         await fs.writeFile(outPath, jass.join('\r\n'));
+    }
+
+    protected async getOriginMapScript() {
+        let scriptFile;
+        if (((await fs.stat(env.mapFolder)).isFile())) {
+            scriptFile = env.asBuildPath('orig' + globals.FILE_ENTRY);
+            await this.extractWar3mapJass(scriptFile, globals.FILE_ENTRY);
+        } else {
+            scriptFile = env.asMapPath(globals.FILE_ENTRY);
+        }
+        return scriptFile;
     }
 }

@@ -4,10 +4,11 @@
  * @Link   : https://dengsir.github.io
  * @Date   : 5/23/2019, 12:57:32 PM
  */
-import * as vscode from 'vscode';
+
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as utils from '../utils';
+import { runtime, ConfigurationTarget } from './runtime';
 
 import isArray from 'lodash-es/isArray';
 import isString from 'lodash-es/isString';
@@ -41,11 +42,15 @@ export class Config {
             },
         },
     };
-    private projectConfig = this.defaultConfig;
+    public projectConfig = this.defaultConfig;
     private waiter?: Promise<void>;
+    public isClassic: boolean;
+    public isRelease: boolean
 
     constructor() {
-        this.reload();
+        if (runtime.inVscode) {
+            this.reload();
+        }
     }
 
     reload() {
@@ -70,15 +75,15 @@ export class Config {
     }
 
     private get config() {
-        return vscode.workspace.getConfiguration('warcraft');
+        return runtime.getConfiguration('warcraft');
     }
 
     private async readProjectConfig(): Promise<WarcraftConfig | undefined> {
-        if (!vscode.workspace.workspaceFolders) {
+        if (!runtime.workspaceFolder) {
             return;
         }
 
-        const file = path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.FILE_PROJECT);
+        const file = path.resolve(runtime.workspaceFolder, globals.FILE_PROJECT);
         if (!(await fs.pathExists(file))) {
             return;
         }
@@ -104,7 +109,7 @@ export class Config {
     }
 
     get gamePath() {
-        const value = this.config.get<string>(this.classic ? 'gamePathClassic' : 'gamePath');
+        const value = this.config?.get<string>(this.classic ? 'gamePathClassic' : 'gamePath');
         if (!value) {
             throw Error(localize('error.noGamePath', 'Not found: Warcraft III.exe'));
         }
@@ -112,11 +117,11 @@ export class Config {
     }
 
     set gamePath(value: string) {
-        this.config.update(this.classic ? 'gamePathClassic' : 'gamePath', value, vscode.ConfigurationTarget.Global);
+        this.config?.update(this.classic ? 'gamePathClassic' : 'gamePath', value, ConfigurationTarget.Global);
     }
 
     get wePath() {
-        const value = this.config.get<string>(this.classic ? 'wePathClassic' : 'wePath');
+        const value = this.config?.get<string>(this.classic ? 'wePathClassic' : 'wePath');
         if (!value) {
             throw Error(localize('error.noEditorPath', 'Not found: World Editor.exe'));
         }
@@ -124,11 +129,11 @@ export class Config {
     }
 
     set wePath(value: string) {
-        this.config.update(this.classic ? 'wePathClassic' : 'wePath', value, vscode.ConfigurationTarget.Global);
+        this.config?.update(this.classic ? 'wePathClassic' : 'wePath', value, ConfigurationTarget.Global);
     }
 
     get kkwePath() {
-        const value = this.config.get<string>('kkwePath');
+        const value = this.config?.get<string>('kkwePath');
         if (!value) {
             throw Error(localize('error.noKKWEPath', 'Not found: YDWEConfig.exe'));
         }
@@ -136,7 +141,7 @@ export class Config {
     }
 
     set kkwePath(value: string) {
-        this.config.update('kkwePath', value, vscode.ConfigurationTarget.Global);
+        this.config?.update('kkwePath', value, ConfigurationTarget.Global);
     }
 
     private parseArguments(args: string[]) {
@@ -164,49 +169,53 @@ export class Config {
     }
 
     get gameArgs() {
-        const gameArgs = this.config.get<string[]>(this.classic ? 'gameArgsClassic' : 'gameArgs') || [];
+        const gameArgs = this.config?.get<string[]>(this.classic ? 'gameArgsClassic' : 'gameArgs') || [];
         return this.parseArguments(gameArgs);
     }
 
     get weArgs() {
-        const weArgs = this.config.get<string[]>(this.classic ? 'weArgsClassic' : 'weArgs') || [];
+        const weArgs = this.config?.get<string[]>(this.classic ? 'weArgsClassic' : 'weArgs') || [];
         return this.parseArguments(weArgs);
     }
 
     get autoCloseClient() {
-        return this.config.get<boolean>('autoCloseClient') || false;
+        return this.config?.get<boolean>('autoCloseClient') || false;
     }
 
     set autoCloseClient(value: boolean) {
-        this.config.update('autoCloseClient', value, vscode.ConfigurationTarget.Global);
+        this.config?.update('autoCloseClient', value, ConfigurationTarget.Global);
     }
 
     get configuration() {
-        return ConfigurationType[this.config.get<string>('configuration') || ''] || ConfigurationType.Debug;
+        if (this.config)
+            return ConfigurationType[this.config?.get<string>('configuration') || ''] || ConfigurationType.Debug;
+        return this.isRelease ? ConfigurationType.Release : ConfigurationType.Debug;
     }
 
     set configuration(value: ConfigurationType) {
-        this.config.update('configuration', ConfigurationType[value], vscode.ConfigurationTarget.Workspace);
+        this.config?.update('configuration', ConfigurationType[value], ConfigurationTarget.Workspace);
     }
 
     get warcraftVersion() {
-        return WarcraftVersionType[this.config.get<string>('warcraftVersion') || ''] || WarcraftVersionType.Reforge;
+        return WarcraftVersionType[this.config?.get<string>('warcraftVersion') || ''] || WarcraftVersionType.Reforge;
     }
 
     set warcraftVersion(value: WarcraftVersionType) {
-        this.config.update('warcraftVersion', WarcraftVersionType[value], vscode.ConfigurationTarget.Workspace);
+        this.config?.update('warcraftVersion', WarcraftVersionType[value], ConfigurationTarget.Workspace);
     }
 
     get classic() {
-        return this.warcraftVersion === WarcraftVersionType.Classic;
+        if (this.config)
+            return this.warcraftVersion === WarcraftVersionType.Classic;
+        return this.isClassic == true;
     }
 
     get codeConfusion() {
-        return this.config.get<boolean>('codeConfusion') || false;
+        return this.config?.get<boolean>('codeConfusion') || false;
     }
 
     set codeConfusion(value: boolean) {
-        this.config.update('codeConfusion', value, vscode.ConfigurationTarget.Global);
+        this.config?.update('codeConfusion', value, ConfigurationTarget.Global);
     }
 
     get mapDir() {
@@ -217,12 +226,12 @@ export class Config {
     }
 
     set mapDir(value: string) {
-        if (!vscode.workspace.workspaceFolders) {
+        if (!runtime.workspaceFolder) {
             return;
         }
 
         this.projectConfig.mapdir = value;
-        const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        const rootPath = runtime.workspaceFolder;
         fs.writeFile(path.resolve(rootPath, globals.FILE_PROJECT), JSON.stringify(this.projectConfig, undefined, 2));
     }
 
@@ -231,8 +240,8 @@ export class Config {
     }
 
     get jassfile() {
-        if (vscode.workspace.workspaceFolders && this.projectConfig.jassfile) {
-            return path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, this.projectConfig.jassfile);
+        if (runtime.workspaceFolder && this.projectConfig.jassfile) {
+            return path.resolve(runtime.workspaceFolder, this.projectConfig.jassfile);
         }
         return null;
     }
@@ -242,7 +251,7 @@ export class Config {
     }
 
     get libraryOrganizations() {
-        const setting = this.config.get<GithubOrgOrUserInfo[]>('libraryOrganizations');
+        const setting = this.config?.get<GithubOrgOrUserInfo[]>('libraryOrganizations');
         if (!setting || !isArray(setting)) {
             return;
         }

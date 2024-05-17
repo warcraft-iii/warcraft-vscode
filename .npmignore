@@ -2,7 +2,7 @@
 .vscode-test/**
 .github/**
 out/test/**
-out/cli.*
+out/extension.*
 src/**
 .gitignore
 **/tsconfig.json

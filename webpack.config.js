@@ -8,10 +8,13 @@ const path = require("path");
 const config = {
     target: "node",
 
-    entry: "./src/extension.ts",
+    entry: {
+        extension: "./src/extension.ts",
+        cli: "./src/cli.ts",
+    },
     output: {
         path: path.resolve(__dirname, "out"),
-        filename: "extension.js",
+        filename: "[name].js",
         libraryTarget: "commonjs2",
         devtoolModuleFilenameTemplate: "../[resource-path]"
     },

@@ -5,12 +5,12 @@
  * @Date   : 5/23/2019, 11:06:58 PM
  */
 
-import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
 import { globals, localize, ConfigurationType, WarcraftVersionType } from '../../globals';
+import { runtime } from '../../env/runtime';
 
 class Project {
     constructor() { }
@@ -22,7 +22,7 @@ class Project {
 
     @utils.report(localize('report.create', 'Creating project'))
     async create(reforge = true) {
-        const result = await vscode.window.showOpenDialog({
+        const result = await runtime.showOpenDialog({
             canSelectFiles: false,
             canSelectFolders: true,
             openLabel: localize('confirm.createProject', 'Use this folder to create project')
@@ -46,7 +46,7 @@ class Project {
         await this.download(output, reforge);
 
         if (await utils.confirm(localize('confirm.openProject', 'Create project success, to open?'))) {
-            vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(output), true);
+            runtime.executeCommand('vscode.openFolder', output, true);
         }
     }
 
@@ -55,7 +55,7 @@ class Project {
     }
 
     async toggleConfiguration() {
-        const result = await vscode.window.showQuickPick(
+        const result = await runtime.showQuickPick(
             [
                 {
                     label: 'Debug',
@@ -77,7 +77,7 @@ class Project {
     }
 
     async toggleWarcraftVersion() {
-        const result = await vscode.window.showQuickPick(
+        const result = await runtime.showQuickPick(
             [
                 {
                     label: 'Reforge',
@@ -111,7 +111,7 @@ class Project {
             }
         }
 
-        const result = await vscode.window.showQuickPick(
+        const result = await runtime.showQuickPick(
             menus,
             { placeHolder: localize('quick.choseMapFile', 'Chose a Map File') }
         );

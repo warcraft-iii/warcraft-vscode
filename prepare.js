@@ -5,7 +5,7 @@ const path = require('path');
 
 async function downloadAsserts(owner, repo, out) {
     const versions = {};
-    const github = new Octokit.Octokit();
+    const github = new Octokit.Octokit({auth: process.env['GH_ACCESS_TOKEN']});
 
     const releaseResp = await github.repos.getLatestRelease({
         owner,
@@ -30,6 +30,7 @@ async function downloadAsserts(owner, repo, out) {
 
     const version = release.tag_name;
     const outpath = typeof out === 'function' ? out(asset) : out;
+    await fs.mkdirp(path.dirname(outpath));
     await fs.writeFile(outpath, assetResp.body);
 
     versions.def = version;

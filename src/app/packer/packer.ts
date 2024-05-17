@@ -77,7 +77,7 @@ class Packer {
     async packByPackList() {
         const args: string[] = [];
 
-        if (!env.config.classic) {
+        if (!env.config.classic && (await fs.stat(env.mapFolder)).isDirectory()) {
             args.push('generate');
             if (this.type() === ConfigurationType.Debug) {
                 args.push('-f');

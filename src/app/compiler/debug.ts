@@ -39,7 +39,8 @@ class DebugCompiler extends BaseCompiler {
         ];
 
         if (!env.config.classic) {
-            files.push(await this.genFile(env.asMapPath(globals.FILE_ENTRY), 'orig' + globals.FILE_ENTRY));
+            const scriptFile = await this.getOriginMapScript();
+            files.push(await this.genFile(scriptFile, 'orig' + globals.FILE_ENTRY));
         }
 
         const code = files.join('\n');

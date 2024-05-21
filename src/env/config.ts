@@ -197,7 +197,9 @@ export class Config {
     }
 
     get warcraftVersion() {
-        return WarcraftVersionType[this.config?.get<string>('warcraftVersion') || ''] || WarcraftVersionType.Reforge;
+        if (this.config)
+            return WarcraftVersionType[this.config?.get<string>('warcraftVersion') || ''] || WarcraftVersionType.Reforge;
+        return this.isClassic ? WarcraftVersionType.Classic : WarcraftVersionType.Reforge;
     }
 
     set warcraftVersion(value: WarcraftVersionType) {

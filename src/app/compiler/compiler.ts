@@ -29,14 +29,25 @@ export abstract class BaseCompiler implements Compiler {
 
         if (this.type() === ConfigurationType.Release) {
             ignores.push('debug');
+            ignores.push('non-release');
+            accepts.push('release');
             accepts.push('non-debug');
+        } else {
+            ignores.push('release');
+            ignores.push('non-debug');
+            accepts.push('debug');
+            accepts.push('non-release');
         }
 
         if (env.config.warcraftVersion === WarcraftVersionType.Classic) {
             ignores.push('reforge');
+            ignores.push('non-classic');
+            accepts.push('classic');
             accepts.push('non-reforge');
         } else {
             ignores.push('classic');
+            ignores.push('non-reforge');
+            accepts.push('reforge');
             accepts.push('non-classic');
         }
 
@@ -49,7 +60,7 @@ export abstract class BaseCompiler implements Compiler {
         }
         for (const key of accepts) {
             code = code
-                .replace(RegExp(`--\\s*\\[=*\\[@${key}@`, 'g'), `--@${key}@`)
+                .replace(RegExp(`--\\[=*\\[@${key}@`, 'g'), `--@${key}@`)
                 .replace(RegExp(`--\\s*@end-${key}@\\]=*\\]`, 'g'), `--@end-${key}@`);
         }
 

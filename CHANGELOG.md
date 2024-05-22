@@ -1,3 +1,12 @@
+## [0.2.1](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.0...v0.2.1) (2024-05-22)
+
+
+### Bug Fixes
+
+* Incorrect ObjectEditing checkDefine ([c38a16d](https://github.com/warcraft-iii/warcraft-vscode/commit/c38a16d7d53a4740da2f8b99f58160f20da81052))
+
+
+
 # [0.2.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.16...v0.2.0) (2024-05-22)
 
 

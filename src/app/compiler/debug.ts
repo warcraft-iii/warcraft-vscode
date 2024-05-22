@@ -7,6 +7,8 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as luaparse from 'luaparse';
+import * as luamin from 'luamin';
 
 import { env } from '../../env';
 import { ConfigurationType, globals, localize } from '../../globals';
@@ -60,7 +62,18 @@ class DebugCompiler extends BaseCompiler {
     }
 
     async genFile(file: string, name?: string) {
-        const body = this.processCodeMacros(await utils.readFile(file));
+        let body = this.processCodeMacros(await utils.readFile(file));
+        if (body.indexOf('compiletime') > 0) {
+            const ast = luaparse.parse(body, {
+                locations: true,
+                ranges: true,
+                scope: true,
+                onCreateNode: async (node) => {
+                    this.checkCompileTime(file, node);
+                }
+            });
+            body = luamin.minify(ast);
+        }
         const comment = this.getCommentEqual(body);
         if (!name) {
             name = utils.posixCase(path.relative(env.sourceFolder, file));

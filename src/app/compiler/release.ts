@@ -98,6 +98,10 @@ class ReleaseCompiler extends BaseCompiler {
                             onCreateNode: (node) => {
                                 let arg: luaparse.Expression;
 
+                                if (this.checkCompileTime(item.name, node)) {
+                                    return;
+                                }
+
                                 if (
                                     node.type === 'CallExpression' &&
                                     node.base.type === 'Identifier' &&

@@ -9,6 +9,9 @@ import { globals, ConfigurationType, WarcraftVersionType, localize } from '../..
 import { env } from '../../env';
 import * as utils from '../../utils';
 import * as fs from 'fs-extra';
+import * as luainjs from 'lua-in-js';
+import * as luaparse from 'luaparse';
+import * as luamin from 'luamin';
 
 export interface Compiler {
     execute(): Promise<void>;
@@ -125,5 +128,37 @@ export abstract class BaseCompiler implements Compiler {
             scriptFile = env.asMapPath(globals.FILE_ENTRY);
         }
         return scriptFile;
+    }
+
+    protected checkCompileTime(fileName: string | undefined, node: luaparse.Node) {
+        if (node.type === 'CallExpression' &&
+            node.base.type === 'Identifier' && node.base.name == 'compiletime') {
+            if (node.arguments.length != 1 || node.arguments[0].type != 'FunctionDeclaration') {
+                throw Error(localize('error.processFilesFailure', ['File: ' + fileName, 'Line: ' + node.loc?.start.line, 'Error: Incorrect compiletime argument'].join('\n')));
+            }
+
+            const script = luamin.stringify(node.arguments[0]);
+            const lua = luainjs.createEnv();
+            const ret = lua.parse(script).exec();
+
+            var newNode = node as any;
+            if (typeof (ret) == 'string') {
+                newNode.type = 'StringLiteral';
+                newNode.raw = `[======[` + ret + `]======]`
+            } else if (typeof (ret) == 'number') {
+                newNode.type = 'NumericLiteral';
+                newNode.raw = `${ret}`;
+            } else if (typeof (ret) == 'boolean') {
+                newNode.type = 'BooleanLiteral';
+                newNode.raw = ret ? "true" : "false";
+            } else if (typeof (ret) == 'undefined') {
+                newNode.type = 'NilLiteral';
+                newNode.raw = 'nil';
+            } else {
+                throw Error(localize('error.processFilesFailure', ['File: ' + fileName, 'Line: ' + node.loc?.start.line, 'Error: Incorrect compiletime return value.'].join('\n')));
+            }
+            return true;
+        }
+        return false;
     }
 }

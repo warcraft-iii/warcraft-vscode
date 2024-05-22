@@ -1,3 +1,12 @@
+## [0.2.2](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.1...v0.2.2) (2024-05-22)
+
+
+### Features
+
+* Running compiletime with wasmoon ([74f0ea1](https://github.com/warcraft-iii/warcraft-vscode/commit/74f0ea1e31e3e71fcb45340b6465e2af72554f6e))
+
+
+
 ## [0.2.1](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.0...v0.2.1) (2024-05-22)
 
 

@@ -91,6 +91,7 @@ class ReleaseCompiler extends BaseCompiler {
                         }
                         const required: RequireItem[] = [];
 
+                        await this.initLuaEngine();
                         const ast = luaparse.parse(body, {
                             locations: true,
                             ranges: true,

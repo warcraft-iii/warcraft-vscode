@@ -247,13 +247,13 @@
     "got": "^9.6.0",
     "is-running": "^2.1.0",
     "lodash-es": "^4.17.21",
-    "lua-in-js": "^2.2.4",
     "luamin": "github:warcraft-iii/luamin",
     "luaparse": "^0.2.1",
     "ps-node": "^0.1.6",
     "simple-git": "^3.19.1",
     "sudo-prompt": "^9.2.1",
     "vscode-nls": "^5.0.0",
+    "wasmoon": "^1.16.0",
     "yauzl-promise": "^2.1.3"
   }
 }

@@ -65,6 +65,9 @@ async function main() {
             await fs.writeJson(f.json, versions);
         }
     }
+
+    await fs.copyFile("node_modules/wasmoon/dist/glue.wasm", path.join('out', "glue.wasm"));
+    await fs.copyFile("node_modules/wasmoon/dist/index.js", path.join('out', "wasmoon.js"));
 }
 
 main();

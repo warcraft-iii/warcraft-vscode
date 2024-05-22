@@ -20,7 +20,8 @@ const config = {
     },
     devtool: "source-map",
     externals: {
-        vscode: "commonjs vscode"
+        vscode: "commonjs vscode",
+        wasmoon: "./wasmoon",
     },
     resolve: {
         extensions: [".ts", ".js"]

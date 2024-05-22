@@ -9,9 +9,10 @@ import { globals, ConfigurationType, WarcraftVersionType, localize } from '../..
 import { env } from '../../env';
 import * as utils from '../../utils';
 import * as fs from 'fs-extra';
-import * as luainjs from 'lua-in-js';
 import * as luaparse from 'luaparse';
 import * as luamin from 'luamin';
+import * as path from 'path';
+import { LuaFactory, LuaEngine } from 'wasmoon';
 
 export interface Compiler {
     execute(): Promise<void>;
@@ -19,6 +20,8 @@ export interface Compiler {
 }
 
 export abstract class BaseCompiler implements Compiler {
+    private luaEngine: LuaEngine;
+
     abstract execute(): Promise<void>;
     abstract type(): ConfigurationType;
 
@@ -130,6 +133,19 @@ export abstract class BaseCompiler implements Compiler {
         return scriptFile;
     }
 
+    protected async initLuaEngine() {
+        if (this.luaEngine) {
+            return;
+        }
+        const factory = new LuaFactory(
+            (() => {
+                const p = path.join(__dirname, 'glue.wasm');
+                return fs.existsSync(p) ? p : undefined;
+            })()
+        );
+        this.luaEngine = await factory.createEngine();
+    }
+
     protected checkCompileTime(fileName: string | undefined, node: luaparse.Node) {
         if (node.type === 'CallExpression' &&
             node.base.type === 'Identifier' && node.base.name == 'compiletime') {
@@ -138,9 +154,7 @@ export abstract class BaseCompiler implements Compiler {
             }
 
             const script = luamin.stringify(node.arguments[0]);
-            const lua = luainjs.createEnv();
-            const ret = lua.parse(script).exec();
-
+            const ret = this.luaEngine.doStringSync(script);
             var newNode = node as any;
             if (typeof (ret) == 'string') {
                 newNode.type = 'StringLiteral';

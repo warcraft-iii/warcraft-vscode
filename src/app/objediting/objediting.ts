@@ -25,7 +25,7 @@ export class ObjEditing {
             return;
         }
 
-        const file = path.resolve(runtime.extensionFolder, globals.FILE_PROJECT);
+        const file = path.resolve(runtime.workspaceFolder, globals.FILE_PROJECT);
         if (!(await fs.pathExists(file))) {
             return;
         }

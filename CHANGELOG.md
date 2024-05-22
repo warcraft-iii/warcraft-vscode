@@ -1,3 +1,19 @@
+# [0.2.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.16...v0.2.0) (2024-05-22)
+
+
+### Bug Fixes
+
+* Incorrect Warcraft version when compiling scripts using the command line ([d780849](https://github.com/warcraft-iii/warcraft-vscode/commit/d78084950798b8577b1f5d312a41160e4f7110fd))
+* Some macros don't work properly when compiling scripts ([cb21780](https://github.com/warcraft-iii/warcraft-vscode/commit/cb21780ac31721d61c3197585a9c0a1a230ca7ac))
+
+
+### Features
+
+* Implement the compiletime API to run during the packaging process and get results ([dfb9b2a](https://github.com/warcraft-iii/warcraft-vscode/commit/dfb9b2ae0051cd3d042ec6128db1a2e4e67b034c))
+* Packaging maps via the nodejs command line ([3f107c6](https://github.com/warcraft-iii/warcraft-vscode/commit/3f107c68662bab4a11dc215d0b1628c880f70c5f))
+
+
+
 ## [0.1.16](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.15...v0.1.16) (2024-05-17)
 
 

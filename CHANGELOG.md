@@ -1,3 +1,13 @@
+## [0.2.4](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.3...v0.2.4) (2024-05-23)
+
+
+### Bug Fixes
+
+* prepare.js copy file failed ([4810966](https://github.com/warcraft-iii/warcraft-vscode/commit/48109666e2e5b618ea88fbf1a4779893c577f9d4))
+* prepare.js copy file failed ([25f0408](https://github.com/warcraft-iii/warcraft-vscode/commit/25f04083615618a1fb4bf2f364ddb12be7652050))
+
+
+
 ## [0.2.3](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.2...v0.2.3) (2024-05-23)
 
 

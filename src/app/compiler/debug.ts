@@ -63,7 +63,7 @@ class DebugCompiler extends BaseCompiler {
 
     async genFile(file: string, name?: string) {
         let body = this.processCodeMacros(await utils.readFile(file));
-        if (body.indexOf('compiletime') > 0) {
+        if (body.indexOf('compiletime') >= 0) {
             await this.initLuaEngine();
             const ast = luaparse.parse(body, {
                 locations: true,

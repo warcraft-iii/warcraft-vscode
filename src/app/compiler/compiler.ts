@@ -11,7 +11,6 @@ import * as utils from '../../utils';
 import * as fs from 'fs-extra';
 import * as luaparse from 'luaparse';
 import * as luamin from 'luamin';
-import * as path from 'path';
 import { LuaFactory, LuaEngine } from 'wasmoon';
 
 export interface Compiler {
@@ -140,7 +139,7 @@ export abstract class BaseCompiler implements Compiler {
         }
         const factory = new LuaFactory(
             (() => {
-                const p = path.join(__dirname, 'glue.wasm');
+                const p = env.asExetensionPath('out/glue.wasm');
                 return fs.existsSync(p) ? p : undefined;
             })()
         );

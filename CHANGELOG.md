@@ -1,3 +1,12 @@
+## [0.2.3](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.2...v0.2.3) (2024-05-23)
+
+
+### Bug Fixes
+
+* Some macros don't work properly when compiling scripts ([12038a3](https://github.com/warcraft-iii/warcraft-vscode/commit/12038a3e0e02941ac6804244e75f0461a10955e4))
+
+
+
 ## [0.2.2](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.1...v0.2.2) (2024-05-22)
 
 

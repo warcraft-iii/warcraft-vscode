@@ -14,3 +14,8 @@ node_modules
 webpack.config.js
 postinstall.js
 prepare.js
+res/**
+images/**
+.editorconfig
+.lua-format
+.vscodeignore

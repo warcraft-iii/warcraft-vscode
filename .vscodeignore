@@ -14,3 +14,5 @@ node_modules
 webpack.config.js
 postinstall.js
 prepare.js
+.lua-format
+.npmignore

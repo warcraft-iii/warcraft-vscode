@@ -1,3 +1,12 @@
+## [0.2.5](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.4...v0.2.5) (2024-05-23)
+
+
+### Bug Fixes
+
+* load wasmoon failed ([1a09272](https://github.com/warcraft-iii/warcraft-vscode/commit/1a092727e87f5462edc5b4b64ba00e3dd5bfc8ca))
+
+
+
 ## [0.2.4](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.3...v0.2.4) (2024-05-23)
 
 

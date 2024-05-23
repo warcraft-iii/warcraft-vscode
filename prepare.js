@@ -66,6 +66,7 @@ async function main() {
         }
     }
 
+    await fs.mkdir('out');
     await fs.copyFile("node_modules/wasmoon/dist/glue.wasm", path.join('out', "glue.wasm"));
     await fs.copyFile("node_modules/wasmoon/dist/index.js", path.join('out', "wasmoon.js"));
 }

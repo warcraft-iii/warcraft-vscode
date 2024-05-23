@@ -26,7 +26,6 @@ export abstract class BaseCompiler implements Compiler {
     abstract type(): ConfigurationType;
 
     protected processCodeMacros(code: string) {
-        const comment = this.getCommentEqual(code);
 
         const ignores: string[] = [];
         const accepts: string[] = [];
@@ -59,15 +58,17 @@ export abstract class BaseCompiler implements Compiler {
 
         code = code.trimRight();
 
-        for (const key of ignores) {
-            code = code
-                .replace(RegExp(`--\\s*@${key}@`, 'g'), `--[${comment}[@${key}@`)
-                .replace(RegExp(`--\\s*@end-${key}@`, 'g'), `--@end-${key}@]${comment}]`);
-        }
         for (const key of accepts) {
             code = code
-                .replace(RegExp(`--\\[=*\\[@${key}@`, 'g'), `--@${key}@`)
-                .replace(RegExp(`--\\s*@end-${key}@\\]=*\\]`, 'g'), `--@end-${key}@`);
+                .replace(RegExp(`--\\[=*\\[@${key}@`, 'mg'), `--@${key}@`)
+                .replace(RegExp(`--\\s*@end-${key}@\\]=*\\]`, 'mg'), `--@end-${key}@`);
+        }
+
+        for (const key of ignores) {
+            const comment = this.getCommentEqual(code);
+            code = code
+                .replace(RegExp(`--\\s*@${key}@`, 'mg'), `--[${comment}[@${key}@`)
+                .replace(RegExp(`--\\s*@end-${key}@\\s*$`, 'mg'), `--@end-${key}@]${comment}]`);
         }
 
         return code;

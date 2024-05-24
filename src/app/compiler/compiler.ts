@@ -64,7 +64,7 @@ export abstract class BaseCompiler implements Compiler {
         }
 
         for (const key of ignores) {
-            const comment = this.getCommentEqual(code);
+            const comment = BaseCompiler.getCommentEqual(code);
             code = code
                 .replace(RegExp(`--\\s*@${key}@`, 'mg'), `--[${comment}[@${key}@`)
                 .replace(RegExp(`--\\s*@end-${key}@\\s*$`, 'mg'), `--@end-${key}@]${comment}]`);
@@ -73,7 +73,7 @@ export abstract class BaseCompiler implements Compiler {
         return code;
     }
 
-    protected getCommentEqual(code: string) {
+    static getCommentEqual(code: string) {
         const m = code.match(/\[(=*)\[|\](=*)\]/g);
         const exists = new Set(m ? m.map((x) => x.length - 2) : []);
 
@@ -82,6 +82,14 @@ export abstract class BaseCompiler implements Compiler {
             length++;
         }
         return '='.repeat(length);
+    }
+
+    static toLuaString(str: string) {
+        const comment = BaseCompiler.getCommentEqual(str);
+        if (comment.length > 0) {
+            return `[${comment}[${str}]${comment}]`
+        }
+        return `[[${str}]]`
     }
 
     protected async extractWar3mapJass(outPath: string, fileName: string) {
@@ -144,6 +152,97 @@ export abstract class BaseCompiler implements Compiler {
             })()
         );
         this.luaEngine = await factory.createEngine();
+
+        const apis = {
+            io: {
+                readFile: (fileName: string) => fs.readFileSync(fileName, { encoding: 'utf-8' }),
+                writeFile: (fileName: string, content: string) => fs.writeFileSync(fileName, content, { encoding: 'utf-8' }),
+            }
+        };
+
+        for (const [t, v] of Object.entries(apis)) {
+            this.luaEngine.global.getTable(t, (idx) => {
+                for (const [n, f] of Object.entries(v)) {
+                    this.luaEngine.global.setField(idx, n, f);
+                }
+            });
+        }
+    }
+
+    /**
+     * Digital character set
+     */
+    static NumberCharSet = new Set<string>(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+
+    /**
+     * The first valid character set for a word
+     */
+    static WordFirstValidCharSet = new Set<string>(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_']);
+
+    /**
+     *
+     * @description Check 's' is a vaild word
+     * @param s input string
+     * @returns true if 's' is a Valid word
+     */
+    static isValidWord(s: string): boolean {
+        for (let i = 0; i < s.length; ++i) {
+            const c = s[i];
+            if (i == 0) {
+                if (!BaseCompiler.WordFirstValidCharSet.has(c))
+                    return false;
+            } else {
+                if (!BaseCompiler.WordFirstValidCharSet.has(c) && !BaseCompiler.NumberCharSet.has(c))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    static makeLuaKey(s: string): string {
+        if (parseInt(s).toString() == s) {
+            return `[${s}]`;
+        } else if (BaseCompiler.isValidWord(s)) {
+            return s;
+        }
+        return `['${s.replace(`'`, `\\'`)}']`;
+    }
+
+    static toLua(obj: any, currDepth: number = 0, CurrEntry?: string, pretty: boolean = false): string {
+        const NextDepth = currDepth + 1;
+        CurrEntry = (CurrEntry != undefined && pretty) ? CurrEntry + '\t' : '';
+        const ObjectEntry = (CurrEntry != undefined && pretty) ? CurrEntry + '\t' : '';
+        const EndLine = pretty ? '\n' : '';
+        const WriteSpace = pretty ? ' ' : '';
+        if (obj === null || obj === undefined) {
+            return 'nil';
+        }
+        if (typeof obj !== 'object') {
+            if (typeof obj === 'string') {
+                return BaseCompiler.toLuaString(obj);
+            }
+            return obj.toString();
+        }
+        let result = `{` + EndLine,
+            isArray = obj instanceof Array,
+            len = Object.entries(obj).length,
+            i = 0;
+
+        for (const [k, v] of Object.entries(obj)) {
+            let objStr = '';
+            if (isArray) {
+                objStr = BaseCompiler.toLua(v, NextDepth, CurrEntry, pretty);
+            } else {
+                objStr = `${BaseCompiler.makeLuaKey(k)}${WriteSpace}=${WriteSpace}${BaseCompiler.toLua(v, NextDepth, CurrEntry, pretty)}`;
+            }
+            if (i < len - 1) {
+                objStr += ',';
+            }
+            i += 1;
+            result += ObjectEntry + objStr + EndLine;
+        };
+        result += CurrEntry + '}';
+        return result;
     }
 
     protected checkCompileTime(fileName: string | undefined, node: luaparse.Node) {
@@ -154,23 +253,12 @@ export abstract class BaseCompiler implements Compiler {
             }
 
             const script = luamin.stringify(node.arguments[0]);
-            const ret = this.luaEngine.doStringSync(script);
+            this.luaEngine.global.loadString(script);
+            const result = this.luaEngine.global.runSync();
+
             var newNode = node as any;
-            if (typeof (ret) == 'string') {
-                newNode.type = 'StringLiteral';
-                newNode.raw = `[======[` + ret + `]======]`
-            } else if (typeof (ret) == 'number') {
-                newNode.type = 'NumericLiteral';
-                newNode.raw = `${ret}`;
-            } else if (typeof (ret) == 'boolean') {
-                newNode.type = 'BooleanLiteral';
-                newNode.raw = ret ? "true" : "false";
-            } else if (typeof (ret) == 'undefined') {
-                newNode.type = 'NilLiteral';
-                newNode.raw = 'nil';
-            } else {
-                throw Error(localize('error.processFilesFailure', ['File: ' + fileName, 'Line: ' + node.loc?.start.line, 'Error: Incorrect compiletime return value.'].join('\n')));
-            }
+            newNode.type = 'StringLiteral';
+            newNode.raw = result.map((v) => BaseCompiler.toLua(v)).join(',');
             return true;
         }
         return false;

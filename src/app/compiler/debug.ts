@@ -75,7 +75,7 @@ class DebugCompiler extends BaseCompiler {
             });
             body = luamin.minify(ast);
         }
-        const comment = this.getCommentEqual(body);
+        const comment = BaseCompiler.getCommentEqual(body);
         if (!name) {
             name = utils.posixCase(path.relative(env.sourceFolder, file));
         }

@@ -28,3 +28,7 @@ jobs:
         npm install
         npm install -g vsce
         vsce publish -p $VS_TOKEN
+    - name: Publish to npm
+      uses: JS-DevTools/npm-publish@v3
+      with:
+        token: ${{ secrets.NPM_TOKEN }}

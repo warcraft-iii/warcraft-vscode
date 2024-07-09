@@ -174,9 +174,15 @@
             "Classic"
           ]
         },
-        "warcraft.codeConfusion": {
-          "type": "boolean",
-          "description": "Enable code confusion? (RELEASE ONLY) *EXPIRMENT*"
+        "warcraft.luaConfusion": {
+          "type": "string",
+          "description": "Enable code confusion? (RELEASE ONLY) *EXPIRMENT*",
+          "enum": [
+            "Minify",
+            "Weak",
+            "Medium",
+            "Strong"
+          ]
         },
         "warcraft.libraryOrganizations": {
           "type": "array",

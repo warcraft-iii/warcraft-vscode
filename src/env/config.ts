@@ -16,7 +16,7 @@ import isBoolean from 'lodash-es/isBoolean';
 import isUndefined from 'lodash-es/isUndefined';
 import isPlainObject from 'lodash-es/isPlainObject';
 
-import { globals, localize, ConfigurationType, GithubOrgOrUserInfo, WarcraftVersionType } from '../globals';
+import { globals, localize, ConfigurationType, GithubOrgOrUserInfo, WarcraftVersionType, LuaConfusionType } from '../globals';
 
 interface LuaPackage {
     path: string[];
@@ -46,6 +46,7 @@ export class Config {
     private waiter?: Promise<void>;
     public isClassic: boolean;
     public isRelease: boolean
+    public luaConfusionType: LuaConfusionType
 
     constructor() {
         if (runtime.inVscode) {
@@ -212,12 +213,14 @@ export class Config {
         return this.isClassic == true;
     }
 
-    get codeConfusion() {
-        return this.config?.get<boolean>('codeConfusion') || false;
+    get luaConfusion() {
+        if (this.config)
+            return LuaConfusionType[this.config.get<string>('luaConfusion') || ''] || LuaConfusionType.Disable
+        return this.luaConfusionType;
     }
 
-    set codeConfusion(value: boolean) {
-        this.config?.update('codeConfusion', value, ConfigurationTarget.Global);
+    set luaConfusion(value: LuaConfusionType) {
+        this.config?.update('luaConfusion', value, ConfigurationTarget.Global);
     }
 
     get mapDir() {

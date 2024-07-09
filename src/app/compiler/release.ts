@@ -15,10 +15,10 @@ import * as templates from '../../templates';
 import isString from 'lodash-es/isString';
 
 import { env } from '../../env';
-import { globals, localize, ConfigurationType } from '../../globals';
+import { globals, localize, ConfigurationType, LuaConfusionType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
-import { SimpleConfuser } from '../../utils/confuser';
+import { Prometheus } from '../../utils/prometheus';
 
 interface RequireItem {
     file: string;
@@ -180,15 +180,16 @@ class ReleaseCompiler extends BaseCompiler {
             classic: env.config.classic
         });
 
-        if (env.config.codeConfusion) {
-            out = luamin.minify(SimpleConfuser.parse(out));
-        } else {
-            out = luamin.minify(out);
-        }
-
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
-        await fs.writeFile(outputPath, out);
+
+        if (env.config.luaConfusion != LuaConfusionType.Disable) {
+            await fs.writeFile(outputPath, out);
+            await Prometheus.compile(env.config.luaConfusion, outputPath);
+        } else {
+            out = luamin.minify(out);
+            await fs.writeFile(outputPath, out);
+        }
 
         if (env.config.classic) {
             await this.injectWar3mapJass();

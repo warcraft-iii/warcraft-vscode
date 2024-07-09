@@ -58,7 +58,9 @@ export class SimpleConfuser {
             case 'CallExpression':
             case 'TableCallExpression':
                 this.formatExpression(expr.base);
-                // this.formatExpressionList(expr.arguments);
+                for (const argument of Object.values(expr.arguments)) {
+                    this.formatExpression(argument);
+                }
                 break;
             case 'StringCallExpression':
                 this.formatExpression(expr.base);

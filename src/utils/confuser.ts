@@ -112,7 +112,9 @@ export class SimpleConfuser {
                 break;
             case 'IfStatement':
                 node.clauses.forEach(v => {
-                    // this.formatExpression(v.condition);
+                    if (v.type != 'ElseClause') {
+                        this.formatExpression(v.condition);
+                    }
                     this.formatStatementList(v.body);
                 });
                 break;

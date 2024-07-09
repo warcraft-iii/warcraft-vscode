@@ -1,3 +1,12 @@
+## [0.2.7](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.6...v0.2.7) (2024-07-09)
+
+
+### Bug Fixes
+
+* Parameters are not correctly confused ([9fc1454](https://github.com/warcraft-iii/warcraft-vscode/commit/9fc1454f412fe5c930dd3dd27a1a947a7172b561))
+
+
+
 ## [0.2.6](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.5...v0.2.6) (2024-05-24)
 
 

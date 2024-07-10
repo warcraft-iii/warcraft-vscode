@@ -259,7 +259,7 @@
     "simple-git": "^3.19.1",
     "sudo-prompt": "^9.2.1",
     "vscode-nls": "^5.0.0",
-    "wasmoon": "^1.16.0",
+    "wasmoon": "github:warcraft-iii/contrib-wasmoon",
     "yauzl-promise": "^2.1.3"
   }
 }

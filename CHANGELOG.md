@@ -1,3 +1,17 @@
+## [0.2.8](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.7...v0.2.8) (2024-07-10)
+
+
+### Bug Fixes
+
+* Parameters are not correctly confused ([11b91c9](https://github.com/warcraft-iii/warcraft-vscode/commit/11b91c94f55db1eee7b64f36e955f0b54f7f49ee))
+
+
+### Features
+
+* Adding the lua code obfuscation module ([494b40c](https://github.com/warcraft-iii/warcraft-vscode/commit/494b40cf5c04107a3f8a4eebe85746538515a9c0))
+
+
+
 ## [0.2.7](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.6...v0.2.7) (2024-07-09)
 
 

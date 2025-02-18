@@ -1,3 +1,12 @@
+# [0.3.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.9...v0.3.0) (2025-02-18)
+
+
+### Bug Fixes
+
+* **cli:** Invalid lua confusion parameter ([8a4a663](https://github.com/warcraft-iii/warcraft-vscode/commit/8a4a6638a4a223b2e14440ffcf7edf9d6bc4b39d))
+
+
+
 ## [0.2.9](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.8...v0.2.9) (2024-07-10)
 
 

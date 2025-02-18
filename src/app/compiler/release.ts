@@ -183,7 +183,7 @@ class ReleaseCompiler extends BaseCompiler {
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
 
-        if (env.config.luaConfusion != LuaConfusionType.Disable) {
+        if (env.config.luaConfusion !== undefined && env.config.luaConfusion != LuaConfusionType.Disable) {
             await fs.writeFile(outputPath, out);
             await Prometheus.compile(env.config.luaConfusion, outputPath);
         } else {

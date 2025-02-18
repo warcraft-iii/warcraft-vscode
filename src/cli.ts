@@ -23,7 +23,7 @@ export class App {
         env.config.isClassic = classic;
         env.config.isRelease = release;
         env.config.projectConfig.mapdir = path.isAbsolute(target) ? path.resolve(target) : path.resolve(projectPath, target);
-        env.config.luaConfusion = LuaConfusionType[luaconfusion] || LuaConfusionType.Disable
+        env.config.luaConfusionType = LuaConfusionType[luaconfusion] || LuaConfusionType.Disable
         await objediting.execute();
         if (!release) {
             await debugCompiler.execute();
@@ -48,7 +48,7 @@ export class App {
             .option('-t --target <map>', 'Map file/folder path', '')
             .option('-c --classic', 'Compile Classic Edition', false)
             .option('-r --release', 'Compile Debug/Release?', false)
-            .option('-l --luaconfusion', 'Lua Confusion level: Disable (default), Minify, Weak, Medium, Strong', '')
+            .option('-l --luaconfusion <confusion>', 'Lua Confusion level: Disable (default), Minify, Weak, Medium, Strong', '')
             .action(async (projectPath: string, opts: { output: string, target: string, classic: boolean, release: boolean, luaconfusion: string }) => {
                 await this.execute(projectPath, opts.output, opts.target, opts.classic, opts.release, opts.luaconfusion);
             });

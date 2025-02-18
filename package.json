@@ -32,7 +32,7 @@
   ],
   "main": "./out/extension.js",
   "bin": {
-    "wvt": "./bin/cli.js"
+    "vscwarcraft": "./bin/cli.js"
   },
   "contributes": {
     "jsonValidation": [

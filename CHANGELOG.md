@@ -1,3 +1,119 @@
+# [0.3.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.9...v0.3.0) (2025-02-18)
+
+
+### Bug Fixes
+
+* **cli:** Invalid lua confusion parameter ([8a4a663](https://github.com/warcraft-iii/warcraft-vscode/commit/8a4a6638a4a223b2e14440ffcf7edf9d6bc4b39d))
+
+
+
+## [0.2.9](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.8...v0.2.9) (2024-07-10)
+
+
+### Bug Fixes
+
+* wasmoon load failed ([769dea3](https://github.com/warcraft-iii/warcraft-vscode/commit/769dea3197c6c7a4c78c8713d1b50748dd624a03))
+
+
+
+## [0.2.8](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.7...v0.2.8) (2024-07-10)
+
+
+### Bug Fixes
+
+* Parameters are not correctly confused ([11b91c9](https://github.com/warcraft-iii/warcraft-vscode/commit/11b91c94f55db1eee7b64f36e955f0b54f7f49ee))
+
+
+### Features
+
+* Adding the lua code obfuscation module ([494b40c](https://github.com/warcraft-iii/warcraft-vscode/commit/494b40cf5c04107a3f8a4eebe85746538515a9c0))
+
+
+
+## [0.2.7](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.6...v0.2.7) (2024-07-09)
+
+
+### Bug Fixes
+
+* Parameters are not correctly confused ([9fc1454](https://github.com/warcraft-iii/warcraft-vscode/commit/9fc1454f412fe5c930dd3dd27a1a947a7172b561))
+
+
+
+## [0.2.6](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.5...v0.2.6) (2024-05-24)
+
+
+
+## [0.2.5](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.4...v0.2.5) (2024-05-23)
+
+
+### Bug Fixes
+
+* load wasmoon failed ([1a09272](https://github.com/warcraft-iii/warcraft-vscode/commit/1a092727e87f5462edc5b4b64ba00e3dd5bfc8ca))
+
+
+
+## [0.2.4](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.3...v0.2.4) (2024-05-23)
+
+
+### Bug Fixes
+
+* prepare.js copy file failed ([4810966](https://github.com/warcraft-iii/warcraft-vscode/commit/48109666e2e5b618ea88fbf1a4779893c577f9d4))
+* prepare.js copy file failed ([25f0408](https://github.com/warcraft-iii/warcraft-vscode/commit/25f04083615618a1fb4bf2f364ddb12be7652050))
+
+
+
+## [0.2.3](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.2...v0.2.3) (2024-05-23)
+
+
+### Bug Fixes
+
+* Some macros don't work properly when compiling scripts ([12038a3](https://github.com/warcraft-iii/warcraft-vscode/commit/12038a3e0e02941ac6804244e75f0461a10955e4))
+
+
+
+## [0.2.2](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.1...v0.2.2) (2024-05-22)
+
+
+### Features
+
+* Running compiletime with wasmoon ([74f0ea1](https://github.com/warcraft-iii/warcraft-vscode/commit/74f0ea1e31e3e71fcb45340b6465e2af72554f6e))
+
+
+
+## [0.2.1](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.0...v0.2.1) (2024-05-22)
+
+
+### Bug Fixes
+
+* Incorrect ObjectEditing checkDefine ([c38a16d](https://github.com/warcraft-iii/warcraft-vscode/commit/c38a16d7d53a4740da2f8b99f58160f20da81052))
+
+
+
+# [0.2.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.16...v0.2.0) (2024-05-22)
+
+
+### Bug Fixes
+
+* Incorrect Warcraft version when compiling scripts using the command line ([d780849](https://github.com/warcraft-iii/warcraft-vscode/commit/d78084950798b8577b1f5d312a41160e4f7110fd))
+* Some macros don't work properly when compiling scripts ([cb21780](https://github.com/warcraft-iii/warcraft-vscode/commit/cb21780ac31721d61c3197585a9c0a1a230ca7ac))
+
+
+### Features
+
+* Implement the compiletime API to run during the packaging process and get results ([dfb9b2a](https://github.com/warcraft-iii/warcraft-vscode/commit/dfb9b2ae0051cd3d042ec6128db1a2e4e67b034c))
+* Packaging maps via the nodejs command line ([3f107c6](https://github.com/warcraft-iii/warcraft-vscode/commit/3f107c68662bab4a11dc215d0b1628c880f70c5f))
+
+
+
+## [0.1.16](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.15...v0.1.16) (2024-05-17)
+
+
+### Features
+
+* **packer:** `imports` support for specific Warcraft versions (ex. imports.reforge) ([51af8f2](https://github.com/warcraft-iii/warcraft-vscode/commit/51af8f25b604445476790d6db4435d457025b00b))
+
+
+
 ## [0.1.15](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.1.14...v0.1.15) (2024-03-29)
 
 

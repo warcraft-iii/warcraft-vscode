@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
+import { runtime } from '../env/runtime';
 
 const proto = require('./pb/product.proto');
 
@@ -9,7 +9,7 @@ export async function getUID(db: string) {
         const info = proto.product.InstallHandshake.decode(buf);
         return info.uid;
     } catch (error) {
-        vscode.window.showWarningMessage(`[Warcraft vscode] ${error.message}`);
+        runtime.showWarningMessage(`[Warcraft vscode] ${error.message}`);
         return '';
     }
 }

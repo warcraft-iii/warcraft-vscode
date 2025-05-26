@@ -15,10 +15,10 @@ import * as templates from '../../templates';
 import isString from 'lodash-es/isString';
 
 import { env } from '../../env';
-import { globals, localize, ConfigurationType } from '../../globals';
+import { globals, localize, ConfigurationType, LuaConfusionType } from '../../globals';
 
 import { BaseCompiler } from './compiler';
-import { SimpleConfuser } from '../../utils/confuser';
+import { Prometheus } from '../../utils/prometheus';
 
 interface RequireItem {
     file: string;
@@ -91,12 +91,20 @@ class ReleaseCompiler extends BaseCompiler {
                         }
                         const required: RequireItem[] = [];
 
+                        if (body.indexOf('compiletime') >= 0) {
+                            await this.initLuaEngine();
+                        }
+
                         const ast = luaparse.parse(body, {
                             locations: true,
                             ranges: true,
                             scope: true,
                             onCreateNode: (node) => {
                                 let arg: luaparse.Expression;
+
+                                if (this.checkCompileTime(item.name, node)) {
+                                    return;
+                                }
 
                                 if (
                                     node.type === 'CallExpression' &&
@@ -160,7 +168,8 @@ class ReleaseCompiler extends BaseCompiler {
         await this.processFiles('main.lua', ...env.config.files);
 
         if (!env.config.classic) {
-            await this.processFiles({ name: 'origwar3map.lua', file: env.asMapPath(globals.FILE_ENTRY) });
+            const scriptFile = await this.getOriginMapScript();
+            await this.processFiles({ name: 'origwar3map.lua', file: scriptFile });
         }
 
         const code = [...this.files.entries()].map(([name, body]) => templates.release.file({ body, name })).join('\n');
@@ -171,15 +180,20 @@ class ReleaseCompiler extends BaseCompiler {
             classic: env.config.classic
         });
 
-        if (env.config.codeConfusion) {
-            out = luamin.minify(SimpleConfuser.parse(out));
-        } else {
-            out = luamin.minify(out);
-        }
-
         const outputPath = env.asBuildPath(globals.FILE_ENTRY);
         await fs.mkdirp(path.dirname(outputPath));
-        await fs.writeFile(outputPath, out);
+
+        if (env.config.luaConfusion !== undefined && env.config.luaConfusion != LuaConfusionType.Disable) {
+            await fs.writeFile(outputPath, out);
+            await Prometheus.compile(env.config.luaConfusion, outputPath);
+        } else {
+            out = luamin.minify(out);
+            await fs.writeFile(outputPath, out);
+        }
+
+        if (env.config.classic) {
+            await this.injectWar3mapJass();
+        }
     }
 }
 

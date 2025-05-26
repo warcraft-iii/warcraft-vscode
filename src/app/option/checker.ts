@@ -5,13 +5,13 @@
  * @Date   : 5/24/2019, 3:47:31 PM
  */
 
-import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
 import { localize, globals } from '../../globals';
+import { runtime } from '../../env/runtime';
 
 interface ExecutionItem {
     title: string;
@@ -75,7 +75,7 @@ class Checker {
             return;
         }
 
-        const result = await vscode.window.showOpenDialog({
+        const result = await runtime.showOpenDialog({
             canSelectFolders: !notFounds[0].selectFile,
             canSelectFiles: notFounds[0].selectFile,
             canSelectMany: false,
@@ -107,7 +107,7 @@ class Checker {
         }
 
         if (names.length > 0) {
-            vscode.window.showWarningMessage(localize('error.notFound', 'Not found {0}', names.join(' ')));
+            runtime.showWarningMessage(localize('error.notFound', 'Not found {0}', names.join(' ')));
         }
     }
 

@@ -5,13 +5,11 @@
  * @Date   : 5/22/2019, 11:28:10 PM
  */
 
-import * as vscode from 'vscode';
+import { runtime, ProgressLocation } from '../env/runtime';
 import * as utils from './utils';
 
-type Reporter = vscode.Progress<{ message?: string; increment?: number }>;
-
 class Context {
-    private reporter?: Reporter;
+    private reporter?: any;
     private resolver?: any;
     private enabled = false;
 
@@ -22,13 +20,13 @@ class Context {
                 return;
             }
 
-            vscode.window.withProgress(
+            runtime.withProgress(
                 {
                     cancellable: false,
-                    location: vscode.ProgressLocation.Notification,
+                    location: ProgressLocation.Notification,
                     title: '[Warcraft vscode] '
                 },
-                async reporter => {
+                async (reporter: any) => {
                     this.reporter = reporter;
                     await new Promise<void>(resolver => {
                         this.resolver = resolver;
@@ -70,7 +68,7 @@ const context = new Context();
 export function report(message: string) {
     return (_target: any, _key: string, descriptor: PropertyDescriptor) => {
         const orig = descriptor.value;
-        descriptor.value = async function(...args: any[]) {
+        descriptor.value = async function (...args: any[]) {
             await context.report(message);
             // tslint:disable-next-line: no-invalid-this
             return await orig.apply(this, args);

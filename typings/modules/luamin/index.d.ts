@@ -6,7 +6,8 @@
  */
 
 declare module 'luamin' {
-    import { Chunk } from 'luaparse';
+    import { Chunk, Statement } from 'luaparse';
 
     export function minify(code: string | Chunk): string;
+    export function stringify(body: Statement): string;
 }

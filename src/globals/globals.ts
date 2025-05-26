@@ -40,6 +40,14 @@ export enum WarcraftVersionType {
     Classic,
 }
 
+export enum LuaConfusionType {
+    Disable,
+    Minify,
+    Weak,
+    Medium,
+    Strong,
+}
+
 export interface GithubOrgInfo {
     name: string;
     type?: 'organization';

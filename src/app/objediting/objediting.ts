@@ -5,7 +5,6 @@
  * @Date   : 7/16/2019, 2:42:02 PM
  */
 
-import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 import * as yauzl from 'yauzl-promise';
 import * as path from 'path';
@@ -13,6 +12,7 @@ import * as path from 'path';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
+import { runtime } from '../../env/runtime'
 import { globals } from '../../globals';
 
 export class ObjEditing {
@@ -21,11 +21,11 @@ export class ObjEditing {
     }
 
     async checkDefine() {
-        if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length > 1) {
+        if (!runtime.workspaceFolders || runtime.workspaceFolders.length > 1) {
             return;
         }
 
-        const file = path.resolve(vscode.workspace.workspaceFolders[0].uri.fsPath, globals.FILE_PROJECT);
+        const file = path.resolve(runtime.workspaceFolder, globals.FILE_PROJECT);
         if (!(await fs.pathExists(file))) {
             return;
         }

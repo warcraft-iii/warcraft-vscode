@@ -2,10 +2,12 @@ const Octokit = require('@octokit/rest');
 const got = require('got');
 const fs = require('fs-extra');
 const path = require('path');
+const yauzl = require('yauzl-promise');
+const { pipeline } = require('stream/promises');
 
 async function downloadAsserts(owner, repo, out) {
     const versions = {};
-    const github = new Octokit.Octokit();
+    const github = new Octokit.Octokit({ auth: process.env['GH_ACCESS_TOKEN'] });
 
     const releaseResp = await github.repos.getLatestRelease({
         owner,
@@ -30,6 +32,7 @@ async function downloadAsserts(owner, repo, out) {
 
     const version = release.tag_name;
     const outpath = typeof out === 'function' ? out(asset) : out;
+    await fs.mkdirp(path.dirname(outpath));
     await fs.writeFile(outpath, assetResp.body);
 
     versions.def = version;
@@ -38,6 +41,34 @@ async function downloadAsserts(owner, repo, out) {
     return versions;
 }
 
+async function downloadRepo(owner, repo, out) {
+    const github = new Octokit.Octokit({ auth: process.env['GH_ACCESS_TOKEN'] });
+    const resp = await github.repos.downloadZipballArchive({ owner: owner, repo: repo });
+    if (resp.status !== 200) {
+        throw Error('download repo failed');
+    }
+    await fs.writeFile(out, Buffer.from(resp.data));
+    console.log(`Download repo ${repo} out: ${out} success`);
+}
+
+async function extractFile(zipFile, out, prefix) {
+    const zip = await yauzl.open(zipFile);
+    try {
+        await zip.walkEntries(async (entry) => {
+            if (entry.fileName.indexOf(prefix) < 0) return;
+            const newPath = entry.fileName.substring(entry.fileName.indexOf(prefix) + prefix.length);
+            if (entry.fileName.endsWith('/')) {
+                await fs.mkdirp(path.join(out, newPath));
+            } else {
+                const readStream = await entry.openReadStream();
+                const writeStream = fs.createWriteStream(path.join(out, newPath));
+                await pipeline(readStream, writeStream);
+            }
+        })
+    } finally {
+        await zip.close();
+    }
+}
 async function main() {
     const files = [
         {
@@ -55,15 +86,34 @@ async function main() {
             repo: 'ObjEditingDefine',
             out: path.join('./res', 'def.zip'),
             json: path.join('./res', '.version.json'),
-        }
+        },
+        {
+            owner: 'prometheus-lua',
+            repo: 'Prometheus',
+            out: path.join('./bin', 'prometheus.zip'),
+            clone: true,
+            unzip: './bin/lua',
+            prefix: '/src/',
+        },
     ];
 
     for (const f of files) {
-        const versions = await downloadAsserts(f.owner, f.repo, f.out);
-        if (f.json) {
-            await fs.writeJson(f.json, versions);
+        if (f.clone) {
+            await fs.emptyDir(f.unzip);
+            await downloadRepo(f.owner, f.repo, f.out);
+            await extractFile(f.out, f.unzip, f.prefix);
+            await fs.remove(f.out);
+        } else {
+            const versions = await downloadAsserts(f.owner, f.repo, f.out);
+            if (f.json) {
+                await fs.writeJson(f.json, versions);
+            }
         }
     }
+
+    await fs.mkdirp('out');
+    await fs.copyFile("node_modules/wasmoon/dist/glue.wasm", path.join('out', "glue.wasm"));
+    await fs.copyFile("node_modules/wasmoon/dist/index.js", path.join('out', "wasmoon.js"));
 }
 
 main();

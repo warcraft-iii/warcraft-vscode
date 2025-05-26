@@ -7,11 +7,11 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as vscode from 'vscode';
 import * as got from 'got';
 import * as yauzl from 'yauzl-promise';
 import pickBy from 'lodash-es/pickBy';
 import { env } from '../env';
+import { runtime } from '../env/runtime';
 import * as proc from './proc';
 
 async function _getAllFiles(root: string, r: string[], isDir: boolean, recursive: boolean) {
@@ -88,7 +88,7 @@ export async function confirm(title: string, ok: string = 'Ok', alt?: string) {
         });
     }
 
-    const result = await vscode.window.showInformationMessage(
+    const result = await runtime.showInformationMessage(
         title,
         {
             modal: true,

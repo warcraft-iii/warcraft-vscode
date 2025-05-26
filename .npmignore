@@ -2,7 +2,7 @@
 .vscode-test/**
 .github/**
 out/test/**
-out/cli.*
+out/extension.*
 src/**
 .gitignore
 **/tsconfig.json
@@ -14,5 +14,8 @@ node_modules
 webpack.config.js
 postinstall.js
 prepare.js
+res/**
+images/**
+.editorconfig
 .lua-format
-.npmignore
+.vscodeignore

@@ -6,10 +6,10 @@
  */
 
 import * as path from 'path';
-import * as vscode from 'vscode';
 import * as fs from 'fs-extra';
 
 import { Config } from './config';
+import { runtime } from './runtime';
 import { globals, localize, ConfigurationType } from '../globals';
 
 class Environment {
@@ -17,10 +17,7 @@ class Environment {
     readonly config = new Config();
 
     constructor() {
-        const extension = vscode.extensions.getExtension(globals.EXTENSION_ID);
-        if (extension) {
-            this.extensionFolder = extension.extensionPath;
-        }
+        this.extensionFolder = runtime.extensionFolder;
     }
 
     asExetensionPath(...args: string[]) {
@@ -58,10 +55,7 @@ class Environment {
     }
 
     get rootPath() {
-        if (!vscode.workspace.workspaceFolders) {
-            return;
-        }
-        return vscode.workspace.workspaceFolders[0].uri.fsPath;
+        return runtime.workspaceFolder;
     }
 
     get sourceFolder() {

@@ -10,7 +10,7 @@ import * as fs from 'fs-extra';
 import * as utils from '../../utils';
 
 import { env } from '../../env';
-import { globals, localize, ConfigurationType } from '../../globals';
+import { globals, localize, ConfigurationType, WarcraftVersionType } from '../../globals';
 
 type PackItem = [string, string];
 
@@ -31,6 +31,7 @@ class Packer {
         const imports = [
             globals.FOLDER_IMPORTS,
             `${globals.FOLDER_IMPORTS}.${ConfigurationType[this.type()].toLowerCase()}`,
+            `${globals.FOLDER_IMPORTS}.${WarcraftVersionType[env.config.warcraftVersion].toLowerCase()}`,
         ];
 
         // map.w3x
@@ -76,7 +77,7 @@ class Packer {
     async packByPackList() {
         const args: string[] = [];
 
-        if (!env.config.classic) {
+        if (!env.config.classic && (await fs.stat(env.mapFolder)).isDirectory()) {
             args.push('generate');
             if (this.type() === ConfigurationType.Debug) {
                 args.push('-f');

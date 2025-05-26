@@ -2,7 +2,7 @@
   "name": "warcraft-vscode",
   "displayName": "warcraft-vscode",
   "description": "A Warcraft III map develop toolset",
-  "version": "0.1.15",
+  "version": "0.3.0",
   "publisher": "Dencer",
   "license": "SEE LICENSE IN LICENSE.md",
   "icon": "images/icon.png",
@@ -31,6 +31,9 @@
     "workspaceContains:warcraft.json"
   ],
   "main": "./out/extension.js",
+  "bin": {
+    "vscwarcraft": "./bin/cli.js"
+  },
   "contributes": {
     "jsonValidation": [
       {
@@ -171,9 +174,15 @@
             "Classic"
           ]
         },
-        "warcraft.codeConfusion": {
-          "type": "boolean",
-          "description": "Enable code confusion? (RELEASE ONLY) *EXPIRMENT*"
+        "warcraft.luaConfusion": {
+          "type": "string",
+          "description": "Enable code confusion? (RELEASE ONLY) *EXPIRMENT*",
+          "enum": [
+            "Minify",
+            "Weak",
+            "Medium",
+            "Strong"
+          ]
         },
         "warcraft.libraryOrganizations": {
           "type": "array",
@@ -212,7 +221,7 @@
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "test": "npm run compile",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
-    "postinstall": "npm run prepare",
+    "vscode:postinstall": "npm run prepare",
     "prepare": "node ./prepare.js"
   },
   "devDependencies": {
@@ -239,16 +248,18 @@
   },
   "dependencies": {
     "@octokit/rest": "^18.5.3",
+    "commander": "^12.1.0",
     "fs-extra": "^8.1.0",
     "got": "^9.6.0",
     "is-running": "^2.1.0",
     "lodash-es": "^4.17.21",
-    "luamin": "git+https://github.com/FATH-Mechatronics/luamin.git",
+    "luamin": "github:warcraft-iii/luamin",
     "luaparse": "^0.2.1",
     "ps-node": "^0.1.6",
     "simple-git": "^3.19.1",
     "sudo-prompt": "^9.2.1",
     "vscode-nls": "^5.0.0",
+    "wasmoon": "github:warcraft-iii/contrib-wasmoon",
     "yauzl-promise": "^2.1.3"
   }
 }

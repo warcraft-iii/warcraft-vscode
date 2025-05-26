@@ -15,28 +15,35 @@ import * as sodu from 'sudo-prompt';
 import isRunning = require('is-running');
 
 export class Process {
-    private process: cp.ChildProcess | undefined;
-    private childprocess: ps.Program | undefined;
+    private process?: cp.ChildProcess;
+    private childprocessId?: number;
 
     checkChildProcess() {
         if (this.process) {
             ps.lookup({ ppid: this.process.pid }, (err, list) => {
                 if (!err && list.length === 1) {
-                    this.childprocess = list[0];
+                    this.childprocessId = list[0].pid;
                 }
             });
         }
     }
 
     constructor(command: string, args?: string[], childproc?: boolean) {
-        this.childprocess = undefined;
+        this.childprocessId = undefined;
         this.process = cp.spawn(command, args, {
             detached: true,
         });
 
-        const onExit = () => {
+        const onExit = (code?: number) => {
             if (!!childproc) {
-                this.checkChildProcess();
+                if (code && code > 1)
+                {
+                    this.childprocessId = code;
+                }
+                else
+                {
+                    this.checkChildProcess();
+                }
             }
             this.process = undefined;
         };
@@ -53,27 +60,27 @@ export class Process {
                 await utils.sleep(100);
             }
         }
-        if (!!this.childprocess) {
+        if (!!this.childprocessId) {
             let command;
             if (process.platform === 'win32') {
                 command = 'taskkill /f /pid ';
             } else {
                 command = 'kill -9 ';
             }
-            sodu.exec(command + this.childprocess.pid, {
+            sodu.exec(command + this.childprocessId, {
                 name: 'Warcraft VSCode',
             }, () => {
-                this.childprocess = undefined;
+                this.childprocessId = undefined;
             });
 
-            while (!!this.childprocess) {
+            while (!!isRunning(this.childprocessId)) {
                 await utils.sleep(100);
             }
         }
     }
 
     isAlive() {
-        return !!this.process || (!!this.childprocess && isRunning(this.childprocess.pid));
+        return !!this.process || (!!this.childprocessId && isRunning(this.childprocessId));
     }
 }
 

@@ -1,3 +1,12 @@
+## [0.3.1](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.0...v0.3.1) (2025-11-06)
+
+
+### Features
+
+* Object editing folder supports specifying Warcraft III versions. ([0a10714](https://github.com/warcraft-iii/warcraft-vscode/commit/0a1071433b1138a9de0e63d685cd2613dc8c7100))
+
+
+
 # [0.3.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.2.9...v0.3.0) (2025-02-18)
 
 

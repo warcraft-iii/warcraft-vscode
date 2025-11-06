@@ -13,7 +13,7 @@ import * as utils from '../../utils';
 
 import { env } from '../../env';
 import { runtime } from '../../env/runtime'
-import { globals } from '../../globals';
+import { globals, WarcraftVersionType } from '../../globals';
 
 export class ObjEditing {
     constructor() {
@@ -79,9 +79,12 @@ export class ObjEditing {
     }
 
     async execute() {
-        const lua = env.asRootPath('objediting/main.lua');
+        let lua = env.asRootPath(`objediting.${WarcraftVersionType[env.config.warcraftVersion].toLowerCase()}/main.lua`);
         if (!(await fs.pathExists(lua))) {
-            return;
+            lua = env.asRootPath('objediting/main.lua');
+            if (!(await fs.pathExists(lua))) {
+                return;
+            }
         }
         await env.checkMapFolder();
         const outDir = env.asBuildPath('objediting');

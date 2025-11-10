@@ -1,3 +1,12 @@
+## [0.3.2](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.1...v0.3.2) (2025-11-10)
+
+
+### Bug Fixes
+
+* CI build ([86d487e](https://github.com/warcraft-iii/warcraft-vscode/commit/86d487e8d956c47a9d59cedc2008534e3a40a7e7))
+
+
+
 ## [0.3.1](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.0...v0.3.1) (2025-11-06)
 
 

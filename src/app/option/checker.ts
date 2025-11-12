@@ -58,7 +58,8 @@ class Checker {
 
     private async checkPath(key: string) {
         try {
-            if (await this.checkFile(env.config[key])) {
+            const configValue = env.config[key as keyof typeof env.config];
+            if (typeof configValue === 'string' && await this.checkFile(configValue)) {
                 return true;
             }
         } catch (error) {}
@@ -97,9 +98,9 @@ class Checker {
             }
             if ((await fs.pathExists(file)) && (await fs.stat(file)).isFile()) {
                 if (item.selectFile) {
-                    env.config[item.key] = folder;
+                    (env.config as any)[item.key] = folder;
                 } else {
-                    env.config[item.key] = file;
+                    (env.config as any)[item.key] = file;
                 }
             } else {
                 names.push(item.name);

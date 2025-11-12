@@ -189,7 +189,7 @@ export class Config {
 
     get configuration() {
         if (this.config)
-            return ConfigurationType[this.config?.get<string>('configuration') || ''] || ConfigurationType.Debug;
+            return ConfigurationType[this.config?.get<string>('configuration') as keyof typeof ConfigurationType || ''] || ConfigurationType.Debug;
         return this.isRelease ? ConfigurationType.Release : ConfigurationType.Debug;
     }
 
@@ -199,7 +199,7 @@ export class Config {
 
     get warcraftVersion() {
         if (this.config)
-            return WarcraftVersionType[this.config?.get<string>('warcraftVersion') || ''] || WarcraftVersionType.Reforge;
+            return WarcraftVersionType[this.config?.get<string>('warcraftVersion') as keyof typeof WarcraftVersionType || ''] || WarcraftVersionType.Reforge;
         return this.isClassic ? WarcraftVersionType.Classic : WarcraftVersionType.Reforge;
     }
 
@@ -215,7 +215,7 @@ export class Config {
 
     get luaConfusion() {
         if (this.config)
-            return LuaConfusionType[this.config.get<string>('luaConfusion') || ''] || LuaConfusionType.Disable
+            return LuaConfusionType[this.config.get<string>('luaConfusion') as keyof typeof LuaConfusionType || ''] || LuaConfusionType.Disable
         return this.luaConfusionType;
     }
 

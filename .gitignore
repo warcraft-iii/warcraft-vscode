@@ -7,3 +7,4 @@ res/
 /src/utils/pb/product.d.ts
 /src/utils/pb/product.js
 bin/
+package-lock.json

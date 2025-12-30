@@ -247,10 +247,10 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
-    "@octokit/rest": "^18.12.0",
+    "@octokit/rest": "^22.0.1",
     "commander": "^12.1.0",
     "fs-extra": "^8.1.0",
-    "got": "^9.6.0",
+    "got": "^14.6.5",
     "is-running": "^2.1.0",
     "lodash-es": "^4.17.21",
     "luamin": "github:warcraft-iii/luamin",

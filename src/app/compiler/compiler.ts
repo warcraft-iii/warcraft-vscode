@@ -118,8 +118,12 @@ export abstract class BaseCompiler implements Compiler {
             if (line.includes('function main takes nothing returns nothing')) {
                 mainFunc = true;
             }
+            if (mainFunc && line.includes('call InitGlobals()')) {
+                jass.splice(index, 1, '    call InitGlobals()', '    call Cheat("exec-lua:war3map")');
+                break;
+            }
             if (mainFunc && line.includes('endfunction')) {
-                jass.splice(index, 1, 'call Cheat("exec-lua:war3map")', 'endfunction');
+                jass.splice(index, 1, '    call Cheat("exec-lua:war3map")', 'endfunction');
                 break;
             }
             index++;

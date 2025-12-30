@@ -222,7 +222,7 @@
     "test": "npm run compile",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
     "vscode:postinstall": "npm run prepare",
-    "prepare": "node ./prepare.mjs"
+    "prepare": "node ./prepare.js"
   },
   "devDependencies": {
     "@types/fs-extra": "^8.1.5",

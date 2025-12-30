@@ -1,3 +1,13 @@
+## [0.3.3](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.2...v0.3.3) (2025-12-30)
+
+
+### Bug Fixes
+
+* @types/vscode version ([a1465cb](https://github.com/warcraft-iii/warcraft-vscode/commit/a1465cba54924e9494083965433e1b4af8d0964a))
+* run prepare failed ([dc9ab67](https://github.com/warcraft-iii/warcraft-vscode/commit/dc9ab67e2d0fc6c456f7469b8995c851bc563a49))
+
+
+
 ## [0.3.2](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.1...v0.3.2) (2025-11-10)
 
 

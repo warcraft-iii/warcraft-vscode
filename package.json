@@ -2,7 +2,7 @@
   "name": "warcraft-vscode",
   "displayName": "warcraft-vscode",
   "description": "A Warcraft III map develop toolset",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "publisher": "Dencer",
   "license": "SEE LICENSE IN LICENSE.md",
   "icon": "images/icon.png",

@@ -1,3 +1,12 @@
+## [0.3.4](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.3...v0.3.4) (2025-12-30)
+
+
+### Reverts
+
+* Revert "fix: run prepare failed" ([4f5a8b9](https://github.com/warcraft-iii/warcraft-vscode/commit/4f5a8b9246f0fb3b2eb6a1fa04767f2e501a7381))
+
+
+
 ## [0.3.3](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.2...v0.3.3) (2025-12-30)
 
 

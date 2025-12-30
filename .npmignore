@@ -13,7 +13,7 @@ src/**
 node_modules
 webpack.config.js
 postinstall.js
-prepare.js
+prepare.mjs
 res/**
 images/**
 .editorconfig

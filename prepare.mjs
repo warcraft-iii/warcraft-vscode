@@ -1,9 +1,10 @@
-const Octokit = require('@octokit/rest');
-const got = require('got');
-const fs = require('fs-extra');
-const path = require('path');
-const yauzl = require('yauzl-promise');
-const { pipeline } = require('stream/promises');
+
+import * as Octokit from '@octokit/rest';
+import got from 'got';
+import fs from 'fs-extra';
+import * as path from 'path';
+import yauzl from 'yauzl-promise';
+import { pipeline } from 'stream/promises';
 
 async function downloadAsserts(owner, repo, out) {
     const versions = {};
@@ -24,7 +25,7 @@ async function downloadAsserts(owner, repo, out) {
 
     const release = releaseResp.data;
     const asset = release.assets[0];
-    const assetResp = await got(asset.browser_download_url, { encoding: null });
+    const assetResp = await got(asset.browser_download_url, { responseType: 'buffer' });
 
     if (assetResp.statusCode !== 200) {
         throw Error('download asset failed');

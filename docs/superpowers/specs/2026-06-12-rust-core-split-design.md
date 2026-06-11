@@ -79,7 +79,7 @@ wc3 build      --project <dir> [...]   # objediting + compile + pack 一条龙
 ```
 
 - 所有 vscode settings 派生的状态经 CLI 参数显式传入；`warcraft.json` 由 Rust 直接读取解析。
-- 外部工具路径（ObjEditing.exe、res/def.zip 等资源）经 `--res-dir` 或环境变量传入，默认相对 exe 自身定位。
+- 外部工具路径（ObjEditing.exe、res/def.zip 等资源）默认相对 exe 自身定位，可用 `--res-dir <dir>` 覆盖（不引入环境变量机制）。
 
 ### 4.2 进程间协议
 

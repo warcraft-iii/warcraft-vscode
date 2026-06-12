@@ -1,1 +1,2 @@
-// modules are declared as they are implemented (see plan tasks)
+pub mod config;
+pub mod error;

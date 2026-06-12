@@ -9,3 +9,4 @@ res/
 bin/
 package-lock.json
 target/
+testdata/fixtures/**/.build/

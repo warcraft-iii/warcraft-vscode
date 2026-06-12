@@ -428,6 +428,7 @@ return RESULT
 ```powershell
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
+if (-not (Test-Path (Join-Path $root 'out/cli.js'))) { throw 'out/cli.js missing - run npm run compile first' }
 $fixtures = @('basic', 'comptime')
 $quads = @(
     @{ name = 'debug-reforge';   args = @() },
@@ -439,9 +440,13 @@ foreach ($f in $fixtures) {
     $proj = Join-Path $root "testdata/fixtures/$f"
     foreach ($q in $quads) {
         if (Test-Path "$proj/.build") { Remove-Item -Recurse -Force "$proj/.build" }
-        node (Join-Path $root 'out/cli.js') compile $proj @($q.args)
+        # bin/cli.js is the launcher shim that loads out/cli.js and invokes app.cli();
+        # running out/cli.js directly is a no-op (webpack commonjs2 library, no self-invocation).
+        node (Join-Path $root 'bin/cli.js') compile $proj @($q.args)
         if ($LASTEXITCODE -ne 0) { throw "compile failed: $f $($q.name)" }
+        if (-not (Test-Path "$proj/.build/war3map.lua")) { throw "missing output: $f $($q.name)" }
         $dst = Join-Path $root "testdata/golden/$f/$($q.name)"
+        if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
         New-Item -ItemType Directory -Force $dst | Out-Null
         Copy-Item "$proj/.build/war3map.lua" $dst -Force
         if (Test-Path "$proj/.build/war3map.j") { Copy-Item "$proj/.build/war3map.j" $dst -Force }
@@ -463,7 +468,7 @@ Expected: `testdata/golden/` 下生成 8 个象限目录；抽查 `golden/basic/
 ```markdown
 # Golden baseline
 
-由 `scripts/make-golden.ps1` 基于 TS 管线（out/cli.js compile）生成，是 Rust 重写的对照锚点。
+由 `scripts/make-golden.ps1` 基于 TS 管线（node bin/cli.js compile，加载 out/cli.js）生成，是 Rust 重写的对照锚点。
 **禁止手改。** 仅当 TS 管线行为被有意修订时重新生成并在 PR 中说明差异。
 对照规则见 docs/superpowers/specs/2026-06-12-rust-core-split-design.md §5。
 ```
@@ -2624,7 +2629,7 @@ The map pipeline is being rewritten in Rust (see docs/superpowers/specs/2026-06-
 
 - `cargo fmt/clippy/test --workspace` 全绿，CI 通过。
 - Task 17 黄金对照 2 测试通过（含字节级 debug 象限）。
-- 真实工程抽验：任选一个实际地图工程，分别用 `out/cli.js compile` 与 `wc3 compile` 构建 debug-reforge，diff war3map.lua 为空；在游戏中实跑 Rust 产物一次（spec §5 端到端要求）。
+- 真实工程抽验：任选一个实际地图工程，分别用 `bin/cli.js compile` 与 `wc3 compile` 构建 debug-reforge，diff war3map.lua 为空；在游戏中实跑 Rust 产物一次（spec §5 端到端要求）。
 - spike go/no-go 结论已记录。
 
 - [ ] **Step 3: Commit**

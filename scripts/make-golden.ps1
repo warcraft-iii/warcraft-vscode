@@ -1,5 +1,6 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
+if (-not (Test-Path (Join-Path $root 'out/cli.js'))) { throw 'out/cli.js missing - run npm run compile first' }
 $fixtures = @('basic', 'comptime')
 $quads = @(
     @{ name = 'debug-reforge';   args = @() },
@@ -17,6 +18,7 @@ foreach ($f in $fixtures) {
         if ($LASTEXITCODE -ne 0) { throw "compile failed: $f $($q.name)" }
         if (-not (Test-Path "$proj/.build/war3map.lua")) { throw "missing output: $f $($q.name)" }
         $dst = Join-Path $root "testdata/golden/$f/$($q.name)"
+        if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
         New-Item -ItemType Directory -Force $dst | Out-Null
         Copy-Item "$proj/.build/war3map.lua" $dst -Force
         if (Test-Path "$proj/.build/war3map.j") { Copy-Item "$proj/.build/war3map.j" $dst -Force }

@@ -11,6 +11,7 @@
 //! - 词法器以"消费完该 token 后的位置"作为 `Token::end_position`（排他字节偏移），
 //!   因此 `&src[start.bytes()..end.bytes()]` 即完整调用原文，无需再找末 token 补偿。
 
+use full_moon::ast::{Call, FunctionArgs, Prefix, Suffix};
 use full_moon::node::Node;
 use full_moon::visitors::Visitor;
 
@@ -29,16 +30,36 @@ struct Finder {
 
 impl Visitor for Finder {
     fn visit_function_call(&mut self, node: &full_moon::ast::FunctionCall) {
-        if let full_moon::ast::Prefix::Name(name) = node.prefix() {
-            // TokenReference::token() 不含 trivia，区间从标识符首字节起算。
-            if name.token().to_string() == "compiletime" {
-                if let (Some(s), Some(e)) = (node.start_position(), node.end_position()) {
-                    self.spans.push(CallSpan {
-                        start: s.bytes(),
-                        end: e.bytes(),
-                    });
-                }
-            }
+        // TS 端（luaparse）仅匹配 `CallExpression` 且 base 为 `Identifier`，即裸圆括号
+        // 调用 `compiletime(...)`。成员/方法/字符串糖形式（compiletime.foo(42)、
+        // compiletime:foo(42)、compiletime"s"）不命中，必须原样放行。
+        // 等价判定：prefix 为 Name("compiletime")，且后缀恰好一个、为
+        // Suffix::Call(Call::AnonymousCall(FunctionArgs::Parentheses))。
+        //
+        // 已认可的剩余偏差：链式 `compiletime(fn)(x)`（两个调用后缀）在 Rust 端
+        // 整体跳过，而 TS 会求值内层调用——属病态写法，接受该差异。
+        let Prefix::Name(name) = node.prefix() else {
+            return;
+        };
+        // TokenReference::token() 不含 trivia，区间从标识符首字节起算。
+        if name.token().to_string() != "compiletime" {
+            return;
+        }
+        let mut suffixes = node.suffixes();
+        let (Some(first), None) = (suffixes.next(), suffixes.next()) else {
+            return;
+        };
+        if !matches!(
+            first,
+            Suffix::Call(Call::AnonymousCall(FunctionArgs::Parentheses { .. }))
+        ) {
+            return;
+        }
+        if let (Some(s), Some(e)) = (node.start_position(), node.end_position()) {
+            self.spans.push(CallSpan {
+                start: s.bytes(),
+                end: e.bytes(),
+            });
         }
     }
 }
@@ -214,6 +235,18 @@ mod tests {
     fn untouched_when_no_compiletime() {
         let src = "local x = 1\nreturn x";
         assert_eq!(process(src, "f.lua").unwrap(), src);
+    }
+
+    #[test]
+    fn non_bare_call_forms_left_untouched() {
+        for src in [
+            "compiletime.foo(42)",
+            "compiletime:foo(42)",
+            "compiletime\"s\"",
+            "compiletime(function() return 1 end)(2)",
+        ] {
+            assert_eq!(process(src, "f.lua").unwrap(), src, "{src}");
+        }
     }
 
     #[test]

@@ -13,6 +13,9 @@
 //! 的节点（如 `FunctionArgs::Parentheses` 的括号对先于实参）并非源序——
 //! 红阶段实测 `f(a,b)` 产出 `f()a,b`。故收集后按 token 起始字节位置排序
 //! 还原源序（AST 覆盖每个非 trivia token 恰一次，位置互异）。
+//! Node::tokens() 由 derive 对每个字段穷举生成（full_moon_derive，full_range
+//! 仅影响 range()），故无 token 会被遗漏；Ast 的 eof token 不在 nodes() 内
+//! （其文本为空，无影响）。
 //! token 文本经 `Token: Display` 还原（structs.rs:437-466，字符串保留
 //! 原引号/长括号层级）。拼接时仅在直接相邻会改变词法处补一个空格
 //! （见 [`needs_space`]）。
@@ -40,8 +43,8 @@ fn is_word_char(c: char) -> bool {
 ///
 /// 后五条字符级规则与首条 token 级规则有重叠，保留无害（多余单空格
 /// 不改变词法），不删。
-fn needs_space(prev_kind: Option<TokenKind>, prev: &str, next: &str) -> bool {
-    let (Some(a), Some(b)) = (prev.chars().last(), next.chars().next()) else {
+fn needs_space(prev_kind: Option<TokenKind>, prev_last: Option<char>, next: &str) -> bool {
+    let (Some(a), Some(b)) = (prev_last, next.chars().next()) else {
         return false;
     };
     if prev_kind == Some(TokenKind::Number) && (b == '.' || is_word_char(b)) {
@@ -76,8 +79,10 @@ pub fn minify(source: &str) -> Result<String> {
             .join("; ");
         Error::new("error.processFilesFailure", format!("minify: {msg}"))
     })?;
+    // 反向迭代规避 full-moon Tokens::next() 的 remove(0) O(n²)（node.rs:84）；随后按字节位置排序恢复源序。
     let mut tokens: Vec<_> = ast
         .tokens()
+        .rev()
         .map(|tok| tok.token())
         .filter(|token| {
             !matches!(
@@ -94,13 +99,15 @@ pub fn minify(source: &str) -> Result<String> {
     tokens.sort_by_key(|token| token.start_position().bytes());
     let mut out = String::with_capacity(source.len());
     let mut prev_kind: Option<TokenKind> = None;
+    let mut last_char: Option<char> = None;
     for token in tokens {
         let text = token.to_string();
-        if needs_space(prev_kind, &out, &text) {
+        if needs_space(prev_kind, last_char, &text) {
             out.push(' ');
         }
         out.push_str(&text);
         prev_kind = Some(token.token_kind());
+        last_char = text.chars().next_back().or(last_char);
     }
     Ok(out)
 }
@@ -170,6 +177,16 @@ mod tests {
             let b: mlua::Value = lua.load(&min).eval().unwrap();
             assert_eq!(format!("{a:?}"), format!("{b:?}"), "case: {src} -> {min}");
         }
+    }
+
+    #[test]
+    fn semicolons_and_shebang() {
+        assert_eq!(
+            minify("local x = 1; return x").unwrap(),
+            "local x=1;return x"
+        );
+        let out = minify("#!/usr/bin/lua\nreturn 1").unwrap();
+        assert_eq!(out, "return 1", "shebang 作为首 token 前导 trivia 被丢弃");
     }
 
     #[test]

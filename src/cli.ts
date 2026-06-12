@@ -52,6 +52,35 @@ export class App {
             .action(async (projectPath: string, opts: { output: string, target: string, classic: boolean, release: boolean, luaconfusion: string }) => {
                 await this.execute(projectPath, opts.output, opts.target, opts.classic, opts.release, opts.luaconfusion);
             });
+        program
+            .command('compile')
+            .argument('[project path]')
+            .description('Compile script only (no objediting/pack), for golden baseline')
+            .option('-t --target <map>', 'Map file/folder path', '')
+            .option('-c --classic', 'Compile Classic Edition', false)
+            .option('-r --release', 'Compile Debug/Release?', false)
+            .action(async (projectPath: string, opts: { target: string, classic: boolean, release: boolean }) => {
+                if (!projectPath) {
+                    console.error('Invalid arguments');
+                    return;
+                }
+                runtime.rootPath = projectPath;
+                await env.config.reload();
+                env.config.isClassic = opts.classic;
+                env.config.isRelease = opts.release;
+                if (opts.target.length > 0) {
+                    env.config.projectConfig.mapdir = path.isAbsolute(opts.target)
+                        ? path.resolve(opts.target)
+                        : path.resolve(projectPath, opts.target);
+                }
+                env.config.luaConfusion = LuaConfusionType.Disable;
+                if (!opts.release) {
+                    await debugCompiler.execute();
+                } else {
+                    await releaseCompiler.execute();
+                }
+                console.log('compile finished!');
+            });
         program.parse(process.argv);
     }
 }

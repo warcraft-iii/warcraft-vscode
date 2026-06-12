@@ -37,7 +37,10 @@ fn origin_map_script(ctx: &BuildContext, tools: &Tools) -> Result<PathBuf> {
             .mopaq_exe
             .ok_or_else(|| Error::new("error.io", "MopaqPack-rs.exe not configured"))?;
         let out = ctx.build_dir().join("origwar3map.lua.extracted");
-        if !mopaq::extract_file_from_map(exe, &map, "war3map.lua", &out)? {
+        // TS extractWar3mapJass：先 war3map.lua 再 scripts\ 回退
+        if !mopaq::extract_file_from_map(exe, &map, "war3map.lua", &out)?
+            && !mopaq::extract_file_from_map(exe, &map, "scripts\\war3map.lua", &out)?
+        {
             return Err(Error::new(
                 "error.noMapScriptFile",
                 "Not found: war3map.lua file",

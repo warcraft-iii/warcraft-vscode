@@ -1,6 +1,6 @@
 use std::path::Path;
 
-/// 错误携带本地化 key（沿用 package.nls.json 命名空间）+ 参数，
+/// 错误携带本地化 key（与 TS 端 vscode-nls localize(key, default) 的 key 命名一致）+ 参数，
 /// CLI 层序列化为 NDJSON，TS 侧用 vscode-nls 渲染。
 #[derive(Debug, thiserror::Error)]
 #[error("{key}: {message}")]
@@ -29,7 +29,7 @@ impl Error {
         Self::with_args(
             "error.io",
             format!("{}: {e}", path.display()),
-            vec![path.display().to_string()],
+            vec![path.display().to_string(), e.to_string()],
         )
     }
 }

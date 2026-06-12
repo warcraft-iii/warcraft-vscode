@@ -7,8 +7,7 @@ use crate::error::{Error, Result};
 #[derive(Debug, Clone, Deserialize)]
 struct RawConfig {
     mapdir: Option<String>,
-    #[serde(default)]
-    files: Vec<String>,
+    files: Option<Vec<String>>,
     jassfile: Option<String>,
     lua: Option<RawLua>,
 }
@@ -32,12 +31,13 @@ pub struct ProjectConfig {
 }
 
 impl ProjectConfig {
+    /// 比 TS 更严格：根节点非对象时报错（TS 静默回退默认配置）。
     pub fn from_json(json: &str) -> Result<Self> {
         let raw: RawConfig = serde_json::from_str(json)
             .map_err(|e| Error::new("error.invalidProjectConfig", format!("warcraft.json: {e}")))?;
         Ok(Self {
             mapdir: raw.mapdir,
-            files: raw.files,
+            files: raw.files.unwrap_or_default(),
             jassfile: raw.jassfile,
             lua_package_path: raw
                 .lua
@@ -138,5 +138,45 @@ mod tests {
         assert_eq!(ctx.source_dir(), std::path::Path::new("C:/proj/src"));
         assert_eq!(ctx.build_dir(), std::path::Path::new("C:/proj/.build"));
         assert_eq!(ctx.map_dir().unwrap(), std::path::Path::new("C:/proj/map"));
+    }
+
+    #[test]
+    fn files_null_falls_back_to_empty() {
+        let cfg = ProjectConfig::from_json(r#"{ "files": null }"#).unwrap();
+        assert!(cfg.files.is_empty());
+    }
+
+    #[test]
+    fn map_dir_override_precedence() {
+        let cfg = ProjectConfig::from_json(r#"{ "mapdir": "map" }"#).unwrap();
+        let opts = BuildOptions {
+            map: Some(std::path::PathBuf::from("other")),
+            ..Default::default()
+        };
+        let ctx = BuildContext::new(std::path::Path::new("C:/proj"), cfg.clone(), opts);
+        assert_eq!(
+            ctx.map_dir().unwrap(),
+            std::path::Path::new("C:/proj/other")
+        );
+        let opts = BuildOptions {
+            map: Some(std::path::PathBuf::from("D:/abs/map.w3x")),
+            ..Default::default()
+        };
+        let ctx = BuildContext::new(std::path::Path::new("C:/proj"), cfg, opts);
+        assert_eq!(
+            ctx.map_dir().unwrap(),
+            std::path::Path::new("D:/abs/map.w3x")
+        );
+    }
+
+    #[test]
+    fn missing_mapdir_errors_with_key() {
+        let cfg = ProjectConfig::from_json("{}").unwrap();
+        let ctx = BuildContext::new(
+            std::path::Path::new("C:/proj"),
+            cfg,
+            BuildOptions::default(),
+        );
+        assert_eq!(ctx.map_dir().unwrap_err().key, "error.noMapFolder");
     }
 }

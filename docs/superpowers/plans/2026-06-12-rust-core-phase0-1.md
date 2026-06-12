@@ -85,7 +85,7 @@ edition = "2021"
 license = "MIT"
 
 [workspace.dependencies]
-full_moon = "1"
+full_moon = { version = "1", features = ["lua54"] }
 mlua = { version = "0.10", features = ["lua54", "vendored"] }
 regex = "1"
 serde = { version = "1", features = ["derive"] }

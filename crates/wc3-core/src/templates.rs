@@ -39,11 +39,11 @@ pub fn render_main(kind: Kind, code: &str, package_path: &[String], classic: boo
     } else {
         ("", "")
     };
-    tpl.replace("%PACKAGE_PATH%", &package_path.join(";"))
-        .replace("%NC_OPEN%", nc_open)
+    tpl.replace("%NC_OPEN%", nc_open)
         .replace("%NC_CLOSE%", nc_close)
         .replace("%C_OPEN%", c_open)
         .replace("%C_CLOSE%", c_close)
+        .replace("%PACKAGE_PATH%", &package_path.join(";"))
         .replace("%CODE%", code)
 }
 
@@ -139,7 +139,7 @@ mod tests {
                     .join(quad)
                     .join("war3map.lua"),
             )
-            .unwrap();
+            .unwrap_or_else(|e| panic!("{quad}: {e}"));
             let skeleton = render_main(Kind::Debug, "%CODE-SPLIT%", &paths, classic);
             let (prefix, suffix) = skeleton.split_once("%CODE-SPLIT%").unwrap();
             assert!(
@@ -152,6 +152,40 @@ mod tests {
                 golden.ends_with(suffix),
                 "{quad}: 模板后缀与黄金不一致（{}）",
                 first_mismatch(golden_tail, suffix.as_bytes())
+            );
+        }
+    }
+
+    /// TS 模板与 Rust 资产是双份真相：此测试用 6 条字面替换从 TS 源重建资产，
+    /// 任何一侧单独改动都会在此失败。失败时：同步修改 assets/main-*.lua 并重新生成黄金基准。
+    #[test]
+    fn assets_stay_in_sync_with_ts_templates() {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        for (ts, asset) in [
+            ("src/templates/debug/main.lua", MAIN_DEBUG),
+            ("src/templates/release/main.lua", MAIN_RELEASE),
+        ] {
+            let src =
+                std::fs::read_to_string(root.join(ts)).unwrap_or_else(|e| panic!("{ts}: {e}"));
+            let derived = src
+                .replace(
+                    "--[[%> print(package.path.join(\";\")) %]]",
+                    "%PACKAGE_PATH%",
+                )
+                .replace(
+                    "--[[%>  if (!classic) { print('--[==['); } %]]",
+                    "%NC_OPEN%",
+                )
+                .replace(
+                    "--[[%>  if (!classic) { print(']==]--'); } %]]",
+                    "%NC_CLOSE%",
+                )
+                .replace("--[[%>  if (classic) { print('--[==['); } %]]", "%C_OPEN%")
+                .replace("--[[%>  if (classic) { print(']==]--'); } %]]", "%C_CLOSE%")
+                .replace("--[[%= code %]]", "%CODE%");
+            assert_eq!(
+                derived, asset,
+                "{ts} 与资产失同步：同步 assets 并重新生成黄金基准"
             );
         }
     }

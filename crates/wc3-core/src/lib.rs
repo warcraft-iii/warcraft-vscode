@@ -1,3 +1,4 @@
+pub mod comptime;
 pub mod config;
 pub mod error;
 pub mod fsutil;

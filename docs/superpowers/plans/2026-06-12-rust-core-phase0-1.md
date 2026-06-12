@@ -21,6 +21,7 @@
 | DV3 | minify 不重命名局部变量（TS luamin 会重命名）；实现为 token 级空白压缩 | 体积略增、行为安全；混淆需求由 Prometheus 层负责 |
 | DV4 | release 文件注册顺序为确定性 DFS 序（TS 为 Promise.all 完成序，本就不稳定） | 去重后注册顺序不影响语义 |
 | DV5 | 目录遍历按文件名字典序排序 | 与 NTFS readdir 顺序一致，保证黄金对照可复现 |
+| DV6 | compiletime 的 Lua 状态在一次构建内跨文件共享、每次构建全新；TS 为 VSCode 会话级持久（跨构建残留全局） | 构建可复现性优先；会话级残留是 TS 缺陷 |
 
 ## 文件结构（最终态）
 
@@ -1944,11 +1945,12 @@ fn ensure_source_dir(ctx: &BuildContext) -> Result<PathBuf> {
 }
 
 /// TS DebugCompiler.genFile：宏 → compiletime → 模板单文件项。
-fn gen_debug_file(ctx: &BuildContext, file: &Path, name: &str) -> Result<String> {
+/// `lua`：构建级共享 compiletime 引擎（DV6）。
+fn gen_debug_file(ctx: &BuildContext, lua: &mlua::Lua, file: &Path, name: &str) -> Result<String> {
     let raw = fsutil::read_to_string(file)?;
     let mut body = macros::process_code_macros(&raw, ctx.opts.release, ctx.opts.classic);
     if body.contains("compiletime") {
-        body = comptime::process(&body, name)?;
+        body = comptime::process(lua, &body, name)?;
     }
     Ok(templates::render_debug_file(name, &body))
 }
@@ -1993,14 +1995,15 @@ pub fn compile_debug(ctx: &BuildContext, mopaq_exe: Option<&Path>) -> Result<()>
     let src = ensure_source_dir(ctx)?;
     std::fs::create_dir_all(ctx.build_dir()).map_err(|e| Error::io(&ctx.build_dir(), e))?;
 
+    let lua = comptime::make_lua()?; // 构建级共享 compiletime 引擎（DV6）
     let mut entries: Vec<String> = Vec::new();
     for file in fsutil::collect_source_lua_files(&src)? {
         let name = fsutil::posix_relative(&src, &file)?;
-        entries.push(gen_debug_file(ctx, &file, &name)?);
+        entries.push(gen_debug_file(ctx, &lua, &file, &name)?);
     }
     if !ctx.opts.classic {
         let script = origin_map_script(ctx, &tools)?;
-        entries.push(gen_debug_file(ctx, &script, "origwar3map.lua")?);
+        entries.push(gen_debug_file(ctx, &lua, &script, "origwar3map.lua")?);
     }
 
     let code = entries.join("\n");
@@ -2102,9 +2105,10 @@ struct PendingFile {
     abs: Option<PathBuf>,
 }
 
-/// TS ReleaseCompiler.processFiles 的确定性 DFS 版（DV4）。
+/// TS ReleaseCompiler.processFiles 的确定性 DFS 版（DV4）。`lua`：构建级共享 compiletime 引擎（DV6）。
 fn process_release_files(
     ctx: &BuildContext,
+    lua: &mlua::Lua,
     src: &Path,
     files: &mut IndexMap<String, String>,
     pending: PendingFile,
@@ -2124,12 +2128,12 @@ fn process_release_files(
     let raw = fsutil::read_to_string(&file)?;
     let mut body = macros::process_code_macros(&raw, ctx.opts.release, ctx.opts.classic);
     if body.contains("compiletime") {
-        body = comptime::process(&body, &name)?;
+        body = comptime::process(lua, &body, &name)?;
     }
     let required = require_graph::scan_requires(&body);
     files.insert(name, minify::minify(&body)?);
     for item in required {
-        process_release_files(ctx, src, files, PendingFile { item, name: None, abs: None })?;
+        process_release_files(ctx, lua, src, files, PendingFile { item, name: None, abs: None })?;
     }
     Ok(())
 }
@@ -2140,9 +2144,11 @@ pub fn compile_release(ctx: &BuildContext, mopaq_exe: Option<&Path>, confuse_exe
     let src = ensure_source_dir(ctx)?;
     std::fs::create_dir_all(ctx.build_dir()).map_err(|e| Error::io(&ctx.build_dir(), e))?;
 
+    let lua = comptime::make_lua()?; // 构建级共享 compiletime 引擎（DV6）
     let mut files: IndexMap<String, String> = IndexMap::new();
     process_release_files(
         ctx,
+        &lua,
         &src,
         &mut files,
         PendingFile {
@@ -2154,6 +2160,7 @@ pub fn compile_release(ctx: &BuildContext, mopaq_exe: Option<&Path>, confuse_exe
     for f in &ctx.config.files {
         process_release_files(
             ctx,
+            &lua,
             &src,
             &mut files,
             PendingFile {
@@ -2167,6 +2174,7 @@ pub fn compile_release(ctx: &BuildContext, mopaq_exe: Option<&Path>, confuse_exe
         let script = origin_map_script(ctx, &tools)?;
         process_release_files(
             ctx,
+            &lua,
             &src,
             &mut files,
             PendingFile {

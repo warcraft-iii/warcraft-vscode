@@ -1,0 +1,15 @@
+[package]
+name = "wc3-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+full_moon.workspace = true
+mlua.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+indexmap.workspace = true
+walkdir.workspace = true
+thiserror.workspace = true

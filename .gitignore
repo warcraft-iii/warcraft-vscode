@@ -8,3 +8,4 @@ res/
 /src/utils/pb/product.js
 bin/
 package-lock.json
+target/

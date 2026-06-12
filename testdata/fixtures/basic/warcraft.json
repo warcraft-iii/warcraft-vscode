@@ -1,0 +1,6 @@
+{
+  "mapdir": "map",
+  "files": [],
+  "jassfile": "war3map.j",
+  "lua": { "package": { "path": ["./?.lua", "./?/init.lua"] } }
+}

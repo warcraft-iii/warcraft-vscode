@@ -2,8 +2,14 @@
 //! （src/app/compiler/release.ts:42-158 的 onCreateNode 扫描 + getMaybeFiles/resolveFile）。
 //!
 //! 本模块只做"扫描 + 解析"两步；编排（DFS 去重递归）由 Task 15 的构建管线负责。
-//! - 扫描：仅命中裸 Name 前缀且恰一个调用后缀的调用（与 comptime.rs 同款过滤，
-//!   对应 TS `node.base.type === 'Identifier'`），实参须为单个字符串字面量。
+//! - 扫描：命中裸 Name 前缀且【首个】后缀为匿名调用的前缀表达式（对应 TS
+//!   `node.base.type === 'Identifier'`），实参须为单个字符串字面量；首个调用
+//!   之后的后缀（`require('x').field` 的成员访问、`require('a')('b')` /
+//!   `require('m').init()` 的链式调用）不影响命中——luaparse 对内层
+//!   CallExpression 独立触发 onCreateNode，外层调用的 base 非 Identifier 不计。
+//!   full-moon 按末后缀分流（parsers.rs:271-280 / 1696-1712）：末后缀为 Call
+//!   是 FunctionCall 节点，为 Index 则是 Var::Expression（VarExpression）节点，
+//!   两类节点互斥，故两处 visitor 共用同一匹配逻辑不会双计。
 //!   圆括号形式 `require('x')`（TS CallExpression，arguments.length !== 1 则忽略，
 //!   release.ts:114-116）与字符串糖形式 `require 'x'` / `require [[x]]`
 //!   （TS StringCallExpression）均命中；`require(x)`（非字面量）、`m.require('no')`、
@@ -18,7 +24,10 @@
 //! - 字符串糖形式为 `FunctionArgs::String(TokenReference)`（ast/mod.rs:484）；
 //! - `TokenType::StringLiteral { literal, .. }` 的 `literal` 为去引号内容
 //!   （tokenizer/structs.rs:273-275 "ignoring quotation marks"，长括号串同样只含正文），
-//!   与 TS luaparse `StringLiteral.value` 对齐。
+//!   与 TS luaparse `StringLiteral.value` 对齐；
+//! - `VarExpression`（ast/mod.rs:1491）与 `FunctionCall` 同样提供 `prefix()` 与
+//!   `suffixes()`（迭代器），对应 visitor 方法为 `visit_var_expression`
+//!   （visitors.rs:276）。
 
 use std::path::{Path, PathBuf};
 
@@ -47,22 +56,26 @@ struct ReqFinder {
     items: Vec<RequireItem>,
 }
 
-impl Visitor for ReqFinder {
-    fn visit_function_call(&mut self, node: &full_moon::ast::FunctionCall) {
-        // 与 comptime.rs 同款裸调用过滤：Name 前缀 + 恰一个调用后缀。
-        // TS: node.base.type === 'Identifier' && isRequireFunction(name)
-        let Prefix::Name(name) = node.prefix() else {
+impl ReqFinder {
+    /// 共用匹配逻辑：裸 Name 前缀（require/dofile/loadfile）且【首个】后缀为
+    /// 匿名调用、实参为单个字符串字面量（圆括号）或字符串糖。
+    /// TS: node.base.type === 'Identifier' && isRequireFunction(name)。
+    /// 首个调用之后的后缀（成员访问、继续调用）一律忽略——只有首个调用绑定
+    /// 到裸名；外层链式调用在 TS 中 base 为 CallExpression/MemberExpression，
+    /// 同样不计。
+    fn scan_prefixed<'a>(
+        &mut self,
+        prefix: &Prefix,
+        mut suffixes: impl Iterator<Item = &'a Suffix>,
+    ) {
+        let Prefix::Name(name) = prefix else {
             return;
         };
         let func = name.token().to_string();
         if func != "require" && func != "dofile" && func != "loadfile" {
             return;
         }
-        let mut suffixes = node.suffixes();
-        let (Some(first), None) = (suffixes.next(), suffixes.next()) else {
-            return;
-        };
-        let Suffix::Call(Call::AnonymousCall(args)) = first else {
+        let Some(Suffix::Call(Call::AnonymousCall(args))) = suffixes.next() else {
             return;
         };
         let module = match args {
@@ -83,6 +96,23 @@ impl Visitor for ReqFinder {
                 is_require: func == "require",
             });
         }
+    }
+}
+
+impl Visitor for ReqFinder {
+    // 末后缀为 Call 的前缀表达式：require('x')、require('a')('b')、
+    // require('m').init() 等均为 FunctionCall 节点。
+    fn visit_function_call(&mut self, node: &full_moon::ast::FunctionCall) {
+        self.scan_prefixed(node.prefix(), node.suffixes());
+    }
+
+    // 末后缀为 Index 的前缀表达式：require('x').field 被 full-moon 解析为
+    // Var::Expression（后缀 [Call, Dot]），不产生 FunctionCall 节点，内层调用
+    // 须在此登记（对齐 luaparse 对内层 CallExpression 的访问）。
+    // 同一前缀表达式按末后缀只会落入 FunctionCall / VarExpression 之一，
+    // 不会双计（见模块顶部说明；scan 测试覆盖全形态恰一次）。
+    fn visit_var_expression(&mut self, node: &full_moon::ast::VarExpression) {
+        self.scan_prefixed(node.prefix(), node.suffixes());
     }
 }
 
@@ -147,20 +177,21 @@ mod tests {
 
     #[test]
     fn scans_require_calls_including_sugar() {
+        // 后四个正例覆盖 Var::Expression（成员访问，full-moon 末后缀为 Index）
+        // 与多后缀 FunctionCall（链式调用）；整表精确相等同时断言每个 require
+        // 恰计一次（FunctionCall / VarExpression 两 visitor 无双计）。
         let reqs = scan_requires(
-            "require('a.b')\nrequire 'c'\ndofile('d.lua')\nloadfile('e.lua')\nrequire(x)\nm.require('no')\nobj:require('no')\n",
+            "require('a.b')\nrequire 'c'\ndofile('d.lua')\nloadfile('e.lua')\nlocal v = require('cn.mod').value\nlocal w = require('m').who\nrequire('a')('b')\nrequire('mm').init()\nrequire(x)\nm.require('no')\nobj:require('no')\n",
         );
+        let req = |module: &str| RequireItem {
+            module: module.into(),
+            is_require: true,
+        };
         assert_eq!(
             reqs,
             vec![
-                RequireItem {
-                    module: "a.b".into(),
-                    is_require: true
-                },
-                RequireItem {
-                    module: "c".into(),
-                    is_require: true
-                },
+                req("a.b"),
+                req("c"),
                 RequireItem {
                     module: "d.lua".into(),
                     is_require: false
@@ -169,8 +200,12 @@ mod tests {
                     module: "e.lua".into(),
                     is_require: false
                 },
+                req("cn.mod"),
+                req("m"),
+                req("a"), // require('a')('b')：仅首个调用绑定裸名，'b' 不计
+                req("mm"),
             ],
-            "非字符串字面量与非裸调用忽略"
+            "非字符串字面量与非裸调用忽略；成员访问/链式调用后缀不影响内层调用命中"
         );
     }
 

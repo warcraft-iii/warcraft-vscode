@@ -86,7 +86,7 @@ wc3 build      <project> [--release] [--classic] [--map <p>] [--output <p>]
   - mpq.rs：create → extract round-trip、add_files 追加与覆盖（stormlib 静态链接，CI 真跑——库化的直接红利）。
 - **TS 对照归档**：`make-golden.ps1` 增加 pack 步——basic fixture 补 `src/lib/<lib>/imports*/`、根 `imports*/` 样例文件（覆盖矩阵与同名覆盖优先级）；TS 管线（`bin/cli.js pack`）产出 `.w3x` 入库 `testdata/golden/<fixture>/<quad>-pack/`；Rust 测试双侧用 stormlib 解包，比较文件名集合 + 逐文件字节。覆盖 reforge × {debug,release}。fixture 不放 objediting 脚本（该步双侧均跳过，ObjEditing.exe 不进 CI）。
 - **classic copy+pack 路径**：测试内用 stormlib 自造最小基底 .w3x（临时文件），跑 Rust pack 后解包自洽验证（TS 侧该路径需真实地图，不进 golden）。
-- **ObjEditing.exe 编排**：集成测试仅在 exe 存在时跑（`bin/ObjEditing.exe` 或 --res-dir），CI 自动 skip。
+- **ObjEditing.exe 编排**：不做自动化集成测试（需有效 .def 与物编脚本，外部依赖过深）；编排逻辑（脚本发现、源准备、失败语义）单测覆盖，真实 exe 由阶段验收的真实工程人工抽验覆盖。
 - **人工验收**（阶段验收）：真实工程 `wc3 build` 与 TS 管线产物互换、游戏加载各一次。
 
 ## 7. 风险与对策

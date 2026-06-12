@@ -2,13 +2,27 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::config::BuildContext;
-use crate::error::{Error, Result};
-use crate::{comptime, fsutil, jass, macros, mopaq, templates};
+use indexmap::IndexMap;
 
-/// 外部工具定位（CLI 层从 --res-dir 解析传入；None 时 .w3x 文件型地图不可用）。
+use crate::config::{BuildContext, Confusion};
+use crate::error::{Error, Result};
+use crate::{comptime, fsutil, jass, macros, minify, mopaq, require_graph, templates};
+
+/// 外部工具定位（CLI 层从 --res-dir 解析传入；None 时对应功能不可用）。
 pub struct Tools<'a> {
     pub mopaq_exe: Option<&'a Path>,
+    pub confuse_exe: Option<&'a Path>,
+}
+
+impl<'a> Tools<'a> {
+    pub fn mopaq(&self) -> Result<&'a Path> {
+        self.mopaq_exe
+            .ok_or_else(|| Error::new("error.io", "MopaqPack-rs.exe not configured"))
+    }
+    pub fn confuse(&self) -> Result<&'a Path> {
+        self.confuse_exe
+            .ok_or_else(|| Error::new("error.io", "wc3-confuse.exe not configured"))
+    }
 }
 
 fn ensure_source_dir(ctx: &BuildContext) -> Result<PathBuf> {
@@ -33,9 +47,8 @@ fn gen_debug_file(ctx: &BuildContext, lua: &mlua::Lua, file: &Path, name: &str) 
 fn origin_map_script(ctx: &BuildContext, tools: &Tools) -> Result<PathBuf> {
     let map = ctx.map_dir()?;
     if map.is_file() {
-        let exe = tools
-            .mopaq_exe
-            .ok_or_else(|| Error::new("error.io", "MopaqPack-rs.exe not configured"))?;
+        let exe = tools.mopaq()?;
+        // 有意改名（TS 用 .build/origwar3map.lua）：加 .extracted 后缀防误认构建产物；packer 不扫 .build，安全。
         let out = ctx.build_dir().join("origwar3map.lua.extracted");
         // TS extractWar3mapJass：先 war3map.lua 再 scripts\ 回退
         if !mopaq::extract_file_from_map(exe, &map, "war3map.lua", &out)?
@@ -58,9 +71,7 @@ fn write_injected_jass(ctx: &BuildContext, tools: &Tools) -> Result<()> {
     let source = if let Some(jf) = ctx.jassfile().filter(|p| p.exists()) {
         fsutil::read_to_string(&jf)?
     } else {
-        let exe = tools
-            .mopaq_exe
-            .ok_or_else(|| Error::new("error.io", "MopaqPack-rs.exe not configured"))?;
+        let exe = tools.mopaq()?;
         let map = ctx.map_dir()?;
         if !mopaq::extract_file_from_map(exe, &map, "war3map.j", &out)?
             && !mopaq::extract_file_from_map(exe, &map, "scripts\\war3map.j", &out)?
@@ -77,8 +88,7 @@ fn write_injected_jass(ctx: &BuildContext, tools: &Tools) -> Result<()> {
 }
 
 /// TS DebugCompiler.execute。
-pub fn compile_debug(ctx: &BuildContext, mopaq_exe: Option<&Path>) -> Result<()> {
-    let tools = Tools { mopaq_exe };
+pub fn compile_debug(ctx: &BuildContext, tools: &Tools) -> Result<()> {
     let src = ensure_source_dir(ctx)?;
     std::fs::create_dir_all(ctx.build_dir()).map_err(|e| Error::io(&ctx.build_dir(), e))?;
     // 一次构建一个共享引擎（DV6）；创建成本微秒级，无懒加载必要
@@ -90,7 +100,7 @@ pub fn compile_debug(ctx: &BuildContext, mopaq_exe: Option<&Path>) -> Result<()>
         entries.push(gen_debug_file(ctx, &lua, &file, &name)?);
     }
     if !ctx.opts.classic {
-        let script = origin_map_script(ctx, &tools)?;
+        let script = origin_map_script(ctx, tools)?;
         entries.push(gen_debug_file(ctx, &lua, &script, "origwar3map.lua")?);
     }
 
@@ -105,7 +115,164 @@ pub fn compile_debug(ctx: &BuildContext, mopaq_exe: Option<&Path>) -> Result<()>
     std::fs::write(&out_path, out).map_err(|e| Error::io(&out_path, e))?;
 
     if ctx.opts.classic {
-        write_injected_jass(ctx, &tools)?;
+        write_injected_jass(ctx, tools)?;
+    }
+    Ok(())
+}
+
+struct PendingFile {
+    item: require_graph::RequireItem,
+    /// 覆盖名（origwar3map.lua 用）
+    name: Option<String>,
+    /// 绝对路径直传（跳过 resolve）
+    abs: Option<PathBuf>,
+}
+
+/// TS ReleaseCompiler.processFiles 的确定性 DFS 版（DV4）。
+fn process_release_files(
+    ctx: &BuildContext,
+    lua: &mlua::Lua,
+    src: &Path,
+    files: &mut IndexMap<String, String>,
+    pending: PendingFile,
+) -> Result<()> {
+    let resolved: Option<PathBuf> = match &pending.abs {
+        Some(p) => Some(p.clone()),
+        None => require_graph::resolve(
+            src,
+            &ctx.config.lua_package_path,
+            &pending.item,
+            ctx.opts.classic,
+        )?,
+    };
+    let Some(file) = resolved else { return Ok(()) };
+    let name = match &pending.name {
+        Some(n) => n.clone(),
+        None => fsutil::posix_relative(src, &file)?,
+    };
+    if files.contains_key(&name) {
+        return Ok(());
+    }
+    let raw = fsutil::read_to_string(&file)?;
+    let mut body = macros::process_code_macros(&raw, ctx.opts.release, ctx.opts.classic);
+    if body.contains("compiletime") {
+        body = comptime::process(lua, &body, &name)?;
+    }
+    let required = require_graph::scan_requires(&body);
+    files.insert(name, minify::minify(&body)?);
+    for item in required {
+        process_release_files(
+            ctx,
+            lua,
+            src,
+            files,
+            PendingFile {
+                item,
+                name: None,
+                abs: None,
+            },
+        )?;
+    }
+    Ok(())
+}
+
+/// TS ReleaseCompiler.execute。
+pub fn compile_release(ctx: &BuildContext, tools: &Tools) -> Result<()> {
+    let src = ensure_source_dir(ctx)?;
+    std::fs::create_dir_all(ctx.build_dir()).map_err(|e| Error::io(&ctx.build_dir(), e))?;
+    let lua = comptime::make_lua()?;
+
+    let mut files: IndexMap<String, String> = IndexMap::new();
+    process_release_files(
+        ctx,
+        &lua,
+        &src,
+        &mut files,
+        PendingFile {
+            item: require_graph::RequireItem {
+                module: "main.lua".into(),
+                is_require: false,
+            },
+            name: None,
+            abs: None,
+        },
+    )?;
+    for f in &ctx.config.files {
+        process_release_files(
+            ctx,
+            &lua,
+            &src,
+            &mut files,
+            PendingFile {
+                item: require_graph::RequireItem {
+                    module: f.clone(),
+                    is_require: false,
+                },
+                name: None,
+                abs: None,
+            },
+        )?;
+    }
+    if !ctx.opts.classic {
+        let script = origin_map_script(ctx, tools)?;
+        process_release_files(
+            ctx,
+            &lua,
+            &src,
+            &mut files,
+            PendingFile {
+                item: require_graph::RequireItem {
+                    module: String::new(),
+                    is_require: false,
+                },
+                name: Some("origwar3map.lua".into()),
+                abs: Some(script),
+            },
+        )?;
+    }
+
+    let code = files
+        .iter()
+        .map(|(name, body)| templates::render_release_file(name, body))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let out = templates::render_main(
+        templates::Kind::Release,
+        &code,
+        &ctx.config.lua_package_path,
+        ctx.opts.classic,
+    );
+    let out_path = ctx.build_dir().join("war3map.lua");
+
+    if ctx.opts.confusion != Confusion::Disable {
+        std::fs::write(&out_path, &out).map_err(|e| Error::io(&out_path, e))?;
+        let exe = tools.confuse()?;
+        let preset = match ctx.opts.confusion {
+            Confusion::Minify => "Minify",
+            Confusion::Weak => "Weak",
+            Confusion::Medium => "Medium",
+            Confusion::Strong => "Strong",
+            Confusion::Disable => unreachable!(),
+        };
+        let status = std::process::Command::new(exe)
+            .args(["--preset", preset, "--out"])
+            .arg(&out_path)
+            .arg(&out_path)
+            .status()
+            .map_err(|e| Error::new("error.io", format!("{}: {e}", exe.display())))?;
+        if !status.success() {
+            return Err(Error::new(
+                "error.processFilesFailure",
+                "lua confusion failed",
+            ));
+        }
+    } else {
+        let minified = minify::minify(&out)?;
+        std::fs::write(&out_path, minified).map_err(|e| Error::io(&out_path, e))?;
+    }
+
+    if ctx.opts.classic {
+        write_injected_jass(ctx, tools)?;
     }
     Ok(())
 }
@@ -158,7 +325,14 @@ mod tests {
     #[test]
     fn debug_reforge_bundles_sources_and_orig() {
         let root = synth_project();
-        compile_debug(&ctx(&root, false, false), None).unwrap();
+        compile_debug(
+            &ctx(&root, false, false),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(out.contains("P['main.lua'] = "));
         assert!(out.contains("P['lib/util.lua'] = "));
@@ -174,7 +348,14 @@ mod tests {
     #[test]
     fn debug_classic_skips_orig_and_injects_jass() {
         let root = synth_project();
-        compile_debug(&ctx(&root, false, true), None).unwrap();
+        compile_debug(
+            &ctx(&root, false, true),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(!out.contains("P['origwar3map.lua']"));
         let j = std::fs::read_to_string(root.join(".build/war3map.j")).unwrap();
@@ -190,7 +371,14 @@ mod tests {
             "local v = compiletime(function()\n    return 6 * 7\nend)\nreturn v",
         )
         .unwrap();
-        compile_debug(&ctx(&root, false, false), None).unwrap();
+        compile_debug(
+            &ctx(&root, false, false),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(
             out.contains("local v = 42\nreturn v"),
@@ -206,8 +394,122 @@ mod tests {
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         std::fs::write(d.join("warcraft.json"), r#"{ "mapdir": "map" }"#).unwrap();
-        let err = compile_debug(&ctx(&d, false, false), None).unwrap_err();
+        let err = compile_debug(
+            &ctx(&d, false, false),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap_err();
         assert_eq!(err.key, "error.noSrcFolder");
         std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    #[test]
+    fn release_reforge_resolves_require_graph() {
+        let root = synth_project();
+        compile_release(
+            &ctx(&root, true, false),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap();
+        let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
+        assert!(out.contains("P['main.lua']"));
+        assert!(out.contains("P['lib/util.lua']"), "require 链被打包");
+        assert!(out.contains("P['origwar3map.lua']"));
+        assert!(!out.contains("--@debug@"), "整体 minify 后无注释");
+        assert!(!out.contains("D=1"), "debug 宏在 release 被注释剔除");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn release_files_roots_are_bundled() {
+        let root = synth_project();
+        std::fs::write(
+            root.join("warcraft.json"),
+            r#"{ "mapdir": "map", "jassfile": "war3map.j", "files": ["extra.lua"] }"#,
+        )
+        .unwrap();
+        std::fs::write(root.join("src/extra.lua"), "EXTRA = 1").unwrap();
+        compile_release(
+            &ctx(&root, true, false),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap();
+        let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
+        assert!(
+            out.contains("P['extra.lua']"),
+            "warcraft.json files[] 根被打包"
+        );
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn release_classic_allows_builtin_modules() {
+        let root = synth_project();
+        std::fs::write(
+            root.join("src/main.lua"),
+            "require('jass.common')\nreturn require('lib.util')",
+        )
+        .unwrap();
+        compile_release(
+            &ctx(&root, true, true),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap();
+        let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
+        assert!(out.contains("P['lib/util.lua']"));
+        assert!(!out.contains("P['jass/common"), "classic 内置包跳过");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn release_reforge_missing_module_errors() {
+        let root = synth_project();
+        std::fs::write(root.join("src/main.lua"), "require('no.such')").unwrap();
+        let err = compile_release(
+            &ctx(&root, true, false),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap_err();
+        assert_eq!(err.key, "error.notFound");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn release_dedup_and_transitive() {
+        let root = synth_project();
+        std::fs::write(
+            root.join("src/main.lua"),
+            "require('lib.util')\nrequire('lib.util')\nreturn 1",
+        )
+        .unwrap();
+        std::fs::write(root.join("src/lib/util.lua"), "return require('lib.deep')").unwrap();
+        std::fs::write(root.join("src/lib/deep.lua"), "return 9").unwrap();
+        compile_release(
+            &ctx(&root, true, false),
+            &Tools {
+                mopaq_exe: None,
+                confuse_exe: None,
+            },
+        )
+        .unwrap();
+        let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
+        assert_eq!(out.matches("P['lib/util.lua']").count(), 1, "去重");
+        assert!(out.contains("P['lib/deep.lua']"), "传递依赖");
+        std::fs::remove_dir_all(&root).unwrap();
     }
 }

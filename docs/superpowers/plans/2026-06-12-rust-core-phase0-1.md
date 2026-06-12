@@ -193,9 +193,17 @@ name: Rust
 
 on:
   push:
-    paths: ["crates/**", "Cargo.toml", "rust-toolchain.toml", ".github/workflows/rust.yml", "testdata/**"]
+    paths: ["crates/**", "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".github/workflows/rust.yml", "testdata/**"]
   pull_request:
-    paths: ["crates/**", "Cargo.toml", "rust-toolchain.toml", ".github/workflows/rust.yml", "testdata/**"]
+    paths: ["crates/**", "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".github/workflows/rust.yml", "testdata/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: rust-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   rust:
@@ -207,8 +215,8 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test --workspace
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
 ```
 
 - [ ] **Step 2: 本地等价验证**

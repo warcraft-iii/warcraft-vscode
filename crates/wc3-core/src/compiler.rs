@@ -120,58 +120,59 @@ pub fn compile_debug(ctx: &BuildContext, tools: &Tools) -> Result<()> {
     Ok(())
 }
 
-struct PendingFile {
-    item: require_graph::RequireItem,
-    /// 覆盖名（origwar3map.lua 用）
-    name: Option<String>,
-    /// 绝对路径直传（跳过 resolve）
-    abs: Option<PathBuf>,
-}
-
-/// TS ReleaseCompiler.processFiles 的确定性 DFS 版（DV4）。
-fn process_release_files(
+/// TS ReleaseCompiler.processFiles 的确定性 DFS 版（DV4）：resolve 模块路径并派生 posix 名，
+/// 委托 process_file。
+fn process_module(
     ctx: &BuildContext,
     lua: &mlua::Lua,
     src: &Path,
     files: &mut IndexMap<String, String>,
-    pending: PendingFile,
+    item: &require_graph::RequireItem,
+    depth: usize,
 ) -> Result<()> {
-    let resolved: Option<PathBuf> = match &pending.abs {
-        Some(p) => Some(p.clone()),
-        None => require_graph::resolve(
-            src,
-            &ctx.config.lua_package_path,
-            &pending.item,
-            ctx.opts.classic,
-        )?,
+    let Some(file) =
+        require_graph::resolve(src, &ctx.config.lua_package_path, item, ctx.opts.classic)?
+    else {
+        return Ok(());
     };
-    let Some(file) = resolved else { return Ok(()) };
-    let name = match &pending.name {
-        Some(n) => n.clone(),
-        None => fsutil::posix_relative(src, &file)?,
-    };
+    let name = fsutil::posix_relative(src, &file)?;
+    process_file(ctx, lua, src, files, &file, name, depth)
+}
+
+/// 单文件处理：去重 → 读 → 宏 → compiletime → 扫 require → minify 注册 → 递归子模块。
+fn process_file(
+    ctx: &BuildContext,
+    lua: &mlua::Lua,
+    src: &Path,
+    files: &mut IndexMap<String, String>,
+    file: &Path,
+    name: String,
+    depth: usize,
+) -> Result<()> {
+    if depth > 500 {
+        return Err(Error::new(
+            "error.processFilesFailure",
+            format!("require chain too deep at {name} (>500); cycle without dedup?"),
+        ));
+    }
     if files.contains_key(&name) {
         return Ok(());
     }
-    let raw = fsutil::read_to_string(&file)?;
+    let raw = fsutil::read_to_string(file)?;
     let mut body = macros::process_code_macros(&raw, ctx.opts.release, ctx.opts.classic);
+    drop(raw);
     if body.contains("compiletime") {
         body = comptime::process(lua, &body, &name)?;
     }
     let required = require_graph::scan_requires(&body);
-    files.insert(name, minify::minify(&body)?);
+    let minified = minify::minify(&body).map_err(|mut e| {
+        e.message = format!("File: {name}\n{}", e.message);
+        e
+    })?;
+    drop(body); // 递归前释放未压缩源码，避免深链上持有大字符串
+    files.insert(name, minified);
     for item in required {
-        process_release_files(
-            ctx,
-            lua,
-            src,
-            files,
-            PendingFile {
-                item,
-                name: None,
-                abs: None,
-            },
-        )?;
+        process_module(ctx, lua, src, files, &item, depth + 1)?;
     }
     Ok(())
 }
@@ -183,51 +184,40 @@ pub fn compile_release(ctx: &BuildContext, tools: &Tools) -> Result<()> {
     let lua = comptime::make_lua()?;
 
     let mut files: IndexMap<String, String> = IndexMap::new();
-    process_release_files(
+    process_module(
         ctx,
         &lua,
         &src,
         &mut files,
-        PendingFile {
-            item: require_graph::RequireItem {
-                module: "main.lua".into(),
-                is_require: false,
-            },
-            name: None,
-            abs: None,
+        &require_graph::RequireItem {
+            module: "main.lua".into(),
+            is_require: false,
         },
+        0,
     )?;
     for f in &ctx.config.files {
-        process_release_files(
+        process_module(
             ctx,
             &lua,
             &src,
             &mut files,
-            PendingFile {
-                item: require_graph::RequireItem {
-                    module: f.clone(),
-                    is_require: false,
-                },
-                name: None,
-                abs: None,
+            &require_graph::RequireItem {
+                module: f.clone(),
+                is_require: false,
             },
+            0,
         )?;
     }
     if !ctx.opts.classic {
         let script = origin_map_script(ctx, tools)?;
-        process_release_files(
+        process_file(
             ctx,
             &lua,
             &src,
             &mut files,
-            PendingFile {
-                item: require_graph::RequireItem {
-                    module: String::new(),
-                    is_require: false,
-                },
-                name: Some("origwar3map.lua".into()),
-                abs: Some(script),
-            },
+            &script,
+            "origwar3map.lua".into(),
+            0,
         )?;
     }
 
@@ -244,6 +234,7 @@ pub fn compile_release(ctx: &BuildContext, tools: &Tools) -> Result<()> {
     );
     let out_path = ctx.build_dir().join("war3map.lua");
 
+    // 真实 exe 的 argv 验证延后到 Task 18 spike
     if ctx.opts.confusion != Confusion::Disable {
         std::fs::write(&out_path, &out).map_err(|e| Error::io(&out_path, e))?;
         let exe = tools.confuse()?;
@@ -281,6 +272,11 @@ pub fn compile_release(ctx: &BuildContext, tools: &Tools) -> Result<()> {
 mod tests {
     use super::*;
     use crate::config::{BuildContext, BuildOptions, ProjectConfig};
+
+    const NO_TOOLS: Tools<'static> = Tools {
+        mopaq_exe: None,
+        confuse_exe: None,
+    };
 
     fn synth_project() -> std::path::PathBuf {
         static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -325,14 +321,7 @@ mod tests {
     #[test]
     fn debug_reforge_bundles_sources_and_orig() {
         let root = synth_project();
-        compile_debug(
-            &ctx(&root, false, false),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap();
+        compile_debug(&ctx(&root, false, false), &NO_TOOLS).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(out.contains("P['main.lua'] = "));
         assert!(out.contains("P['lib/util.lua'] = "));
@@ -348,14 +337,7 @@ mod tests {
     #[test]
     fn debug_classic_skips_orig_and_injects_jass() {
         let root = synth_project();
-        compile_debug(
-            &ctx(&root, false, true),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap();
+        compile_debug(&ctx(&root, false, true), &NO_TOOLS).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(!out.contains("P['origwar3map.lua']"));
         let j = std::fs::read_to_string(root.join(".build/war3map.j")).unwrap();
@@ -371,14 +353,7 @@ mod tests {
             "local v = compiletime(function()\n    return 6 * 7\nend)\nreturn v",
         )
         .unwrap();
-        compile_debug(
-            &ctx(&root, false, false),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap();
+        compile_debug(&ctx(&root, false, false), &NO_TOOLS).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(
             out.contains("local v = 42\nreturn v"),
@@ -394,14 +369,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         std::fs::write(d.join("warcraft.json"), r#"{ "mapdir": "map" }"#).unwrap();
-        let err = compile_debug(
-            &ctx(&d, false, false),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap_err();
+        let err = compile_debug(&ctx(&d, false, false), &NO_TOOLS).unwrap_err();
         assert_eq!(err.key, "error.noSrcFolder");
         std::fs::remove_dir_all(&d).unwrap();
     }
@@ -409,14 +377,7 @@ mod tests {
     #[test]
     fn release_reforge_resolves_require_graph() {
         let root = synth_project();
-        compile_release(
-            &ctx(&root, true, false),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap();
+        compile_release(&ctx(&root, true, false), &NO_TOOLS).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(out.contains("P['main.lua']"));
         assert!(out.contains("P['lib/util.lua']"), "require 链被打包");
@@ -435,14 +396,7 @@ mod tests {
         )
         .unwrap();
         std::fs::write(root.join("src/extra.lua"), "EXTRA = 1").unwrap();
-        compile_release(
-            &ctx(&root, true, false),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap();
+        compile_release(&ctx(&root, true, false), &NO_TOOLS).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(
             out.contains("P['extra.lua']"),
@@ -459,14 +413,7 @@ mod tests {
             "require('jass.common')\nreturn require('lib.util')",
         )
         .unwrap();
-        compile_release(
-            &ctx(&root, true, true),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap();
+        compile_release(&ctx(&root, true, true), &NO_TOOLS).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(out.contains("P['lib/util.lua']"));
         assert!(!out.contains("P['jass/common"), "classic 内置包跳过");
@@ -477,14 +424,7 @@ mod tests {
     fn release_reforge_missing_module_errors() {
         let root = synth_project();
         std::fs::write(root.join("src/main.lua"), "require('no.such')").unwrap();
-        let err = compile_release(
-            &ctx(&root, true, false),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap_err();
+        let err = compile_release(&ctx(&root, true, false), &NO_TOOLS).unwrap_err();
         assert_eq!(err.key, "error.notFound");
         std::fs::remove_dir_all(&root).unwrap();
     }
@@ -499,17 +439,26 @@ mod tests {
         .unwrap();
         std::fs::write(root.join("src/lib/util.lua"), "return require('lib.deep')").unwrap();
         std::fs::write(root.join("src/lib/deep.lua"), "return 9").unwrap();
-        compile_release(
-            &ctx(&root, true, false),
-            &Tools {
-                mopaq_exe: None,
-                confuse_exe: None,
-            },
-        )
-        .unwrap();
+        compile_release(&ctx(&root, true, false), &NO_TOOLS).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert_eq!(out.matches("P['lib/util.lua']").count(), 1, "去重");
         assert!(out.contains("P['lib/deep.lua']"), "传递依赖");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn release_confusion_without_exe_errors() {
+        let root = synth_project();
+        let opts = BuildOptions {
+            release: true,
+            confusion: crate::config::Confusion::Minify,
+            ..Default::default()
+        };
+        let cfg = ProjectConfig::load(&root).unwrap();
+        let ctx = BuildContext::new(&root, cfg, opts);
+        let err = compile_release(&ctx, &NO_TOOLS).unwrap_err();
+        assert_eq!(err.key, "error.io");
+        assert!(err.message.contains("wc3-confuse"));
         std::fs::remove_dir_all(&root).unwrap();
     }
 }

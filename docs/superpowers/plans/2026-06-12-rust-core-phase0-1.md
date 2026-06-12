@@ -22,6 +22,7 @@
 | DV4 | release 文件注册顺序为确定性 DFS 序（TS 为 Promise.all 完成序，本就不稳定） | 去重后注册顺序不影响语义 |
 | DV5 | 目录遍历按文件名字典序排序 | 与 NTFS readdir 顺序一致，保证黄金对照可复现 |
 | DV6 | compiletime 的 Lua 状态在一次构建内跨文件共享、每次构建全新；TS 为 VSCode 会话级持久（跨构建残留全局） | 构建可复现性优先；会话级残留是 TS 缺陷 |
+| DV7 | release 的 require 扫描在 compiletime 替换之后；TS 在替换前的 AST 上扫描，compiletime 函数体内的 require 会被 TS 打包进地图（死重）或触发误报错。两侧对「构建期实际执行的 require」行为一致（均失败） | compiletime 体在出图前被擦除，Rust 行为语义正确；TS 行为是误特性 |
 
 ## 文件结构（最终态）
 

@@ -5,7 +5,8 @@ use std::collections::{BTreeMap, HashSet};
 
 /// TS getCommentEqual：扫描 [=*[ 与 ]=*]，返回第一个未被占用的等号层级。
 pub fn comment_equal(code: &str) -> String {
-    let re = regex::Regex::new(r"\[(=*)\[|\](=*)\]").unwrap();
+    static BRACKET_RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    let re = BRACKET_RE.get_or_init(|| regex::Regex::new(r"\[=*\[|\]=*\]").unwrap());
     let mut exists: HashSet<usize> = HashSet::new();
     for m in re.find_iter(code) {
         exists.insert(m.as_str().len() - 2);
@@ -47,16 +48,29 @@ pub fn make_lua_key(s: &str) -> String {
 }
 
 /// TS toLua（非 pretty 路径）；表键序按 DV1 确定性化：数组部分在前，整数键升序，字符串键字典序。
-pub fn to_lua(value: &mlua::Value) -> String {
-    match value {
+/// 嵌套深度超过 128（循环表或超深嵌套）时返回干净错误而非栈溢出。
+pub fn to_lua(value: &mlua::Value) -> crate::error::Result<String> {
+    to_lua_depth(value, 0)
+}
+
+fn to_lua_depth(value: &mlua::Value, depth: usize) -> crate::error::Result<String> {
+    if depth > 128 {
+        return Err(crate::error::Error::new(
+            "error.processFilesFailure",
+            "compiletime result too deeply nested or cyclic",
+        ));
+    }
+    Ok(match value {
         mlua::Value::Nil => "nil".into(),
         mlua::Value::Boolean(b) => b.to_string(),
         mlua::Value::Integer(i) => i.to_string(),
         mlua::Value::Number(n) => {
-            // 对齐 JS Number.prototype.toString：整数值不带小数点
-            if n.fract() == 0.0 && n.is_finite() && n.abs() < 9.007_199_254_740_992e15 {
+            // 2^53：以内 f64 整数可精确转 i64 且与 JS toString 一致（含 -0.0 → "0"）；
+            // 以外走 Display（与 JS 拼写可能不同但数值等价）。
+            if n.fract() == 0.0 && n.is_finite() && n.abs() < 9_007_199_254_740_992.0 {
                 format!("{}", *n as i64)
             } else {
+                // 注意：>=1e21（JS 科学计数法）、<1e-6、inf 等场景 JS/Rust 文本拼写不同，仅保证数值语义等价。
                 n.to_string()
             }
         }
@@ -66,14 +80,14 @@ pub fn to_lua(value: &mlua::Value) -> String {
             let len = t.raw_len();
             for i in 1..=len {
                 let v: mlua::Value = t.raw_get(i).unwrap_or(mlua::Value::Nil);
-                parts.push(to_lua(&v));
+                parts.push(to_lua_depth(&v, depth + 1)?);
             }
             let mut int_keys: BTreeMap<i64, mlua::Value> = BTreeMap::new();
             let mut str_keys: BTreeMap<String, mlua::Value> = BTreeMap::new();
             for pair in t.clone().pairs::<mlua::Value, mlua::Value>() {
                 let Ok((k, v)) = pair else { continue };
                 match &k {
-                    mlua::Value::Integer(i) if *i >= 1 && (*i as usize) <= len => {}
+                    mlua::Value::Integer(i) if *i >= 1 && (*i as u64) <= len as u64 => {}
                     mlua::Value::Integer(i) => {
                         int_keys.insert(*i, v);
                     }
@@ -84,15 +98,23 @@ pub fn to_lua(value: &mlua::Value) -> String {
                 }
             }
             for (k, v) in int_keys {
-                parts.push(format!("{}={}", make_lua_key(&k.to_string()), to_lua(&v)));
+                parts.push(format!(
+                    "{}={}",
+                    make_lua_key(&k.to_string()),
+                    to_lua_depth(&v, depth + 1)?
+                ));
             }
             for (k, v) in str_keys {
-                parts.push(format!("{}={}", make_lua_key(&k), to_lua(&v)));
+                parts.push(format!(
+                    "{}={}",
+                    make_lua_key(&k),
+                    to_lua_depth(&v, depth + 1)?
+                ));
             }
             format!("{{{}}}", parts.join(","))
         }
         _ => "nil".into(),
-    }
+    })
 }
 
 #[cfg(test)]
@@ -120,6 +142,12 @@ mod tests {
         assert_eq!(make_lua_key("_ok2"), "_ok2");
         assert_eq!(make_lua_key("2x"), "['2x']");
         assert_eq!(make_lua_key("a-b"), "['a-b']");
+        assert_eq!(make_lua_key("a'b"), "['a\\'b']");
+        assert_eq!(
+            make_lua_key("a'b'c"),
+            "['a\\'b'c']",
+            "TS .replace escapes only first quote"
+        );
     }
 
     #[test]
@@ -130,22 +158,53 @@ mod tests {
             .eval()
             .unwrap();
         assert_eq!(
-            to_lua(&v),
+            to_lua(&v).unwrap(),
             "{count=3,flag=true,list={[[a]],[[b]]},name=[[wc3]]}"
         );
+        let v: mlua::Value = lua
+            .load("return { 'a', [3]='c', [-1]='m', [0]='z', x=1 }")
+            .eval()
+            .unwrap();
+        assert_eq!(
+            to_lua(&v).unwrap(),
+            "{[[a]],[-1]=[[m]],[0]=[[z]],[3]=[[c]],x=1}"
+        );
         let s: mlua::Value = lua.load("return 'hello ]] world'").eval().unwrap();
-        assert_eq!(to_lua(&s), "[=[hello ]] world]=]");
+        assert_eq!(to_lua(&s).unwrap(), "[=[hello ]] world]=]");
         let n: mlua::Value = lua.load("return 42").eval().unwrap();
-        assert_eq!(to_lua(&n), "42");
+        assert_eq!(to_lua(&n).unwrap(), "42");
         let f: mlua::Value = lua.load("return -0.5").eval().unwrap();
-        assert_eq!(to_lua(&f), "-0.5");
+        assert_eq!(to_lua(&f).unwrap(), "-0.5");
         let nil: mlua::Value = lua.load("return nil").eval().unwrap();
-        assert_eq!(to_lua(&nil), "nil");
+        assert_eq!(to_lua(&nil).unwrap(), "nil");
         let multi: mlua::Value = lua.load("return 1.0").eval().unwrap();
         assert_eq!(
-            to_lua(&multi),
+            to_lua(&multi).unwrap(),
             "1",
             "JS Number.toString parity: 1.0 prints as 1"
         );
+        assert_eq!(
+            to_lua(&mlua::Value::Number(-0.0)).unwrap(),
+            "0",
+            "JS (-0).toString() is \"0\""
+        );
+        assert_eq!(
+            to_lua(&mlua::Value::Number(9_007_199_254_740_991.0)).unwrap(),
+            "9007199254740991",
+            "2^53-1: last exactly-representable integer goes through the i64 path"
+        );
+        assert_eq!(
+            to_lua(&mlua::Value::Number(9_007_199_254_740_992.0)).unwrap(),
+            "9007199254740992",
+            "2^53: at the boundary we fall back to f64 Display"
+        );
+    }
+
+    #[test]
+    fn cyclic_table_errors_cleanly() {
+        let lua = mlua::Lua::new();
+        let v: mlua::Value = lua.load("local t = {} t.self = t return t").eval().unwrap();
+        let err = to_lua(&v).unwrap_err();
+        assert_eq!(err.key, "error.processFilesFailure");
     }
 }

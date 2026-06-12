@@ -1,3 +1,4 @@
+pub mod compiler;
 pub mod comptime;
 pub mod config;
 pub mod error;

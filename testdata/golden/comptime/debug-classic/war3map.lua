@@ -173,7 +173,9 @@ end
     })
 end
 
-P['main.lua'] = [==[RESULT=RESULT or{}RESULT.table={flag=true,list={[[a]],[[b]]},count=3,name=[[wc3]]}RESULT.str=[=[hello ]] world]=]RESULT.num=42;return RESULT]==]
+P['lib/gen.lua'] = [=[return{value=[[generated]]}]=]
+
+P['main.lua'] = [==[RESULT=RESULT or{}RESULT.ct_debug=true;RESULT.table={flag=true,name=[[wc3]],list={[[a]],[[b]]},count=3}RESULT.str=[=[hello ]] world]=]RESULT.num=42;RESULT.f=-0.5;RESULT.a,RESULT.b=1,[[x]]RESULT.gen=require('lib.gen').value;return RESULT]==]
 
 --[==[
 dofile('origwar3map.lua')

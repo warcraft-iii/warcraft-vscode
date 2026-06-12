@@ -173,45 +173,64 @@ end
     })
 end
 
-P['lib/util.lua'] = [[local M = {}
+P['lib/extra.lua'] = [[RESULT = RESULT or {}
+RESULT.extra = true]]
+
+P['lib/util.lua'] = [[local mod = require('mod')
+local M = {}
+M.from = mod.who
 function M.add(a, b)
     return a + b
 end
 return M]]
 
-P['main.lua'] = [=====[local util = require('lib.util')
+P['main.lua'] = [======[local util = require('lib.util')
+local strutil = require 'strutil'
 RESULT = RESULT or {}
 RESULT.mode = 'common'
 --@debug@
 RESULT.debug = true
 --@end-debug@
---[=[@release@
+--[==[@release@
 RESULT.release = true
---@end-release@]=]
---[==[@non-debug@
+--@end-release@]==]
+--[[@release@
+RESULT.release_uncommented = true
+--@end-release@]]
+--[===[@non-debug@
 RESULT.non_debug = true
---@end-non-debug@]==]
+--@end-non-debug@]===]
 --@non-release@
 RESULT.non_release = true
 --@end-non-release@
---[===[@classic@
+--[====[@classic@
 RESULT.classic = true
---@end-classic@]===]
+--@end-classic@]====]
 --@reforge@
 RESULT.reforge = true
 --@end-reforge@
 --@non-classic@
 RESULT.non_classic = true
 --@end-non-classic@
---[====[@non-reforge@
+--[=====[@non-reforge@
 RESULT.non_reforge = true
---@end-non-reforge@]====]
---[[@remove@
+--@end-non-reforge@]=====]
+--[=[@remove@
 RESULT.removed = true
---@end-remove@]]
+--@end-remove@]=]
 RESULT.sum = util.add(1, 2)
 RESULT.cn = require('中文目录.数据').value
-return RESULT]=====]
+RESULT.modwho = require('mod').who
+RESULT.sugar = strutil.tag
+dofile('lib/extra.lua')
+--[====[@classic@
+require('jass.common')
+--@end-classic@]====]
+return RESULT]======]
+
+P['mod/init.lua'] = [[return { who = 'init' }]]
+
+P['strutil.lua'] = [[return { tag = 'sugar-ok' }]]
 
 P['中文目录/数据.lua'] = [[return { value = 42 }]]
 

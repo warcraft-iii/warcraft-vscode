@@ -1,4 +1,5 @@
 local util = require('lib.util')
+local strutil = require 'strutil'
 RESULT = RESULT or {}
 RESULT.mode = 'common'
 --@debug@
@@ -7,6 +8,9 @@ RESULT.debug = true
 --@release@
 RESULT.release = true
 --@end-release@
+--[[@release@
+RESULT.release_uncommented = true
+--@end-release@]]
 --@non-debug@
 RESULT.non_debug = true
 --@end-non-debug@
@@ -30,4 +34,10 @@ RESULT.removed = true
 --@end-remove@
 RESULT.sum = util.add(1, 2)
 RESULT.cn = require('中文目录.数据').value
+RESULT.modwho = require('mod').who
+RESULT.sugar = strutil.tag
+dofile('lib/extra.lua')
+--@classic@
+require('jass.common')
+--@end-classic@
 return RESULT

@@ -27,16 +27,26 @@ fn is_word_char(c: char) -> bool {
 }
 
 /// prev 尾字符与 next 首字符直接相邻是否会改变词法，需要补空格：
+/// - 数字字面量 token + `.`/词字符开头：`1. and` 拼成 `1.and`、`0xff ..`
+///   拼成 `0xff..`（Lua ≥5.2 数字读取器在十六进制里也吞 `.`）都成非法
+///   数字——按 token 种类判定，不依赖尾字符（`1.` 尾是 `.`、`0xff` 尾是
+///   字母，纯字符规则覆盖不到）；
 /// - 词字符 + 词字符：`and b`、`return x`（标识符/关键字/数字粘连）；
 /// - `-` + `-`：拼成行注释 `--`；
 /// - 数字 + `.`：`1 ..` 拼成 `1..` 会被吞进数字字面量（保守保留）；
 /// - `.` + `.`：`..`/`...` 歧义（如 `1. .. x`）；
 /// - `[` + `[`/`=`：`t[ [[s]] ]` 拼成 `[[[s]]` 会开长括号串（`[=` 同防
 ///   `[=[`）。`]` + `]` 无歧义——长括号只由 `[` 开启，`]]` 恒为两个右括号。
-fn needs_space(prev: &str, next: &str) -> bool {
+///
+/// 后五条字符级规则与首条 token 级规则有重叠，保留无害（多余单空格
+/// 不改变词法），不删。
+fn needs_space(prev_kind: Option<TokenKind>, prev: &str, next: &str) -> bool {
     let (Some(a), Some(b)) = (prev.chars().last(), next.chars().next()) else {
         return false;
     };
+    if prev_kind == Some(TokenKind::Number) && (b == '.' || is_word_char(b)) {
+        return true;
+    }
     if is_word_char(a) && is_word_char(b) {
         return true;
     }
@@ -83,12 +93,14 @@ pub fn minify(source: &str) -> Result<String> {
     // 还原源序（见模块顶部说明：字段声明序 ≠ 源序）。
     tokens.sort_by_key(|token| token.start_position().bytes());
     let mut out = String::with_capacity(source.len());
+    let mut prev_kind: Option<TokenKind> = None;
     for token in tokens {
         let text = token.to_string();
-        if needs_space(&out, &text) {
+        if needs_space(prev_kind, &out, &text) {
             out.push(' ');
         }
         out.push_str(&text);
+        prev_kind = Some(token.token_kind());
     }
     Ok(out)
 }
@@ -138,6 +150,26 @@ mod tests {
         let mined: i64 = lua.load(&min).eval().unwrap();
         assert_eq!(orig, mined);
         assert_eq!(mined, 42);
+    }
+
+    #[test]
+    fn number_token_boundaries_stay_lexable() {
+        let cases = [
+            "local x = 1. and 2\nreturn x",
+            "if 2 > 1. then return 'big' end",
+            "return 0xff .. 'x'",
+            "return 1 .. '2'",
+            "return 2.5e-1 and 1",
+            "return 0x1p+4 and 1",
+        ];
+        let lua = mlua::Lua::new();
+        for src in cases {
+            let min = minify(src).unwrap();
+            // 语义等价：原文与压缩文求值结果一致
+            let a: mlua::Value = lua.load(src).eval().unwrap();
+            let b: mlua::Value = lua.load(&min).eval().unwrap();
+            assert_eq!(format!("{a:?}"), format!("{b:?}"), "case: {src} -> {min}");
+        }
     }
 
     #[test]

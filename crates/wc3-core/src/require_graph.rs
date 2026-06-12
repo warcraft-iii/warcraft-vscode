@@ -145,6 +145,7 @@ pub fn resolve(
             .join("/");
         finders
             .iter()
+            // 有意偏差：replace 替换所有 '?'（TS String.replace 仅首个；多 ? finder 才有差异，且本行为与真实 Lua package.path 的 gsub 一致）
             .map(|f| source_dir.join(f.replace('?', &name)))
             .collect()
     } else {
@@ -181,7 +182,7 @@ mod tests {
         // 与多后缀 FunctionCall（链式调用）；整表精确相等同时断言每个 require
         // 恰计一次（FunctionCall / VarExpression 两 visitor 无双计）。
         let reqs = scan_requires(
-            "require('a.b')\nrequire 'c'\ndofile('d.lua')\nloadfile('e.lua')\nlocal v = require('cn.mod').value\nlocal w = require('m').who\nrequire('a')('b')\nrequire('mm').init()\nrequire(x)\nm.require('no')\nobj:require('no')\n",
+            "require('a.b')\nrequire 'c'\ndofile('d.lua')\nloadfile('e.lua')\nlocal v = require('cn.mod').value\nlocal w = require('m').who\nrequire('a')('b')\nrequire('mm').init()\nrequire(x)\nm.require('no')\nobj:require('no')\nrequire [[lb]]\n",
         );
         let req = |module: &str| RequireItem {
             module: module.into(),
@@ -204,6 +205,10 @@ mod tests {
                 req("m"),
                 req("a"), // require('a')('b')：仅首个调用绑定裸名，'b' 不计
                 req("mm"),
+                RequireItem {
+                    module: "lb".into(),
+                    is_require: true
+                }, // require [[lb]]：长括号串糖（FunctionArgs::String 同样命中）
             ],
             "非字符串字面量与非裸调用忽略；成员访问/链式调用后缀不影响内层调用命中"
         );

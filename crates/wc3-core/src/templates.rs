@@ -12,15 +12,18 @@ pub enum Kind {
     Release,
 }
 
-/// TS templates/debug/file.lua：P['name'] = [eq[body]eq]
+/// TS templates/debug/file.lua：P['name'] = [eq[body]eq]\n。
+/// 模板文件以换行结尾，渲染产物含该换行；entries.join("\n") 后文件间为
+/// 空行分隔、整块以换行收尾，与 TS 字节一致（golden 对照验证）。
 pub fn render_debug_file(name: &str, body: &str) -> String {
     let eq = crate::luastr::comment_equal(body);
-    format!("P['{name}'] = [{eq}[{body}]{eq}]")
+    format!("P['{name}'] = [{eq}[{body}]{eq}]\n")
 }
 
-/// TS templates/release/file.lua：P['name'] = function(_ENV, ...) body end
+/// TS templates/release/file.lua：P['name'] = function(_ENV, ...) body end\n
+/// （模板文件同样以换行结尾，见 render_debug_file）。
 pub fn render_release_file(name: &str, body: &str) -> String {
-    format!("P['{name}'] = function(_ENV, ...)\n{body}\nend")
+    format!("P['{name}'] = function(_ENV, ...)\n{body}\nend\n")
 }
 
 /// TS templates/*/main.lua：classic 控制 5 组注释开关（3 NC + 2 C）。
@@ -53,14 +56,15 @@ mod tests {
 
     #[test]
     fn debug_file_entry() {
+        // 尾随换行来自 TS 模板文件自身的结尾换行（join("\n") 后形成文件间空行）
         assert_eq!(
             render_debug_file("lib/util.lua", "return 1"),
-            "P['lib/util.lua'] = [[return 1]]"
+            "P['lib/util.lua'] = [[return 1]]\n"
         );
         // body 含 ]] 时提升括号层级（层级由 body 经 comment_equal 计算，与 TS genFile 一致）
         assert_eq!(
             render_debug_file("a.lua", "s=']]'"),
-            "P['a.lua'] = [=[s=']]']=]"
+            "P['a.lua'] = [=[s=']]']=]\n"
         );
     }
 
@@ -68,7 +72,7 @@ mod tests {
     fn release_file_entry() {
         assert_eq!(
             render_release_file("main.lua", "return 1"),
-            "P['main.lua'] = function(_ENV, ...)\nreturn 1\nend"
+            "P['main.lua'] = function(_ENV, ...)\nreturn 1\nend\n"
         );
     }
 

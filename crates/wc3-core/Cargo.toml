@@ -13,3 +13,7 @@ serde_json.workspace = true
 indexmap.workspace = true
 walkdir.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+# 集成测试（tests/golden.rs）的沙箱执行需要直接使用 mlua
+mlua.workspace = true

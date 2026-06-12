@@ -62,6 +62,7 @@ export class App {
             .action(async (projectPath: string, opts: { target: string, classic: boolean, release: boolean }) => {
                 if (!projectPath) {
                     console.error('Invalid arguments');
+                    process.exitCode = 1;
                     return;
                 }
                 runtime.rootPath = projectPath;

@@ -157,5 +157,8 @@ runner 迁 Rust（winreg + prost + 进程管理，TS 只留确认 UI）；ObjEdi
 1. **minify/混淆输出不可字节级复现** → 测试分层（§5）：字节对照只施加于 minify 前产物，之后转语义对照。
 2. **compiletime 语义偏差**（`toLua` 序列化的 key 顺序、字符串 `[[ ]]`/`[=[ ]=]` 包裹选择、数字 key 规则）→ 纯函数级单测先行，固定历史行为后再接管线。
 3. **Lua 版本冲突**：Prometheus 要求 Lua 5.1，compiletime 对齐 wasmoon（5.4）；mlua 同一进程不能同时 vendored 两个版本 → 方案 A：混淆拆为独立辅助二进制（wc3-confuse.exe，lua51）；方案 B：feature 拆分两个 crate 静态链接不同符号前缀。阶段 1 早期 spike 验证后定夺。
+   **Spike 结论（2026-06-12，Task 18）：GO，采用方案 A。** 补充：mlua 的 lua 版本 feature 在 workspace 内也会合一冲突，故 wc3-confuse 整体移出 workspace（根 Cargo.toml `exclude`），单独构建、CI 单列 step。四 preset 对照（同一 release 风格输入，分别在干净 Lua 沙箱执行比较 `RESULT`）：
+   - Minify / Weak / Medium：Rust（mlua/lua51）与 TS（wasmoon/Lua 5.4）产物语义一致，全部通过。
+   - Strong：**两侧均不可用**，且为 Prometheus 自身缺陷而非迁移回归——TS 在混淆期崩溃（`NumbersToExpressions` 的 `NumberRepresentationMutation` 路径调用 `math.log10`，Lua 5.2+ 已移除）；Rust 混淆可完成（5.1 有 `log10`）但产物在 Lua 5.1 运行期确定性崩溃（双 Vmify + NumberRepresentationMutation 组合产出坏代码）。注意失败模式差异：TS 是构建期报错，Rust 是静默产出坏脚本——阶段 3 接入插件混淆路径时应让 Strong 显式报错或从选项中移除。
 4. **Windows 路径/编码**（GBK 路径、JASS 注入按 `\r\n` 行处理）→ 黄金样例强制覆盖中文路径与 Classic 用例；Rust 侧统一 `PathBuf`，输出时显式 `\r\n`。
 5. **MopaqPack-rs 库化改造**属于跨仓库前置依赖 → 阶段 2 开始前先行；若受阻，pack 临时保留 exe 子进程调用（packlist 仍走 JSON 文件），不阻塞阶段 3。

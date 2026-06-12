@@ -31,15 +31,28 @@ pub fn posix_relative(root: &Path, file: &Path) -> Result<String> {
 }
 
 /// 递归收集 root 下非隐藏 .lua 文件，按 posix 相对路径字典序（DV5）。
+/// 遍历错误（权限/IO）直接上抛——静默丢文件会产出缺模块的坏地图（与 TS 抛错对齐）。
 pub fn collect_source_lua_files(root: &Path) -> Result<Vec<PathBuf>> {
-    let mut files: Vec<PathBuf> = walkdir::WalkDir::new(root)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file())
-        .map(|e| e.into_path())
-        .filter(|p| is_lua_file(p) && !is_hidden_file(p))
-        .collect();
-    files.sort_by_key(|p| posix_relative(root, p).unwrap_or_default());
+    let mut files: Vec<PathBuf> = Vec::new();
+    for entry in walkdir::WalkDir::new(root) {
+        let entry = entry.map_err(|e| {
+            let p = e.path().unwrap_or(root).to_path_buf();
+            match e.into_io_error() {
+                Some(io) => Error::io(&p, io),
+                None => Error::new("error.io", format!("{}: walk error", p.display())),
+            }
+        })?;
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        let p = entry.into_path();
+        if is_lua_file(&p) && !is_hidden_file(&p) {
+            files.push(p);
+        }
+    }
+    files.sort_by_cached_key(|p| {
+        posix_relative(root, p).expect("walkdir entry is always under root")
+    });
     Ok(files)
 }
 
@@ -91,7 +104,9 @@ mod tests {
     }
 
     fn tempdir() -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!("wc3-fsutil-{}", std::process::id()));
+        static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+        let n = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let d = std::env::temp_dir().join(format!("wc3-fsutil-{}-{n}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d

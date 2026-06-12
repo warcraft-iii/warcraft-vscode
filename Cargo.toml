@@ -21,3 +21,5 @@ indexmap = "2"
 walkdir = "2"
 thiserror = "2"
 clap = { version = "4", features = ["derive"] }
+stormlib = { git = "https://github.com/warcraft-iii/MopaqPack-rs", rev = "06ceb1de710177140ade76bfbb9fff0ec3a1ce16" }
+zip = { version = "2", default-features = false, features = ["deflate"] }

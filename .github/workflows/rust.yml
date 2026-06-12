@@ -26,3 +26,6 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked
+      # wc3-confuse 独立于 workspace（mlua 的 lua51 与 lua54 feature 互斥，见根 Cargo.toml）
+      - run: cargo fmt --manifest-path crates/wc3-confuse/Cargo.toml -- --check
+      - run: cargo clippy --manifest-path crates/wc3-confuse/Cargo.toml --all-targets --locked -- -D warnings

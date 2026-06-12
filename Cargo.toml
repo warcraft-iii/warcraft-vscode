@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
 members = ["crates/wc3-core", "crates/wc3-cli"]
+# mlua 的 lua 版本 feature 互斥（lua54 vs lua51），workspace 构建会 feature 合一冲突，
+# 故 wc3-confuse 独立于 workspace 之外单独构建：
+#   cargo build --manifest-path crates/wc3-confuse/Cargo.toml
+exclude = ["crates/wc3-confuse"]
 
 [workspace.package]
 version = "0.1.0"

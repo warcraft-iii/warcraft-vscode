@@ -1,0 +1,16 @@
+# 独立于根 workspace（见根 Cargo.toml 的 exclude 注释）：
+# mlua 的 lua51 与 wc3-core 的 lua54 feature 互斥，不能合一构建，
+# 因此本 crate 不继承 workspace.package/workspace.dependencies。
+[package]
+name = "wc3-confuse"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[[bin]]
+name = "wc3-confuse"
+path = "src/main.rs"
+
+[dependencies]
+mlua = { version = "0.10", features = ["lua51", "vendored"] }
+clap = { version = "4", features = ["derive"] }

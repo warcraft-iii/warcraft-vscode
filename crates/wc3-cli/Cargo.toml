@@ -11,5 +11,4 @@ path = "src/main.rs"
 [dependencies]
 wc3-core = { path = "../wc3-core" }
 clap.workspace = true
-serde.workspace = true
 serde_json.workspace = true

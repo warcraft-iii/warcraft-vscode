@@ -52,7 +52,7 @@ enum Command {
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },
-    /// Run object editing (requires ObjEditing.exe in --res-dir)
+    /// Run object editing (skips when no objediting script; needs ObjEditing.exe in --res-dir)
     Objediting {
         /// Project root (contains warcraft.json)
         project: PathBuf,
@@ -229,6 +229,7 @@ fn main() -> ExitCode {
             let dir = res_dir_or_exe_dir(res_dir);
             progress("objediting", "Object editing");
             wc3_core::objediting::execute(&ctx, &dir)?;
+            progress("objediting", "done");
             progress("compile", "Compiling script");
             let confuse = dir.join("wc3-confuse.exe");
             let tools = Tools {
@@ -239,11 +240,13 @@ fn main() -> ExitCode {
             } else {
                 compile_debug(&ctx)?;
             }
+            progress("compile", "done");
             progress("pack", "Packing map");
             let out = wc3_core::packer::pack(&ctx)?;
             if let Some(o) = &output {
                 copy_output(&out, o)?;
             }
+            progress("pack", "done");
             progress("build", "done");
             Ok(())
         })()),

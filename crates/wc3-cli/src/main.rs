@@ -48,7 +48,7 @@ enum Command {
         map: Option<PathBuf>,
         #[arg(long, value_enum, default_value = "disable")]
         confusion: ConfusionArg,
-        /// Directory containing MopaqPack-rs.exe / wc3-confuse.exe (defaults next to wc3.exe)
+        /// Directory containing wc3-confuse.exe (defaults next to wc3.exe)
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },
@@ -94,17 +94,15 @@ fn main() -> ExitCode {
                     },
                 );
                 let dir = res_dir_or_exe_dir(res_dir);
-                let mopaq = dir.join("MopaqPack-rs.exe");
                 let confuse = dir.join("wc3-confuse.exe");
                 let tools = Tools {
-                    mopaq_exe: mopaq.exists().then_some(mopaq.as_path()),
                     confuse_exe: confuse.exists().then_some(confuse.as_path()),
                 };
                 progress("compile", "Compiling script");
                 if release {
                     compile_release(&ctx, &tools)?;
                 } else {
-                    compile_debug(&ctx, &tools)?;
+                    compile_debug(&ctx)?;
                 }
                 progress("compile", "done");
                 Ok(())

@@ -7,10 +7,7 @@ use std::path::{Path, PathBuf};
 use wc3_core::compiler::{compile_debug, compile_release, Tools};
 use wc3_core::config::{BuildContext, BuildOptions, ProjectConfig};
 
-const NO_TOOLS: Tools<'static> = Tools {
-    mopaq_exe: None,
-    confuse_exe: None,
-};
+const NO_TOOLS: Tools<'static> = Tools { confuse_exe: None };
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -53,7 +50,7 @@ fn build(fixture: &str, release: bool, classic: bool) -> PathBuf {
     if release {
         compile_release(&ctx, &NO_TOOLS).unwrap();
     } else {
-        compile_debug(&ctx, &NO_TOOLS).unwrap();
+        compile_debug(&ctx).unwrap();
     }
     dst
 }

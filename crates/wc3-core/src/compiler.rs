@@ -6,19 +6,14 @@ use indexmap::IndexMap;
 
 use crate::config::{BuildContext, Confusion};
 use crate::error::{Error, Result};
-use crate::{comptime, fsutil, jass, macros, minify, mopaq, require_graph, templates};
+use crate::{comptime, fsutil, jass, macros, minify, mpq, require_graph, templates};
 
 /// 外部工具定位（CLI 层从 --res-dir 解析传入；None 时对应功能不可用）。
 pub struct Tools<'a> {
-    pub mopaq_exe: Option<&'a Path>,
     pub confuse_exe: Option<&'a Path>,
 }
 
 impl<'a> Tools<'a> {
-    pub fn mopaq(&self) -> Result<&'a Path> {
-        self.mopaq_exe
-            .ok_or_else(|| Error::new("error.io", "MopaqPack-rs.exe not configured"))
-    }
     pub fn confuse(&self) -> Result<&'a Path> {
         self.confuse_exe
             .ok_or_else(|| Error::new("error.io", "wc3-confuse.exe not configured"))
@@ -43,16 +38,15 @@ fn gen_debug_file(ctx: &BuildContext, lua: &mlua::Lua, file: &Path, name: &str) 
     Ok(templates::render_debug_file(name, &body))
 }
 
-/// TS getOriginMapScript：目录地图直接读 `<mapdir>/war3map.lua`，文件地图经 mopaq 提取。
-fn origin_map_script(ctx: &BuildContext, tools: &Tools) -> Result<PathBuf> {
+/// TS getOriginMapScript：目录地图直接读 `<mapdir>/war3map.lua`，文件地图经 mpq 提取。
+fn origin_map_script(ctx: &BuildContext) -> Result<PathBuf> {
     let map = ctx.map_dir()?;
     if map.is_file() {
-        let exe = tools.mopaq()?;
         // 有意改名（TS 用 .build/origwar3map.lua）：加 .extracted 后缀防误认构建产物；packer 不扫 .build，安全。
         let out = ctx.build_dir().join("origwar3map.lua.extracted");
         // TS extractWar3mapJass：先 war3map.lua 再 scripts\ 回退
-        if !mopaq::extract_file_from_map(exe, &map, "war3map.lua", &out)?
-            && !mopaq::extract_file_from_map(exe, &map, "scripts\\war3map.lua", &out)?
+        if !mpq::extract_to(&map, "war3map.lua", &out)?
+            && !mpq::extract_to(&map, "scripts\\war3map.lua", &out)?
         {
             return Err(Error::new(
                 "error.noMapScriptFile",
@@ -66,15 +60,14 @@ fn origin_map_script(ctx: &BuildContext, tools: &Tools) -> Result<PathBuf> {
 }
 
 /// TS injectWar3mapJass 的 IO 编排：jassfile 优先，否则地图提取（含 scripts\ 回退）。
-fn write_injected_jass(ctx: &BuildContext, tools: &Tools) -> Result<()> {
+fn write_injected_jass(ctx: &BuildContext) -> Result<()> {
     let out = ctx.build_dir().join("war3map.j");
     let source = if let Some(jf) = ctx.jassfile().filter(|p| p.exists()) {
         fsutil::read_to_string(&jf)?
     } else {
-        let exe = tools.mopaq()?;
         let map = ctx.map_dir()?;
-        if !mopaq::extract_file_from_map(exe, &map, "war3map.j", &out)?
-            && !mopaq::extract_file_from_map(exe, &map, "scripts\\war3map.j", &out)?
+        if !mpq::extract_to(&map, "war3map.j", &out)?
+            && !mpq::extract_to(&map, "scripts\\war3map.j", &out)?
         {
             return Err(Error::new(
                 "error.noMapScriptFile",
@@ -88,7 +81,7 @@ fn write_injected_jass(ctx: &BuildContext, tools: &Tools) -> Result<()> {
 }
 
 /// TS DebugCompiler.execute。
-pub fn compile_debug(ctx: &BuildContext, tools: &Tools) -> Result<()> {
+pub fn compile_debug(ctx: &BuildContext) -> Result<()> {
     let src = ensure_source_dir(ctx)?;
     std::fs::create_dir_all(ctx.build_dir()).map_err(|e| Error::io(&ctx.build_dir(), e))?;
     // 一次构建一个共享引擎（DV6）；创建成本微秒级，无懒加载必要
@@ -100,7 +93,7 @@ pub fn compile_debug(ctx: &BuildContext, tools: &Tools) -> Result<()> {
         entries.push(gen_debug_file(ctx, &lua, &file, &name)?);
     }
     if !ctx.opts.classic {
-        let script = origin_map_script(ctx, tools)?;
+        let script = origin_map_script(ctx)?;
         entries.push(gen_debug_file(ctx, &lua, &script, "origwar3map.lua")?);
     }
 
@@ -115,7 +108,7 @@ pub fn compile_debug(ctx: &BuildContext, tools: &Tools) -> Result<()> {
     std::fs::write(&out_path, out).map_err(|e| Error::io(&out_path, e))?;
 
     if ctx.opts.classic {
-        write_injected_jass(ctx, tools)?;
+        write_injected_jass(ctx)?;
     }
     Ok(())
 }
@@ -209,7 +202,7 @@ pub fn compile_release(ctx: &BuildContext, tools: &Tools) -> Result<()> {
         )?;
     }
     if !ctx.opts.classic {
-        let script = origin_map_script(ctx, tools)?;
+        let script = origin_map_script(ctx)?;
         process_file(
             ctx,
             &lua,
@@ -263,7 +256,7 @@ pub fn compile_release(ctx: &BuildContext, tools: &Tools) -> Result<()> {
     }
 
     if ctx.opts.classic {
-        write_injected_jass(ctx, tools)?;
+        write_injected_jass(ctx)?;
     }
     Ok(())
 }
@@ -273,10 +266,7 @@ mod tests {
     use super::*;
     use crate::config::{BuildContext, BuildOptions, ProjectConfig};
 
-    const NO_TOOLS: Tools<'static> = Tools {
-        mopaq_exe: None,
-        confuse_exe: None,
-    };
+    const NO_TOOLS: Tools<'static> = Tools { confuse_exe: None };
 
     fn synth_project() -> std::path::PathBuf {
         static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -321,7 +311,7 @@ mod tests {
     #[test]
     fn debug_reforge_bundles_sources_and_orig() {
         let root = synth_project();
-        compile_debug(&ctx(&root, false, false), &NO_TOOLS).unwrap();
+        compile_debug(&ctx(&root, false, false)).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(out.contains("P['main.lua'] = "));
         assert!(out.contains("P['lib/util.lua'] = "));
@@ -337,7 +327,7 @@ mod tests {
     #[test]
     fn debug_classic_skips_orig_and_injects_jass() {
         let root = synth_project();
-        compile_debug(&ctx(&root, false, true), &NO_TOOLS).unwrap();
+        compile_debug(&ctx(&root, false, true)).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(!out.contains("P['origwar3map.lua']"));
         let j = std::fs::read_to_string(root.join(".build/war3map.j")).unwrap();
@@ -353,7 +343,7 @@ mod tests {
             "local v = compiletime(function()\n    return 6 * 7\nend)\nreturn v",
         )
         .unwrap();
-        compile_debug(&ctx(&root, false, false), &NO_TOOLS).unwrap();
+        compile_debug(&ctx(&root, false, false)).unwrap();
         let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
         assert!(
             out.contains("local v = 42\nreturn v"),
@@ -369,7 +359,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         std::fs::write(d.join("warcraft.json"), r#"{ "mapdir": "map" }"#).unwrap();
-        let err = compile_debug(&ctx(&d, false, false), &NO_TOOLS).unwrap_err();
+        let err = compile_debug(&ctx(&d, false, false)).unwrap_err();
         assert_eq!(err.key, "error.noSrcFolder");
         std::fs::remove_dir_all(&d).unwrap();
     }
@@ -459,6 +449,45 @@ mod tests {
         let err = compile_release(&ctx, &NO_TOOLS).unwrap_err();
         assert_eq!(err.key, "error.io");
         assert!(err.message.contains("wc3-confuse"));
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn debug_reforge_extracts_orig_from_file_map() {
+        let root = synth_project();
+        let map_file = root.join("map.w3x");
+        crate::mpq::create_archive(
+            &map_file,
+            &[("war3map.lua".into(), root.join("map/war3map.lua"))],
+            true,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("warcraft.json"),
+            r#"{ "mapdir": "map.w3x", "jassfile": "war3map.j" }"#,
+        )
+        .unwrap();
+        compile_debug(&ctx(&root, false, false)).unwrap();
+        let out = std::fs::read_to_string(root.join(".build/war3map.lua")).unwrap();
+        assert!(out.contains("P['origwar3map.lua'] = [[function main() end]]"));
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn classic_extracts_jass_from_file_map_when_no_jassfile() {
+        let root = synth_project();
+        let map_file = root.join("map.w3x");
+        crate::mpq::create_archive(
+            &map_file,
+            &[("war3map.j".into(), root.join("war3map.j"))],
+            true,
+        )
+        .unwrap();
+        // 无 jassfile 字段 → 走地图提取
+        std::fs::write(root.join("warcraft.json"), r#"{ "mapdir": "map.w3x" }"#).unwrap();
+        compile_debug(&ctx(&root, false, true)).unwrap();
+        let j = std::fs::read_to_string(root.join(".build/war3map.j")).unwrap();
+        assert!(j.contains("call Cheat(\"exec-lua:war3map\")"));
         std::fs::remove_dir_all(&root).unwrap();
     }
 }

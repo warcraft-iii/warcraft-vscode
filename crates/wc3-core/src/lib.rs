@@ -7,7 +7,6 @@ pub mod jass;
 pub mod luastr;
 pub mod macros;
 pub mod minify;
-pub mod mopaq;
 pub mod mpq;
 pub mod require_graph;
 pub mod templates;

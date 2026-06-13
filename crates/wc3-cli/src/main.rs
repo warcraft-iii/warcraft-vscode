@@ -52,7 +52,7 @@ enum Command {
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },
-    /// Run object editing (skips when no objediting script; needs ObjEditing.exe in --res-dir)
+    /// Run object editing (skips when no objediting script)
     Objediting {
         /// Project root (contains warcraft.json)
         project: PathBuf,
@@ -61,7 +61,7 @@ enum Command {
         /// Override mapdir (file or folder)
         #[arg(short, long)]
         map: Option<PathBuf>,
-        /// Directory containing ObjEditing.exe / def.zip (defaults next to wc3.exe)
+        /// Directory containing def.zip / .version.json (defaults next to wc3.exe)
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },
@@ -96,7 +96,7 @@ enum Command {
         output: Option<PathBuf>,
         #[arg(long, value_enum, default_value = "disable")]
         confusion: ConfusionArg,
-        /// Directory containing ObjEditing.exe / def.zip / wc3-confuse.exe (defaults next to wc3.exe)
+        /// Directory containing def.zip / wc3-confuse.exe (defaults next to wc3.exe)
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },

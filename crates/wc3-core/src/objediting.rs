@@ -109,7 +109,7 @@ pub fn execute(ctx: &BuildContext, res_dir: &Path) -> Result<()> {
     if !output.status.success() || !stderr.trim().is_empty() {
         return Err(Error::new(
             "error.processFilesFailure",
-            format!("ObjEditing failed: {}", stderr.trim()),
+            format!("ObjEditing failed ({}): {}", output.status, stderr.trim()),
         ));
     }
     Ok(())

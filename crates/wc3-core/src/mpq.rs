@@ -58,6 +58,15 @@ pub fn create_archive(out: &Path, files: &[(String, PathBuf)], with_filelist: bo
 
 /// 向现有归档追加（TS MopaqPack pack）：扩容 + add_file（同名覆盖）+ compact。
 pub fn add_files(map: &Path, files: &[(String, PathBuf)]) -> Result<()> {
+    // add_file 失败时原条目已被删除（先删后加）——开档前先校验全部源文件，失败不碰归档
+    for (name, path) in files {
+        if !path.is_file() {
+            return Err(Error::new(
+                "error.io",
+                format!("{} ({name}): source file missing", path.display()),
+            ));
+        }
+    }
     let mut ar = stormlib::Archive::open(map, stormlib::OpenArchiveFlags::MPQ_OPEN_NO_FLAG)
         .map_err(|e| mpq_err(map, "open", e))?;
     let count = ar
@@ -162,6 +171,26 @@ mod tests {
             "中文内容".as_bytes(),
             "原文件保留"
         );
+        std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    #[test]
+    fn add_files_with_missing_source_leaves_archive_untouched() {
+        let d = tempdir();
+        let files = src_files(&d);
+        let out = d.join("map.w3x");
+        create_archive(&out, &files, true).unwrap();
+        let err = add_files(
+            &out,
+            &[
+                ("a.txt".into(), d.join("a.txt")),         // 存在
+                ("ghost.txt".into(), d.join("ghost.txt")), // 不存在 → 预检失败
+            ],
+        )
+        .unwrap_err();
+        assert_eq!(err.key, "error.io");
+        // 预检在开档前触发，归档原条目不受影响
+        assert_eq!(extract_file(&out, "a.txt").unwrap().unwrap(), b"alpha");
         std::fs::remove_dir_all(&d).unwrap();
     }
 

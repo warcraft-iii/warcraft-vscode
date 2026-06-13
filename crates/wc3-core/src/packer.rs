@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 use crate::config::BuildContext;
 use crate::error::{Error, Result};
-use crate::fsutil;
+use crate::{fsutil, mpq};
 
 /// (归档内相对名（`\` 分隔）, 源文件绝对路径)
 pub type PackItem = (String, PathBuf);
@@ -84,6 +84,59 @@ pub fn generate_packlist(ctx: &BuildContext) -> Result<Vec<PackItem>> {
         if seen.insert(item.0.clone()) {
             out.push(item);
         }
+    }
+    Ok(out)
+}
+
+/// TS env.outFilePath：.build/{_warcraft_vscode_test|release}<mapdir 扩展名>。
+pub fn out_file_path(ctx: &BuildContext) -> Result<PathBuf> {
+    let map = ctx.map_dir()?;
+    let ext = map
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
+    let name = if ctx.opts.release {
+        "release"
+    } else {
+        "_warcraft_vscode_test"
+    };
+    Ok(ctx.build_dir().join(format!("{name}{ext}")))
+}
+
+/// TS Packer.execute（generatePackList + packByPackList）。返回产物路径（--output 复制用）。
+pub fn pack(ctx: &BuildContext) -> Result<PathBuf> {
+    let entry = ctx.build_dir().join("war3map.lua");
+    if !entry.is_file() {
+        return Err(Error::with_args(
+            "error.notFound",
+            "Not found .build/war3map.lua (run compile first)",
+            vec!["war3map.lua".into()],
+        ));
+    }
+    if ctx.opts.classic && !ctx.build_dir().join("war3map.j").is_file() {
+        return Err(Error::with_args(
+            "error.notFound",
+            "Not found .build/war3map.j (run compile first)",
+            vec!["war3map.j".into()],
+        ));
+    }
+    let map = ctx.map_dir()?;
+    if ctx.opts.classic && map.is_dir() {
+        // DV10：TS 同场景为隐性崩溃，这里显式化
+        return Err(Error::new(
+            "error.invalidMapFile",
+            "Classic version ONLY support .w3x/.w3m format map file.",
+        ));
+    }
+    let items = generate_packlist(ctx)?;
+    let out = out_file_path(ctx)?;
+    if map.is_dir() {
+        mpq::create_archive(&out, &items, !ctx.opts.release)?;
+    } else if map.is_file() {
+        std::fs::copy(&map, &out).map_err(|e| Error::io(&out, e))?;
+        mpq::add_files(&out, &items)?;
+    } else {
+        return Err(Error::new("error.noMapFolder", "Not found: map folder"));
     }
     Ok(out)
 }
@@ -206,6 +259,121 @@ mod tests {
         std::fs::create_dir_all(root.join("map")).unwrap();
         let items = generate_packlist(&ctx(&root, false, false)).unwrap();
         assert_eq!(names(&items), vec!["war3map.lua"]);
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn packlist_lib_collision_later_sorted_lib_wins() {
+        // lib 间同名冲突：lib 字典序遍历、后推入者经 reduceRight 胜出
+        let root = tempdir();
+        std::fs::write(root.join("warcraft.json"), r#"{ "mapdir": "map" }"#).unwrap();
+        std::fs::create_dir_all(root.join("map")).unwrap();
+        std::fs::create_dir_all(root.join("src/lib/aaa/imports")).unwrap();
+        std::fs::write(root.join("src/lib/aaa/imports/x.txt"), "from-aaa").unwrap();
+        std::fs::create_dir_all(root.join("src/lib/bbb/imports")).unwrap();
+        std::fs::write(root.join("src/lib/bbb/imports/x.txt"), "from-bbb").unwrap();
+        let items = generate_packlist(&ctx(&root, false, false)).unwrap();
+        let (_, src) = items.iter().find(|(n, _)| n == "x.txt").unwrap();
+        assert_eq!(std::fs::read_to_string(src).unwrap(), "from-bbb");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn out_file_name_by_config_and_ext() {
+        let root = synth_project();
+        assert!(out_file_path(&ctx(&root, false, false))
+            .unwrap()
+            .ends_with(".build/_warcraft_vscode_test"));
+        assert!(out_file_path(&ctx(&root, true, false))
+            .unwrap()
+            .ends_with(".build/release"));
+        // mapdir 带扩展名 → 产物带扩展名
+        std::fs::write(root.join("warcraft.json"), r#"{ "mapdir": "map.w3x" }"#).unwrap();
+        assert!(out_file_path(&ctx(&root, true, false))
+            .unwrap()
+            .ends_with(".build/release.w3x"));
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn pack_reforge_dir_creates_archive() {
+        let root = synth_project();
+        // debug：带 listfile
+        let out = pack(&ctx(&root, false, false)).unwrap();
+        assert!(out.ends_with(".build/_warcraft_vscode_test"));
+        let names = mpq::read_listfile(&out).unwrap().unwrap();
+        assert!(names.contains(&"war3map.lua".to_string()));
+        assert_eq!(
+            mpq::extract_file(&out, "override.txt").unwrap().unwrap(),
+            b"from-root"
+        );
+        assert_eq!(
+            mpq::extract_file(&out, "war3map.lua").unwrap().unwrap(),
+            b"entry"
+        );
+        // release：无 listfile
+        let out = pack(&ctx(&root, true, false)).unwrap();
+        assert!(mpq::read_listfile(&out).unwrap().is_none());
+        assert_eq!(mpq::extract_file(&out, "rel.txt").unwrap().unwrap(), b"x");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn pack_classic_file_map_copies_then_appends() {
+        let root = synth_project();
+        // 自造基底地图：含将被覆盖的 war3map.j 与应保留的 base.txt
+        std::fs::write(root.join("orig-j.txt"), "orig-jass").unwrap();
+        std::fs::write(root.join("base.txt"), "base").unwrap();
+        let map = root.join("the.w3x");
+        mpq::create_archive(
+            &map,
+            &[
+                ("war3map.j".into(), root.join("orig-j.txt")),
+                ("base.txt".into(), root.join("base.txt")),
+            ],
+            true,
+        )
+        .unwrap();
+        std::fs::write(root.join("warcraft.json"), r#"{ "mapdir": "the.w3x" }"#).unwrap();
+        let out = pack(&ctx(&root, false, true)).unwrap();
+        assert!(out.ends_with(".build/_warcraft_vscode_test.w3x"));
+        assert_eq!(
+            mpq::extract_file(&out, "base.txt").unwrap().unwrap(),
+            b"base"
+        );
+        assert_eq!(
+            mpq::extract_file(&out, "war3map.j").unwrap().unwrap(),
+            b"jass",
+            ".build/war3map.j 覆盖原图"
+        );
+        assert_eq!(
+            mpq::extract_file(&out, "cls.txt").unwrap().unwrap(),
+            b"x",
+            "imports.classic 进包"
+        );
+        assert_eq!(
+            mpq::extract_file(&map, "war3map.j").unwrap().unwrap(),
+            b"orig-jass",
+            "原地图不被修改"
+        );
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn pack_classic_dir_map_rejected() {
+        // DV10
+        let root = synth_project();
+        let err = pack(&ctx(&root, false, true)).unwrap_err();
+        assert_eq!(err.key, "error.invalidMapFile");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn pack_requires_compiled_entry() {
+        let root = synth_project();
+        std::fs::remove_file(root.join(".build/war3map.lua")).unwrap();
+        let err = pack(&ctx(&root, false, false)).unwrap_err();
+        assert_eq!(err.key, "error.notFound");
         std::fs::remove_dir_all(&root).unwrap();
     }
 }

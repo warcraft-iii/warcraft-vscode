@@ -73,11 +73,6 @@ async function main() {
     const files = [
         {
             owner: 'warcraft-iii',
-            repo: 'ObjEditing',
-            out: asset => path.join('./bin', asset.name),
-        },
-        {
-            owner: 'warcraft-iii',
             repo: 'ObjEditingDefine',
             out: path.join('./res', 'def.zip'),
             json: path.join('./res', '.version.json'),

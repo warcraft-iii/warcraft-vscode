@@ -78,11 +78,6 @@ async function main() {
         },
         {
             owner: 'warcraft-iii',
-            repo: 'MopaqPack-rs',
-            out: asset => path.join('./bin', asset.name),
-        },
-        {
-            owner: 'warcraft-iii',
             repo: 'ObjEditingDefine',
             out: path.join('./res', 'def.zip'),
             json: path.join('./res', '.version.json'),
@@ -112,8 +107,15 @@ async function main() {
     }
 
     await fs.mkdirp('out');
-    await fs.copyFile("node_modules/wasmoon/dist/glue.wasm", path.join('out', "glue.wasm"));
-    await fs.copyFile("node_modules/wasmoon/dist/index.js", path.join('out', "wasmoon.js"));
+
+    // Build wc3.exe from crates/ (stormlib statically linked, no MopaqPack-rs.exe needed)
+    const { execSync } = require('child_process');
+    console.log('Building wc3.exe...');
+    execSync('cargo build -p wc3-cli --release', { stdio: 'inherit', cwd: __dirname });
+    const wc3Src = path.join(__dirname, 'target/release/wc3.exe');
+    const wc3Dst = path.join(__dirname, 'bin/wc3.exe');
+    await fs.copyFile(wc3Src, wc3Dst);
+    console.log('wc3.exe built and copied to bin/');
 }
 
 main();

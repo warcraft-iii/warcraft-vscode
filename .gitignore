@@ -10,3 +10,4 @@ bin/
 package-lock.json
 target/
 testdata/fixtures/**/.build/
+bin/wc3.exe

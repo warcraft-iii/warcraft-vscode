@@ -9,13 +9,11 @@ import * as vscode from 'vscode';
 import * as utils from '../utils';
 
 import { env } from '../env';
-import { globals, ConfigurationType, WarcraftVersionType } from '../globals';
+import { globals, ConfigurationType, WarcraftVersionType, LuaConfusionType } from '../globals';
 import { registerCommand, registerCheckedCommand } from './command';
-import { debugCompiler, releaseCompiler } from './compiler';
-import { debugPacker, releasePacker } from './packer';
+import { runWc3, BuildOptions } from './bridge';
 import { gameRunner, editorRunner } from './runner';
 import { project, library } from './project';
-import { objediting } from './objediting';
 
 class App implements vscode.Disposable {
     private subscriptions: vscode.Disposable[] = [];
@@ -34,12 +32,12 @@ class App implements vscode.Disposable {
         this.initStatusBar();
     }
 
-    private get compiler() {
-        return env.config.configuration === ConfigurationType.Release ? releaseCompiler : debugCompiler;
-    }
-
-    private get packer() {
-        return env.config.configuration === ConfigurationType.Release ? releasePacker : debugPacker;
+    private buildOpts(): BuildOptions {
+        return {
+            release: env.config.configuration === ConfigurationType.Release,
+            classic: env.config.classic,
+            confusion: LuaConfusionType[env.config.luaConfusion],
+        };
     }
 
     private initListeners() {
@@ -73,20 +71,14 @@ class App implements vscode.Disposable {
 
     private initCommands() {
         this.subscriptions.push(
-            registerCommand('compile.debug', () => this.compiler.execute()),
-            registerCommand('pack.debug', async () => {
-                await objediting.execute();
-                await this.compiler.execute();
-                await this.packer.execute();
-            }),
-            registerCommand('pack.object', () => objediting.execute()),
+            registerCommand('compile.debug', () => runWc3('compile', this.buildOpts())),
+            registerCommand('pack.debug', () => runWc3('build', this.buildOpts())),
+            registerCommand('pack.object', () => runWc3('objediting', this.buildOpts())),
             registerCheckedCommand('run.debug', async () => {
                 if (!(await gameRunner.check())) {
                     return;
                 }
-                await objediting.execute();
-                await this.compiler.execute();
-                await this.packer.execute();
+                await runWc3('build', this.buildOpts());
                 await gameRunner.execute();
             }),
             registerCheckedCommand('run.editor', async () => {

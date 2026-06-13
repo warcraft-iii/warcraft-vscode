@@ -158,8 +158,10 @@ fn confuse_bench_all_presets() {
         run_preset(&input_path, &original_result, preset, iterations);
     }
 
-    // Strong 已知在两侧都 broken (见 Task 18 spike 结论), 仅测混淆是否能完成(不验证语义)
-    println!("  --- Strong (obfuscation-only, no semantic check) ---");
+    // Strong: Vmify 产出面向 Lua 5.1 的 VM 代码，无法在 Lua 5.4 验证器中执行。
+    // 仅验证混淆过程成功完成(产物需在 Warcraft III 的 Lua 5.1 中运行,
+    // 完整语义验证见 crates/wc3-confuse/tests/spike_tmp.rs)。
+    println!("  --- Strong (obfuscation-only, runtime requires Lua 5.1) ---");
     let confuse_exe = repo_root().join("crates/wc3-confuse/target/release/wc3-confuse.exe");
     if confuse_exe.is_file() {
         let prometheus_dir = repo_root().join("bin/lua");
@@ -177,7 +179,10 @@ fn confuse_bench_all_presets() {
             .unwrap();
         let elapsed = start.elapsed().as_millis();
         let out_size = std::fs::metadata(&output).map(|m| m.len()).unwrap_or(0);
-        println!("    obfuscation {}: {elapsed}ms, {out_size}B", if status.success() { "OK" } else { "FAILED" });
+        let ratio = out_size as f64 / input_size as f64 * 100.0;
+        println!("    obfuscation {}: {elapsed}ms, {out_size}B ({ratio:.0}%)",
+            if status.success() { "OK" } else { "FAILED" });
+        assert!(status.success(), "Strong obfuscation should complete successfully");
     }
 
     std::fs::remove_dir_all(&root).unwrap();

@@ -8,6 +8,7 @@ pub mod luastr;
 pub mod macros;
 pub mod minify;
 pub mod mpq;
+pub mod objediting;
 pub mod packer;
 pub mod require_graph;
 pub mod templates;

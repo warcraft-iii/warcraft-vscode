@@ -180,10 +180,12 @@ mod tests {
         let files = src_files(&d);
         let out = d.join("map.w3x");
         create_archive(&out, &files, true).unwrap();
+        // 不同内容的源文件：若预检缺失导致 a.txt 被部分覆盖，最终断言必然失败
+        std::fs::write(d.join("a2.txt"), "ALPHA-NEW").unwrap();
         let err = add_files(
             &out,
             &[
-                ("a.txt".into(), d.join("a.txt")),         // 存在
+                ("a.txt".into(), d.join("a2.txt")),        // 存在（内容不同）
                 ("ghost.txt".into(), d.join("ghost.txt")), // 不存在 → 预检失败
             ],
         )

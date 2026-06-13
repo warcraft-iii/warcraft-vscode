@@ -1,5 +1,7 @@
 //! TS ObjEditing 移植（src/app/objediting/objediting.ts）：def 资源管理、
-//! 物编源文件准备、ObjEditing.exe 编排（spec 阶段 2 §4.3，偏差 DV9）。
+//! 物编源文件准备、嵌入式 Lua VM 执行（替代 ObjEditing.exe 子进程）。
+//! 设计决策：ObjEditing 核心逻辑为 ~19000 行 Lua，C++ 宿主仅 120 行；
+//! 本模块用 mlua (Lua 5.4) 替换 C++ 宿主，Lua 逻辑通过 include_str! 嵌入。
 
 use std::path::{Path, PathBuf};
 
@@ -8,6 +10,27 @@ use crate::error::{Error, Result};
 use crate::{fsutil, mpq};
 
 const OBJ_EXTS: [&str; 7] = ["w3u", "w3t", "w3b", "w3h", "w3d", "w3a", "w3q"];
+
+// ObjEditing Lua 源码嵌入（按 C++ 宿主 luasource.h 的加载顺序）
+const LUA_BASE_STRING: &str = include_str!("../assets/objediting/base/string.lua");
+const LUA_BASE_TABLE: &str = include_str!("../assets/objediting/base/table.lua");
+const LUA_BASE_CLASS: &str = include_str!("../assets/objediting/base/class.lua");
+const LUA_CORE_CHECKER: &str = include_str!("../assets/objediting/core/checker.lua");
+const LUA_CORE_ENUM: &str = include_str!("../assets/objediting/core/enum.lua");
+const LUA_CORE_OBJECT: &str = include_str!("../assets/objediting/core/object.lua");
+const LUA_CORE_READBUFFER: &str = include_str!("../assets/objediting/core/readbuffer.lua");
+const LUA_CORE_WRITEBUFFER: &str = include_str!("../assets/objediting/core/writebuffer.lua");
+const LUA_CORE_DUMMPER: &str = include_str!("../assets/objediting/core/dummper.lua");
+const LUA_CORE_OBJECTREADER: &str = include_str!("../assets/objediting/core/objectreader.lua");
+const LUA_CORE_OBJECTWRITER: &str = include_str!("../assets/objediting/core/objectwriter.lua");
+const LUA_OBJ_ABILITY: &str = include_str!("../assets/objediting/object/AbilityObjEditing.lua");
+const LUA_OBJ_BUFF: &str = include_str!("../assets/objediting/object/BuffObjEditing.lua");
+const LUA_OBJ_DESTRUCTABLE: &str =
+    include_str!("../assets/objediting/object/DestructableObjEditing.lua");
+const LUA_OBJ_ITEM: &str = include_str!("../assets/objediting/object/ItemObjEditing.lua");
+const LUA_OBJ_UNIT: &str = include_str!("../assets/objediting/object/UnitObjEditing.lua");
+const LUA_OBJ_UPGRADE: &str = include_str!("../assets/objediting/object/UpgradeObjEditing.lua");
+const LUA_APPLICATION: &str = include_str!("../assets/objediting/application.lua");
 
 /// TS checkDefine（DV9：执行时检查而非会话启动时）。res 资源缺失静默跳过。
 pub fn check_define(root: &Path, res_dir: &Path) -> Result<()> {
@@ -72,7 +95,7 @@ fn prepare_object_files(ctx: &BuildContext) -> Result<PathBuf> {
 }
 
 /// TS ObjEditing.execute：def 检查 → 脚本发现（无则跳过）→ classic 地图校验 →
-/// 清空产物目录 → 源准备 → ObjEditing.exe。
+/// 清空产物目录 → 源准备 → 嵌入式 Lua VM 执行。
 pub fn execute(ctx: &BuildContext, res_dir: &Path) -> Result<()> {
     check_define(&ctx.root, res_dir)?;
     let Some(script) = find_script(&ctx.root, ctx.opts.classic) else {
@@ -88,31 +111,107 @@ pub fn execute(ctx: &BuildContext, res_dir: &Path) -> Result<()> {
     let out_dir = ctx.build_dir().join("objediting");
     recreate_dir(&out_dir)?;
     let source_dir = prepare_object_files(ctx)?;
-    let exe = res_dir.join("ObjEditing.exe");
-    if !exe.is_file() {
-        return Err(Error::with_args(
-            "error.notFound",
-            "Not found ObjEditing.exe",
-            vec!["ObjEditing.exe".into()],
-        ));
-    }
-    let output = std::process::Command::new(&exe)
-        .arg("-m")
-        .arg(&source_dir)
-        .arg("-o")
-        .arg(&out_dir)
-        .arg(&script)
-        .output()
-        .map_err(|e| Error::new("error.io", format!("{}: {e}", exe.display())))?;
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    // TS utils.execFile 语义：非零退出或 stderr 非空均视为失败
-    if !output.status.success() || !stderr.trim().is_empty() {
-        return Err(Error::new(
-            "error.processFilesFailure",
-            format!("ObjEditing failed ({}): {}", output.status, stderr.trim()),
-        ));
-    }
+    run_objediting_lua(&source_dir, &out_dir, &script, &ctx.root)?;
     Ok(())
+}
+
+/// 嵌入式 ObjEditing Lua VM 执行（替代 ObjEditing.exe 子进程）。
+/// 复刻 C++ 宿主行为：创建带自定义 _ENV 的 Lua 5.4 VM、注册 os.chdir、
+/// 依序加载内部模块、最后由 application.lua 读源文件→执行用户脚本→写产物。
+fn run_objediting_lua(
+    source_dir: &Path,
+    out_dir: &Path,
+    script: &Path,
+    project_root: &Path,
+) -> Result<()> {
+    // 保存当前工作目录，Lua VM 执行后恢复（application.lua 通过 os.chdir 切换目录）
+    let original_cwd =
+        std::env::current_dir().map_err(|e| Error::new("error.io", format!("getcwd: {e}")))?;
+
+    // ObjEditing 需要完整 stdlib（io.open 读写二进制文件、os.chdir 切目录）
+    let lua = unsafe { mlua::Lua::unsafe_new() };
+
+    // 注册 os.chdir（C++ 版用 SetCurrentDirectoryW，Rust 版用 std::env::set_current_dir）
+    let os: mlua::Table = lua.globals().get("os").map_err(lua_err)?;
+    os.set(
+        "chdir",
+        lua.create_function(|_, dir: String| {
+            std::env::set_current_dir(&dir).map_err(|e| {
+                mlua::Error::external(format!("unable to switch to directory '{dir}': {e}"))
+            })?;
+            Ok(true)
+        })
+        .map_err(lua_err)?,
+    )
+    .map_err(lua_err)?;
+
+    // package.path 指向 .def 目录（用户脚本 require 字段定义用）
+    let def_dir = project_root
+        .join(".def")
+        .to_string_lossy()
+        .replace('\\', "/");
+    lua.load(format!(
+        "package.path = [[{def_dir}/?.lua;{def_dir}/?/init.lua;]] .. package.path"
+    ))
+    .exec()
+    .map_err(lua_err)?;
+
+    // 设置 args 表（与 C++ 宿主注入的结构一致）
+    let args = lua.create_table().map_err(lua_err)?;
+    args.set("map", source_dir.to_string_lossy().replace('\\', "/"))
+        .map_err(lua_err)?;
+    args.set("output", out_dir.to_string_lossy().replace('\\', "/"))
+        .map_err(lua_err)?;
+    args.set("dump", false).map_err(lua_err)?;
+    let files_table = lua.create_table().map_err(lua_err)?;
+    files_table
+        .set(1, script.to_string_lossy().replace('\\', "/"))
+        .map_err(lua_err)?;
+    args.set("files", files_table).map_err(lua_err)?;
+    lua.globals().set("args", args).map_err(lua_err)?;
+
+    // 按 C++ 宿主 luasource.h 顺序加载内部模块
+    let sources: &[(&str, &str)] = &[
+        ("base/string.lua", LUA_BASE_STRING),
+        ("base/table.lua", LUA_BASE_TABLE),
+        ("base/class.lua", LUA_BASE_CLASS),
+        ("core/checker.lua", LUA_CORE_CHECKER),
+        ("core/enum.lua", LUA_CORE_ENUM),
+        ("core/object.lua", LUA_CORE_OBJECT),
+        ("core/readbuffer.lua", LUA_CORE_READBUFFER),
+        ("core/writebuffer.lua", LUA_CORE_WRITEBUFFER),
+        ("core/dummper.lua", LUA_CORE_DUMMPER),
+        ("core/objectreader.lua", LUA_CORE_OBJECTREADER),
+        ("core/objectwriter.lua", LUA_CORE_OBJECTWRITER),
+        ("object/AbilityObjEditing.lua", LUA_OBJ_ABILITY),
+        ("object/BuffObjEditing.lua", LUA_OBJ_BUFF),
+        ("object/DestructableObjEditing.lua", LUA_OBJ_DESTRUCTABLE),
+        ("object/ItemObjEditing.lua", LUA_OBJ_ITEM),
+        ("object/UnitObjEditing.lua", LUA_OBJ_UNIT),
+        ("object/UpgradeObjEditing.lua", LUA_OBJ_UPGRADE),
+        ("application.lua", LUA_APPLICATION),
+    ];
+    for (name, source) in sources {
+        lua.load(*source)
+            .set_name(format!("@{name}"))
+            .exec()
+            .map_err(|e| {
+                // 恢复 CWD 再报错
+                let _ = std::env::set_current_dir(&original_cwd);
+                Error::new(
+                    "error.processFilesFailure",
+                    format!("ObjEditing Lua error in {name}: {e}"),
+                )
+            })?;
+    }
+
+    // 恢复原始工作目录
+    let _ = std::env::set_current_dir(&original_cwd);
+    Ok(())
+}
+
+fn lua_err(e: mlua::Error) -> Error {
+    Error::new("error.processFilesFailure", format!("ObjEditing: {e}"))
 }
 
 #[cfg(test)]
@@ -266,19 +365,31 @@ mod tests {
     }
 
     #[test]
-    fn execute_classic_dir_map_rejected_and_exe_missing_reported() {
+    fn execute_classic_dir_map_rejected() {
         let d = tempdir();
         std::fs::write(d.join("warcraft.json"), r#"{ "mapdir": "map" }"#).unwrap();
         std::fs::create_dir_all(d.join("map")).unwrap();
         std::fs::create_dir_all(d.join("objediting")).unwrap();
-        std::fs::write(d.join("objediting/main.lua"), "x").unwrap();
+        std::fs::write(d.join("objediting/main.lua"), "-- noop").unwrap();
         let res = make_res(&d, "v1");
         let err = execute(&ctx(&d, true), &res).unwrap_err();
         assert_eq!(err.key, "error.invalidMapFile");
-        // reforge + 脚本存在 + exe 缺失
-        let err = execute(&ctx(&d, false), &res).unwrap_err();
-        assert_eq!(err.key, "error.notFound");
-        assert!(err.message.contains("ObjEditing.exe"));
+        std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    #[test]
+    fn execute_reforge_with_script_runs_lua_vm() {
+        let d = tempdir();
+        std::fs::write(d.join("warcraft.json"), r#"{ "mapdir": "map" }"#).unwrap();
+        std::fs::create_dir_all(d.join("map")).unwrap();
+        std::fs::create_dir_all(d.join("objediting")).unwrap();
+        // 用户脚本不需要做任何事——验证 VM 启动并成功返回
+        std::fs::write(d.join("objediting/main.lua"), "-- empty objediting script").unwrap();
+        std::fs::create_dir_all(d.join(".def")).unwrap();
+        let res = make_res(&d, "v1");
+        execute(&ctx(&d, false), &res).unwrap();
+        // application.lua 会创建产物目录并写空的 object 文件（无定义时产生空或不产生）
+        assert!(d.join(".build/objediting").is_dir(), "产物目录已创建");
         std::fs::remove_dir_all(&d).unwrap();
     }
 }

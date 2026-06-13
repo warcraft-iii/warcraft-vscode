@@ -531,10 +531,33 @@ mod tests {
             r#"{ "mapdir": "map.w3x", "jassfile": "war3map.j" }"#,
         )
         .unwrap();
+        // 预置陈旧产物，使下方 !exists 断言真正验证预删除逻辑（非空洞断言）
+        std::fs::create_dir_all(root.join(".build")).unwrap();
+        std::fs::write(root.join(".build/origwar3map.lua.extracted"), "stale").unwrap();
         let err = compile_debug(&ctx(&root, false, false)).unwrap_err();
         assert_eq!(err.key, "error.noMapScriptFile");
         // 验证失败构建不留陈旧提取产物
         assert!(!root.join(".build/origwar3map.lua.extracted").exists());
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn classic_failed_extraction_removes_stale_jass() {
+        let root = synth_project();
+        // 预置陈旧 war3map.j，验证提取失败时被预删除
+        std::fs::create_dir_all(root.join(".build")).unwrap();
+        std::fs::write(root.join(".build/war3map.j"), "stale").unwrap();
+        crate::mpq::create_archive(
+            &root.join("map.w3x"),
+            &[("dummy.txt".into(), root.join("map/war3map.lua"))],
+            true,
+        )
+        .unwrap();
+        // 无 jassfile 字段 → 走地图提取
+        std::fs::write(root.join("warcraft.json"), r#"{ "mapdir": "map.w3x" }"#).unwrap();
+        let err = compile_debug(&ctx(&root, false, true)).unwrap_err();
+        assert_eq!(err.key, "error.noMapScriptFile");
+        assert!(!root.join(".build/war3map.j").exists(), "陈旧产物被预删除");
         std::fs::remove_dir_all(&root).unwrap();
     }
 

@@ -52,6 +52,54 @@ enum Command {
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },
+    /// Run object editing (requires ObjEditing.exe in --res-dir)
+    Objediting {
+        /// Project root (contains warcraft.json)
+        project: PathBuf,
+        #[arg(short, long)]
+        classic: bool,
+        /// Override mapdir (file or folder)
+        #[arg(short, long)]
+        map: Option<PathBuf>,
+        /// Directory containing ObjEditing.exe / def.zip (defaults next to wc3.exe)
+        #[arg(long)]
+        res_dir: Option<PathBuf>,
+    },
+    /// Pack .build outputs and imports into a map archive (requires prior compile)
+    Pack {
+        /// Project root (contains warcraft.json)
+        project: PathBuf,
+        #[arg(short, long)]
+        release: bool,
+        #[arg(short, long)]
+        classic: bool,
+        /// Override mapdir (file or folder)
+        #[arg(short, long)]
+        map: Option<PathBuf>,
+        /// Copy resulting archive to this path
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
+    /// objediting + compile + pack in one go
+    Build {
+        /// Project root (contains warcraft.json)
+        project: PathBuf,
+        #[arg(short, long)]
+        release: bool,
+        #[arg(short, long)]
+        classic: bool,
+        /// Override mapdir (file or folder)
+        #[arg(short, long)]
+        map: Option<PathBuf>,
+        /// Copy resulting archive to this path
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+        #[arg(long, value_enum, default_value = "disable")]
+        confusion: ConfusionArg,
+        /// Directory containing ObjEditing.exe / def.zip / wc3-confuse.exe (defaults next to wc3.exe)
+        #[arg(long)]
+        res_dir: Option<PathBuf>,
+    },
 }
 
 fn progress(step: &str, message: &str) {
@@ -70,6 +118,49 @@ fn res_dir_or_exe_dir(res_dir: Option<PathBuf>) -> PathBuf {
     })
 }
 
+fn make_ctx(
+    project: &std::path::Path,
+    release: bool,
+    classic: bool,
+    map: Option<PathBuf>,
+    confusion: Confusion,
+) -> wc3_core::error::Result<BuildContext> {
+    let config = ProjectConfig::load(project)?;
+    Ok(BuildContext::new(
+        project,
+        config,
+        BuildOptions {
+            release,
+            classic,
+            map,
+            confusion,
+        },
+    ))
+}
+
+fn copy_output(from: &std::path::Path, to: &std::path::Path) -> wc3_core::error::Result<()> {
+    if let Some(dir) = to.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| wc3_core::error::Error::io(dir, e))?;
+    }
+    std::fs::copy(from, to).map_err(|e| wc3_core::error::Error::io(to, e))?;
+    Ok(())
+}
+
+fn finish(result: wc3_core::error::Result<()>) -> ExitCode {
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "event": "error", "key": e.key, "message": e.message, "args": e.args
+                })
+            );
+            ExitCode::FAILURE
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
     match cli.command {
@@ -80,45 +171,81 @@ fn main() -> ExitCode {
             map,
             confusion,
             res_dir,
-        } => {
-            let run = || -> wc3_core::error::Result<()> {
-                let config = ProjectConfig::load(&project)?;
-                let ctx = BuildContext::new(
-                    &project,
-                    config,
-                    BuildOptions {
-                        release,
-                        classic,
-                        map,
-                        confusion: confusion.into(),
-                    },
-                );
-                let dir = res_dir_or_exe_dir(res_dir);
-                let confuse = dir.join("wc3-confuse.exe");
-                let tools = Tools {
-                    confuse_exe: confuse.exists().then_some(confuse.as_path()),
-                };
-                progress("compile", "Compiling script");
-                if release {
-                    compile_release(&ctx, &tools)?;
-                } else {
-                    compile_debug(&ctx)?;
-                }
-                progress("compile", "done");
-                Ok(())
+        } => finish((|| {
+            let ctx = make_ctx(&project, release, classic, map, confusion.into())?;
+            let dir = res_dir_or_exe_dir(res_dir);
+            let confuse = dir.join("wc3-confuse.exe");
+            let tools = Tools {
+                confuse_exe: confuse.exists().then_some(confuse.as_path()),
             };
-            match run() {
-                Ok(()) => ExitCode::SUCCESS,
-                Err(e) => {
-                    println!(
-                        "{}",
-                        serde_json::json!({
-                            "event": "error", "key": e.key, "message": e.message, "args": e.args
-                        })
-                    );
-                    ExitCode::FAILURE
-                }
+            progress("compile", "Compiling script");
+            if release {
+                compile_release(&ctx, &tools)?;
+            } else {
+                compile_debug(&ctx)?;
             }
-        }
+            progress("compile", "done");
+            Ok(())
+        })()),
+        Command::Objediting {
+            project,
+            classic,
+            map,
+            res_dir,
+        } => finish((|| {
+            let ctx = make_ctx(&project, false, classic, map, Confusion::Disable)?;
+            let dir = res_dir_or_exe_dir(res_dir);
+            progress("objediting", "Object editing");
+            wc3_core::objediting::execute(&ctx, &dir)?;
+            progress("objediting", "done");
+            Ok(())
+        })()),
+        Command::Pack {
+            project,
+            release,
+            classic,
+            map,
+            output,
+        } => finish((|| {
+            let ctx = make_ctx(&project, release, classic, map, Confusion::Disable)?;
+            progress("pack", "Packing map");
+            let out = wc3_core::packer::pack(&ctx)?;
+            if let Some(o) = &output {
+                copy_output(&out, o)?;
+            }
+            progress("pack", "done");
+            Ok(())
+        })()),
+        Command::Build {
+            project,
+            release,
+            classic,
+            map,
+            output,
+            confusion,
+            res_dir,
+        } => finish((|| {
+            let ctx = make_ctx(&project, release, classic, map, confusion.into())?;
+            let dir = res_dir_or_exe_dir(res_dir);
+            progress("objediting", "Object editing");
+            wc3_core::objediting::execute(&ctx, &dir)?;
+            progress("compile", "Compiling script");
+            let confuse = dir.join("wc3-confuse.exe");
+            let tools = Tools {
+                confuse_exe: confuse.exists().then_some(confuse.as_path()),
+            };
+            if release {
+                compile_release(&ctx, &tools)?;
+            } else {
+                compile_debug(&ctx)?;
+            }
+            progress("pack", "Packing map");
+            let out = wc3_core::packer::pack(&ctx)?;
+            if let Some(o) = &output {
+                copy_output(&out, o)?;
+            }
+            progress("build", "done");
+            Ok(())
+        })()),
     }
 }

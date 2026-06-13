@@ -198,16 +198,43 @@ fn run_objediting_lua(
             .map_err(|e| {
                 // 恢复 CWD 再报错
                 let _ = std::env::set_current_dir(&original_cwd);
-                Error::new(
-                    "error.processFilesFailure",
-                    format!("ObjEditing Lua error in {name}: {e}"),
-                )
+                let msg = e.to_string();
+                // 从 Lua traceback 提取用户脚本文件和行号
+                let (file, line) = extract_user_script_location(&msg);
+                let mut err = Error::new("error.processFilesFailure", format!("ObjEditing: {msg}"));
+                err.file = file;
+                err.line = line;
+                err
             })?;
     }
 
     // 恢复原始工作目录
     let _ = std::env::set_current_dir(&original_cwd);
     Ok(())
+}
+
+/// 从 ObjEditing Lua 错误 traceback 中提取用户脚本位置。
+/// 典型格式: "runtime error: C:/.../objediting/main.lua:5: message"
+fn extract_user_script_location(msg: &str) -> (Option<String>, Option<u32>) {
+    // 找 .lua:数字: 模式
+    for segment in msg.lines() {
+        let segment = segment.trim();
+        if let Some(idx) = segment.find(".lua:") {
+            let after = &segment[idx + 5..];
+            if let Some(colon) = after.find(':') {
+                if let Ok(line) = after[..colon].trim().parse::<u32>() {
+                    // 提取文件路径(取最后一个路径分隔符之后的部分)
+                    let before = &segment[..idx + 4]; // 含 .lua
+                    let file = before
+                        .rsplit(['/', '\\', ' '])
+                        .next()
+                        .unwrap_or(before);
+                    return (Some(file.to_string()), Some(line));
+                }
+            }
+        }
+    }
+    (None, None)
 }
 
 fn lua_err(e: mlua::Error) -> Error {

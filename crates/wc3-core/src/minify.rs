@@ -77,7 +77,19 @@ pub fn minify(source: &str) -> Result<String> {
             .map(|e| e.to_string())
             .collect::<Vec<_>>()
             .join("; ");
-        Error::new("error.processFilesFailure", format!("minify: {msg}"))
+        // 尝试从 full-moon 错误消息提取行号（格式 "starting from line X, character Y"）
+        let line = errors.first().and_then(|e| {
+            let s = e.to_string();
+            s.find("line ").and_then(|i| {
+                s[i + 5..]
+                    .split(|c: char| !c.is_ascii_digit())
+                    .next()
+                    .and_then(|n| n.parse::<u32>().ok())
+            })
+        });
+        let mut err = Error::new("error.processFilesFailure", format!("minify: {msg}"));
+        err.line = line;
+        err
     })?;
     // 反向迭代规避 full-moon Tokens::next() 的 remove(0) O(n²)（node.rs:84）；随后按字节位置排序恢复源序。
     let mut tokens: Vec<_> = ast

@@ -95,3 +95,18 @@ wc3 build      <project> [--release] [--classic] [--map <p>] [--output <p>]
 2. **stormlib API 缺口**：已对照 lib.rs——create/open/write_file/add_file/remove_file/compact/has_file/read_all 齐备，预计零改动；万一有缺口按 P3 处理。
 3. **CI 构建时长**：静态链 StormLib（cmake + MSVC）增加首次构建时间，Swatinem/rust-cache 缓存兜底。
 4. **MPQ 内路径分隔符**：TS `path.relative` 在 Windows 产生 `\` 分隔名，MPQ 约定亦为 `\`；Rust 侧归档内名需统一用 `\`（与 fsutil 的 posix 名区分），TS 对照归档测试兜底。
+
+## 8. 实施结果（2026-06-13）
+
+- stormlib git 依赖锁定 rev：`06ceb1de710177140ade76bfbb9fff0ec3a1ce16`（MopaqPack-rs 无需修改）。
+- cmake 4.x spike 结果：一次通过（cmake 4.2.3 配置 StormLib 无 policy 报错）。
+- 全 gate green（96 个测试：92 单测 + 2 compile golden + 2 pack golden）。
+- 人工验收（待用户执行）：真实工程 `wc3 build` 与 TS 管线产物互换、游戏加载各一次。
+
+### 补充偏差记录
+
+| # | 偏差 | 理由 |
+|---|---|---|
+| DV12 | walkdir 不跟随符号链接（TS fs.stat 跟随）；影响 collect_pack_files 和 collect_source_lua_files | Windows 上符号链接需 dev 模式/管理员权限，实际工程不使用；walkdir 默认不跟随是安全默认值 |
+| DV13 | lib_names 按字节序排序（A < a），NTFS readdir 为大小写不敏感排序；仅在两个不同 lib 含同名 imports 文件且 lib 名大小写混合时覆盖优先级与 TS 不同 | 实际工程 lib 名全小写；TS 从未保证该顺序 |
+| DV14 | res 资源损坏（def.zip 无法解压/json 格式错误）时 objediting 步骤 hard-fail；TS 中 checkDefine 是 fire-and-forget 构造函数 Promise，损坏不阻塞构建 | fail-loud 是更安全的行为；spec 仅声明「缺失时跳过」，损坏属不同语义 |

@@ -30,23 +30,64 @@ pub fn posix_relative(root: &Path, file: &Path) -> Result<String> {
         .join("/"))
 }
 
+/// TS path.relative 原生分隔符版：MPQ 归档内名用 `\`（spec 阶段 2 §7 风险 4）。
+pub fn windows_relative(root: &Path, file: &Path) -> Result<String> {
+    let rel = file.strip_prefix(root).map_err(|_| {
+        Error::new(
+            "error.io",
+            format!("{} not under {}", file.display(), root.display()),
+        )
+    })?;
+    Ok(rel
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy())
+        .collect::<Vec<_>>()
+        .join("\\"))
+}
+
+/// walkdir 遍历错误 → 带路径的 Error（collect_* 共用）。
+fn walk_error(root: &Path, e: walkdir::Error) -> Error {
+    let p = e.path().unwrap_or(root).to_path_buf();
+    match e.into_io_error() {
+        Some(io) => Error::io(&p, io),
+        None => Error::new("error.io", format!("{}: walk error", p.display())),
+    }
+}
+
 /// 递归收集 root 下非隐藏 .lua 文件，按 posix 相对路径字典序（DV5）。
 /// 遍历错误（权限/IO）直接上抛——静默丢文件会产出缺模块的坏地图（与 TS 抛错对齐）。
 pub fn collect_source_lua_files(root: &Path) -> Result<Vec<PathBuf>> {
     let mut files: Vec<PathBuf> = Vec::new();
     for entry in walkdir::WalkDir::new(root) {
-        let entry = entry.map_err(|e| {
-            let p = e.path().unwrap_or(root).to_path_buf();
-            match e.into_io_error() {
-                Some(io) => Error::io(&p, io),
-                None => Error::new("error.io", format!("{}: walk error", p.display())),
-            }
-        })?;
+        let entry = entry.map_err(|e| walk_error(root, e))?;
         if !entry.file_type().is_file() {
             continue;
         }
         let p = entry.into_path();
         if is_lua_file(&p) && !is_hidden_file(&p) {
+            files.push(p);
+        }
+    }
+    files.sort_by_cached_key(|p| {
+        posix_relative(root, p).expect("walkdir entry is always under root")
+    });
+    Ok(files)
+}
+
+/// 递归收集 root 下全部非隐藏文件（packer 用）；root 不存在或非目录返回空
+/// （TS generatePackItems）。按 posix 相对路径字典序（DV5）。
+pub fn collect_pack_files(root: &Path) -> Result<Vec<PathBuf>> {
+    if !root.is_dir() {
+        return Ok(Vec::new());
+    }
+    let mut files: Vec<PathBuf> = Vec::new();
+    for entry in walkdir::WalkDir::new(root) {
+        let entry = entry.map_err(|e| walk_error(root, e))?;
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        let p = entry.into_path();
+        if !is_hidden_file(&p) {
             files.push(p);
         }
     }
@@ -100,6 +141,34 @@ mod tests {
             .map(|f| posix_relative(&dir, f).unwrap())
             .collect();
         assert_eq!(rel, vec!["lib/util.lua", "main.lua"]);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn windows_relative_uses_backslash() {
+        let root = std::path::Path::new("C:/p");
+        let f = std::path::Path::new("C:/p/imports/sub/a.txt");
+        assert_eq!(windows_relative(root, f).unwrap(), r"imports\sub\a.txt");
+    }
+
+    #[test]
+    fn collects_all_pack_files_sorted_nonhidden() {
+        let dir = tempdir();
+        std::fs::create_dir_all(dir.join("sub")).unwrap();
+        std::fs::write(dir.join("b.txt"), "x").unwrap();
+        std::fs::write(dir.join("a.lua"), "x").unwrap(); // pack 不排 lua（map 目录的排除在 packer 层）
+        std::fs::write(dir.join(".hidden.txt"), "x").unwrap();
+        std::fs::write(dir.join("@gen.lua"), "x").unwrap(); // @ 前缀 lua 隐藏
+        std::fs::write(dir.join("sub/c.txt"), "x").unwrap();
+        let files = collect_pack_files(&dir).unwrap();
+        let rel: Vec<String> = files
+            .iter()
+            .map(|f| posix_relative(&dir, f).unwrap())
+            .collect();
+        assert_eq!(rel, vec!["a.lua", "b.txt", "sub/c.txt"]);
+        // 不存在/非目录 → 空（TS generatePackItems 行为）
+        assert!(collect_pack_files(&dir.join("nope")).unwrap().is_empty());
+        assert!(collect_pack_files(&dir.join("b.txt")).unwrap().is_empty());
         std::fs::remove_dir_all(&dir).unwrap();
     }
 

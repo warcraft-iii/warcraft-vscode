@@ -25,4 +25,26 @@ foreach ($f in $fixtures) {
     }
     Remove-Item -Recurse -Force "$proj/.build"
 }
+# pack 黄金：仅 basic × reforge 两象限（classic 需真实 .w3x 基底，由 Rust 侧 packer 单测自洽覆盖）。
+# TS cli 的 pack 子命令对空 -t 会把 mapdir 重置为工程根（无 guard），必须显式传 -t map。
+if (-not (Test-Path (Join-Path $root 'bin/MopaqPack-rs.exe'))) {
+    throw 'bin/MopaqPack-rs.exe missing - build: cargo build --release --manifest-path ../MopaqPack-rs/Cargo.toml; cp to bin/'
+}
+$packQuads = @(
+    @{ name = 'debug-reforge';   args = @();     out = '_warcraft_vscode_test' },
+    @{ name = 'release-reforge'; args = @('-r'); out = 'release' }
+)
+$proj = Join-Path $root 'testdata/fixtures/basic'
+foreach ($q in $packQuads) {
+    if (Test-Path "$proj/.build") { Remove-Item -Recurse -Force "$proj/.build" }
+    node (Join-Path $root 'bin/cli.js') pack $proj -t map @($q.args)
+    if ($LASTEXITCODE -ne 0) { throw "pack failed: $($q.name)" }
+    $src = "$proj/.build/$($q.out)"
+    if (-not (Test-Path $src)) { throw "missing archive: $($q.name)" }
+    $dst = Join-Path $root "testdata/golden/basic/$($q.name)-pack"
+    if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
+    New-Item -ItemType Directory -Force $dst | Out-Null
+    Copy-Item $src $dst -Force
+    Remove-Item -Recurse -Force "$proj/.build"
+}
 Write-Host 'golden baseline updated.'

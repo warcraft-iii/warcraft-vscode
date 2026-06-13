@@ -10,14 +10,22 @@ import * as utils from '../utils';
 
 import { checker } from './option';
 import { env } from '../env';
+import { WarcraftBuildError } from './bridge';
+import { clearDiagnostics, reportBuildError } from './diagnostics';
 
 export function registerCommand(name: string, task: () => Promise<void>) {
     return vscode.commands.registerCommand('extension.warcraft.' + name, async () => {
         try {
             await env.config.waitLoaded();
+            clearDiagnostics();
             await utils.withReport(task);
         } catch (error) {
-            vscode.window.showWarningMessage(`[Warcraft vscode] ${error.message}`);
+            if (error instanceof WarcraftBuildError) {
+                await reportBuildError(error);
+                vscode.window.showWarningMessage(`[Warcraft vscode] ${error.message}`);
+            } else {
+                vscode.window.showWarningMessage(`[Warcraft vscode] ${error.message}`);
+            }
         }
     });
 }

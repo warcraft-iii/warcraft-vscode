@@ -94,9 +94,10 @@ impl Visitor for Finder {
 fn bad_arg(file: &str, line: usize) -> Error {
     Error::with_args(
         "error.processFilesFailure",
-        format!("File: {file}\nLine: {line}\nError: Incorrect compiletime argument"),
+        "Incorrect compiletime argument".to_string(),
         vec![file.to_string()],
     )
+    .with_location(file, Some(line as u32))
 }
 
 /// TS initLuaEngine：在标准 io 库上注入 readFile/writeFile。
@@ -126,11 +127,37 @@ pub fn make_lua() -> Result<mlua::Lua> {
 }
 
 fn lua_err(e: mlua::Error, file: &str) -> Error {
+    // mlua RuntimeError 格式: "[string \"file\"]:LINE: message" — 尝试提取行号
+    let msg = e.to_string();
+    let line = extract_lua_error_line(&msg);
     Error::with_args(
         "error.processFilesFailure",
-        format!("File: {file}\nError: {e}"),
+        msg.clone(),
         vec![file.to_string()],
     )
+    .with_location(file, line)
+}
+
+/// 从 Lua 错误消息中提取行号（格式 `[string "..."]:LINE:` 或 `file:LINE:`）
+fn extract_lua_error_line(msg: &str) -> Option<u32> {
+    // 匹配 ]:数字: 或 .lua:数字:
+    if let Some(pos) = msg.find("]:") {
+        let after = &msg[pos + 2..];
+        if let Some(colon) = after.find(':') {
+            return after[..colon].trim().parse().ok();
+        }
+    }
+    // fallback: file.lua:数字:
+    for part in msg.split('\n') {
+        let part = part.trim();
+        if let Some(idx) = part.find(".lua:") {
+            let after = &part[idx + 5..];
+            if let Some(colon) = after.find(':') {
+                return after[..colon].trim().parse().ok();
+            }
+        }
+    }
+    None
 }
 
 /// 对含 compiletime 的源码做求值替换（DV2：区间替换，不重打印 AST）。
@@ -145,10 +172,7 @@ pub fn process(lua: &mlua::Lua, source: &str, file: &str) -> Result<String> {
             .map(|e| e.to_string())
             .collect::<Vec<_>>()
             .join("; ");
-        Error::new(
-            "error.processFilesFailure",
-            format!("File: {file}\nError: {msg}"),
-        )
+        Error::new("error.processFilesFailure", msg).with_location(file, None)
     })?;
     let mut finder = Finder::default();
     finder.visit_ast(&ast);
@@ -293,11 +317,9 @@ mod tests {
         let lua = make_lua().unwrap();
         let err = process(&lua, "local x = compiletime(42)", "bad.lua").unwrap_err();
         assert_eq!(err.key, "error.processFilesFailure");
-        assert_eq!(
-            err.message,
-            "File: bad.lua\nLine: 1\nError: Incorrect compiletime argument"
-        );
-        assert_eq!(err.args, vec!["bad.lua".to_string()]);
+        assert_eq!(err.message, "Incorrect compiletime argument");
+        assert_eq!(err.file.as_deref(), Some("bad.lua"));
+        assert_eq!(err.line, Some(1));
     }
 
     #[test]
@@ -305,7 +327,8 @@ mod tests {
         let lua = make_lua().unwrap();
         let err = process(&lua, "y = 1\nx = compiletime(function() end, 2)", "f.lua").unwrap_err();
         assert_eq!(err.key, "error.processFilesFailure");
-        assert!(err.message.contains("Line: 2"), "{}", err.message);
+        assert_eq!(err.file.as_deref(), Some("f.lua"));
+        assert_eq!(err.line, Some(2));
     }
 
     #[test]

@@ -163,13 +163,19 @@ fn process_file(
     }
     let required = require_graph::scan_requires(&body);
     let minified = minify::minify(&body).map_err(|mut e| {
-        e.message = format!("File: {name}\n{}", e.message);
+        e.file = Some(name.clone());
         e
     })?;
     drop(body); // 递归前释放未压缩源码，避免深链上持有大字符串
-    files.insert(name, minified);
+    files.insert(name.clone(), minified);
     for item in required {
-        process_module(ctx, lua, src, files, &item, depth + 1)?;
+        process_module(ctx, lua, src, files, &item, depth + 1).map_err(|mut e| {
+            // 若子模块解析失败且无 file 定位，附加「引用自」上下文
+            if e.file.is_none() {
+                e.file = Some(name.clone());
+            }
+            e
+        })?;
     }
     Ok(())
 }

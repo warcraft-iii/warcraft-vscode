@@ -150,12 +150,16 @@ fn finish(result: wc3_core::error::Result<()>) -> ExitCode {
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
-            println!(
-                "{}",
-                serde_json::json!({
-                    "event": "error", "key": e.key, "message": e.message, "args": e.args
-                })
-            );
+            let mut json = serde_json::json!({
+                "event": "error", "key": e.key, "message": e.message, "args": e.args
+            });
+            if let Some(file) = &e.file {
+                json["file"] = serde_json::Value::String(file.clone());
+            }
+            if let Some(line) = e.line {
+                json["line"] = serde_json::Value::Number(line.into());
+            }
+            println!("{json}");
             ExitCode::FAILURE
         }
     }

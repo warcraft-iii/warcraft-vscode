@@ -19,8 +19,27 @@ export interface BuildOptions {
 }
 
 interface NdjsonProgress { event: 'progress'; step: string; message: string; }
-interface NdjsonError { event: 'error'; key: string; message: string; args: string[]; }
+interface NdjsonError { event: 'error'; key: string; message: string; args: string[]; file?: string; line?: number; }
 type NdjsonEvent = NdjsonProgress | NdjsonError;
+
+/**
+ * 结构化构建错误——携带源文件定位信息，供 VS Code Diagnostics 使用。
+ */
+export class WarcraftBuildError extends Error {
+    readonly key: string;
+    readonly args: string[];
+    readonly file?: string;     // 相对于工程根的源文件路径
+    readonly line?: number;     // 1-based 行号
+
+    constructor(ev: NdjsonError) {
+        super(ev.message);
+        this.name = 'WarcraftBuildError';
+        this.key = ev.key;
+        this.args = ev.args;
+        this.file = ev.file;
+        this.line = ev.line;
+    }
+}
 
 function wc3ExePath(): string {
     return env.asExetensionPath('bin/wc3.exe');
@@ -32,7 +51,7 @@ function resDir(): string {
 
 /**
  * spawn wc3.exe 子命令，逐行解析 NDJSON stdout，驱动 withProgress 通知。
- * 失败时 throw Error（message = NDJSON error.message 或 stderr）。
+ * 失败时 throw WarcraftBuildError（携带 key/args/file/line）或普通 Error。
  */
 export async function runWc3(
     subcommand: 'compile' | 'pack' | 'objediting' | 'build',
@@ -81,11 +100,10 @@ export async function runWc3(
             child.on('close', (code) => {
                 if (code === 0) {
                     resolve();
+                } else if (lastError) {
+                    reject(new WarcraftBuildError(lastError));
                 } else {
-                    const msg = lastError
-                        ? lastError.message
-                        : (stderrBuf.trim() || `wc3 ${subcommand} failed (exit ${code})`);
-                    reject(new Error(msg));
+                    reject(new Error(stderrBuf.trim() || `wc3 ${subcommand} failed (exit ${code})`));
                 }
             });
             child.on('error', (err) => {

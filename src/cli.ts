@@ -15,7 +15,7 @@ function wc3Exe(): string {
 }
 
 function spawn(args: string[]): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const child = cp.spawn(wc3Exe(), args, { stdio: 'inherit' });
         child.on('close', (code) => (code === 0 ? resolve() : process.exit(code || 1)));
         child.on('error', (err) => {

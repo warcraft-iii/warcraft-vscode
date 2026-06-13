@@ -21,7 +21,6 @@ const config = {
     devtool: "source-map",
     externals: {
         vscode: "commonjs vscode",
-        wasmoon: "./wasmoon",
     },
     resolve: {
         extensions: [".ts", ".js"]
@@ -36,18 +35,6 @@ const config = {
                 use: [
                     {
                         loader: "ts-loader"
-                    }
-                ]
-            },
-            {
-                test: /\.lua$/,
-                use: [
-                    {
-                        loader: "underscore-template-loader",
-                        options: {
-                            interpolate: /\-\-\[\[%\=([\s\S]+?)%\]\]/g,
-                            evaluate: /\-\-\[\[%\>([\s\S]+?)%\]\]/g
-                        }
                     }
                 ]
             },

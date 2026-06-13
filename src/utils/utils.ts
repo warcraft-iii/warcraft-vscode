@@ -10,9 +10,7 @@ import * as path from 'path';
 import * as got from 'got';
 import * as yauzl from 'yauzl-promise';
 import pickBy from 'lodash-es/pickBy';
-import { env } from '../env';
 import { runtime } from '../env/runtime';
-import * as proc from './proc';
 
 async function _getAllFiles(root: string, r: string[], isDir: boolean, recursive: boolean) {
     const files = (await fs.readdir(root)).map((file) => path.resolve(root, file));

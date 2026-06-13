@@ -160,12 +160,15 @@ mod tests {
         std::fs::write(dir.join(".hidden.txt"), "x").unwrap();
         std::fs::write(dir.join("@gen.lua"), "x").unwrap(); // @ 前缀 lua 隐藏
         std::fs::write(dir.join("sub/c.txt"), "x").unwrap();
+        // 点目录本身不算隐藏文件（TS isHiddenFile 只看 basename）——其内普通文件仍被收集
+        std::fs::create_dir_all(dir.join(".dot")).unwrap();
+        std::fs::write(dir.join(".dot/inside.txt"), "x").unwrap();
         let files = collect_pack_files(&dir).unwrap();
         let rel: Vec<String> = files
             .iter()
             .map(|f| posix_relative(&dir, f).unwrap())
             .collect();
-        assert_eq!(rel, vec!["a.lua", "b.txt", "sub/c.txt"]);
+        assert_eq!(rel, vec![".dot/inside.txt", "a.lua", "b.txt", "sub/c.txt"]);
         // 不存在/非目录 → 空（TS generatePackItems 行为）
         assert!(collect_pack_files(&dir.join("nope")).unwrap().is_empty());
         assert!(collect_pack_files(&dir.join("b.txt")).unwrap().is_empty());

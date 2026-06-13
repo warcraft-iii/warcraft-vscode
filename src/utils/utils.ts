@@ -144,18 +144,3 @@ export async function extractFile(zipFile: yauzl.ZipFile, output: string | Resol
 export async function downloadZip(url: string) {
     return await yauzl.fromBuffer((await got(url, { encoding: null })).body);
 }
-
-export async function extractFileFromMap(outPath: string, fileName: string) {
-    await fs.remove(outPath);
-    await fs.mkdirp(path.dirname(outPath));
-    await proc.execFile(env.asExetensionPath('bin/MopaqPack-rs.exe'), [
-        'extract',
-        '-o',
-        outPath,
-        '-m',
-        env.mapFolder,
-        '-f',
-        fileName,
-    ]);
-    return await fs.pathExists(outPath);
-}

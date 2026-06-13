@@ -66,6 +66,12 @@ pub fn add_files(map: &Path, files: &[(String, PathBuf)]) -> Result<()> {
                 format!("{} ({name}): source file missing", path.display()),
             ));
         }
+        if path.to_str().is_none() {
+            return Err(Error::new(
+                "error.io",
+                format!("non-utf8 path: {}", path.display()),
+            ));
+        }
     }
     let mut ar = stormlib::Archive::open(map, stormlib::OpenArchiveFlags::MPQ_OPEN_NO_FLAG)
         .map_err(|e| mpq_err(map, "open", e))?;

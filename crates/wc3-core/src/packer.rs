@@ -110,14 +110,14 @@ pub fn pack(ctx: &BuildContext) -> Result<PathBuf> {
         return Err(Error::with_args(
             "error.notFound",
             "Not found .build/war3map.lua (run compile first)",
-            vec!["war3map.lua".into()],
+            vec![".build/war3map.lua (run compile first)".into()],
         ));
     }
     if ctx.opts.classic && !ctx.build_dir().join("war3map.j").is_file() {
         return Err(Error::with_args(
             "error.notFound",
             "Not found .build/war3map.j (run compile first)",
-            vec!["war3map.j".into()],
+            vec![".build/war3map.j (run compile first)".into()],
         ));
     }
     let map = ctx.map_dir()?;
@@ -133,7 +133,12 @@ pub fn pack(ctx: &BuildContext) -> Result<PathBuf> {
     if map.is_dir() {
         mpq::create_archive(&out, &items, !ctx.opts.release)?;
     } else if map.is_file() {
-        std::fs::copy(&map, &out).map_err(|e| Error::io(&out, e))?;
+        std::fs::copy(&map, &out).map_err(|e| {
+            Error::new(
+                "error.io",
+                format!("copy {} -> {}: {e}", map.display(), out.display()),
+            )
+        })?;
         mpq::add_files(&out, &items)?;
     } else {
         return Err(Error::new("error.noMapFolder", "Not found: map folder"));

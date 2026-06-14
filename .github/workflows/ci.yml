@@ -17,7 +17,19 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win32-x64
+            binary: wc3.exe
+            copy_cmd: Copy-Item target\release\wc3.exe bin\wc3.exe -Force
+          - os: macos-latest
+            target: darwin-arm64
+            binary: wc3
+            copy_cmd: cp target/release/wc3 bin/wc3
+    runs-on: ${{ matrix.os }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
@@ -30,14 +42,17 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
 
       # Node toolchain
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # Rust checks
+      # Rust checks (fmt/clippy only on one OS to avoid duplicate noise)
       - name: Rust fmt
+        if: matrix.os == 'windows-latest'
         run: cargo fmt --all -- --check
       - name: Rust clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
@@ -46,15 +61,16 @@ jobs:
 
       # wc3-confuse (独立 workspace，mlua lua51 与 lua54 feature 互斥)
       - name: wc3-confuse fmt
+        if: matrix.os == 'windows-latest'
         run: cargo fmt --manifest-path crates/wc3-confuse/Cargo.toml -- --check
       - name: wc3-confuse clippy
         run: cargo clippy --manifest-path crates/wc3-confuse/Cargo.toml --all-targets --locked -- -D warnings
 
-      # Build wc3.exe (release) and place in bin/
-      - name: Build wc3.exe
+      # Build wc3 binary (release) and place in bin/
+      - name: Build wc3
         run: |
           cargo build -p wc3-cli --release
-          Copy-Item target\release\wc3.exe bin\wc3.exe -Force
+          ${{ matrix.copy_cmd }}
 
       # Node build
       - name: npm install
@@ -62,18 +78,18 @@ jobs:
       - name: Webpack build
         run: npm run build
 
-      # Upload VSIX artifact (for publish job and manual download)
+      # Package platform-specific VSIX
       - name: Package VSIX
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           npm install -g @vscode/vsce
-          vsce package -o warcraft-vscode.vsix
+          vsce package --target ${{ matrix.target }} -o warcraft-vscode-${{ matrix.target }}.vsix
       - name: Upload VSIX
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
-          name: vsix
-          path: warcraft-vscode.vsix
+          name: vsix-${{ matrix.target }}
+          path: warcraft-vscode-${{ matrix.target }}.vsix
 
   publish:
     needs: build
@@ -90,25 +106,29 @@ jobs:
           node-version: 22
       - uses: actions/download-artifact@v4
         with:
-          name: vsix
+          pattern: vsix-*
+          merge-multiple: true
 
-      # Publish to VS Code Marketplace
+      # Publish platform-specific VSIXs to Marketplace
       - name: Publish to Marketplace
         env:
           VSCE_PAT: ${{ secrets.VS_TOKEN }}
         run: |
           npm install -g @vscode/vsce
-          vsce publish --packagePath warcraft-vscode.vsix -p $VSCE_PAT
+          for vsix in warcraft-vscode-*.vsix; do
+            echo "Publishing $vsix..."
+            vsce publish --packagePath "$vsix" -p $VSCE_PAT
+          done
 
-      # Publish to npm
+      # Publish to npm (platform-independent CLI shim)
       - name: Publish to npm
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
 
-      # Create GitHub Release with VSIX
+      # Create GitHub Release with all VSIXs
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: warcraft-vscode.vsix
+          files: warcraft-vscode-*.vsix
           generate_release_notes: true

@@ -130,11 +130,7 @@ mod tests {
     #[test]
     fn build_context_paths() {
         let cfg = ProjectConfig::from_json(r#"{ "mapdir": "map" }"#).unwrap();
-        let ctx = BuildContext::new(
-            std::path::Path::new("/proj"),
-            cfg,
-            BuildOptions::default(),
-        );
+        let ctx = BuildContext::new(std::path::Path::new("/proj"), cfg, BuildOptions::default());
         assert_eq!(ctx.source_dir(), std::path::Path::new("/proj/src"));
         assert_eq!(ctx.build_dir(), std::path::Path::new("/proj/.build"));
         assert_eq!(ctx.map_dir().unwrap(), std::path::Path::new("/proj/map"));
@@ -160,20 +156,13 @@ mod tests {
             ..Default::default()
         };
         let ctx = BuildContext::new(std::path::Path::new("/proj"), cfg, opts);
-        assert_eq!(
-            ctx.map_dir().unwrap(),
-            std::path::Path::new("/abs/map.w3x")
-        );
+        assert_eq!(ctx.map_dir().unwrap(), std::path::Path::new("/abs/map.w3x"));
     }
 
     #[test]
     fn missing_mapdir_errors_with_key() {
         let cfg = ProjectConfig::from_json("{}").unwrap();
-        let ctx = BuildContext::new(
-            std::path::Path::new("/proj"),
-            cfg,
-            BuildOptions::default(),
-        );
+        let ctx = BuildContext::new(std::path::Path::new("/proj"), cfg, BuildOptions::default());
         assert_eq!(ctx.map_dir().unwrap_err().key, "error.noMapFolder");
     }
 }

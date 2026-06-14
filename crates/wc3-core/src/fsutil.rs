@@ -121,8 +121,8 @@ mod tests {
 
     #[test]
     fn posix_relative_path() {
-        let root = std::path::Path::new("C:/p/src");
-        let f = std::path::Path::new("C:/p/src/lib/util.lua");
+        let root = std::path::Path::new("/proj/src");
+        let f = std::path::Path::new("/proj/src/lib/util.lua");
         assert_eq!(posix_relative(root, f).unwrap(), "lib/util.lua");
     }
 
@@ -146,8 +146,8 @@ mod tests {
 
     #[test]
     fn windows_relative_uses_backslash() {
-        let root = std::path::Path::new("C:/p");
-        let f = std::path::Path::new("C:/p/imports/sub/a.txt");
+        let root = std::path::Path::new("/proj");
+        let f = std::path::Path::new("/proj/imports/sub/a.txt");
         assert_eq!(windows_relative(root, f).unwrap(), r"imports\sub\a.txt");
     }
 

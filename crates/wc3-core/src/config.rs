@@ -131,13 +131,13 @@ mod tests {
     fn build_context_paths() {
         let cfg = ProjectConfig::from_json(r#"{ "mapdir": "map" }"#).unwrap();
         let ctx = BuildContext::new(
-            std::path::Path::new("C:/proj"),
+            std::path::Path::new("/proj"),
             cfg,
             BuildOptions::default(),
         );
-        assert_eq!(ctx.source_dir(), std::path::Path::new("C:/proj/src"));
-        assert_eq!(ctx.build_dir(), std::path::Path::new("C:/proj/.build"));
-        assert_eq!(ctx.map_dir().unwrap(), std::path::Path::new("C:/proj/map"));
+        assert_eq!(ctx.source_dir(), std::path::Path::new("/proj/src"));
+        assert_eq!(ctx.build_dir(), std::path::Path::new("/proj/.build"));
+        assert_eq!(ctx.map_dir().unwrap(), std::path::Path::new("/proj/map"));
     }
 
     #[test]
@@ -153,19 +153,16 @@ mod tests {
             map: Some(std::path::PathBuf::from("other")),
             ..Default::default()
         };
-        let ctx = BuildContext::new(std::path::Path::new("C:/proj"), cfg.clone(), opts);
-        assert_eq!(
-            ctx.map_dir().unwrap(),
-            std::path::Path::new("C:/proj/other")
-        );
+        let ctx = BuildContext::new(std::path::Path::new("/proj"), cfg.clone(), opts);
+        assert_eq!(ctx.map_dir().unwrap(), std::path::Path::new("/proj/other"));
         let opts = BuildOptions {
-            map: Some(std::path::PathBuf::from("D:/abs/map.w3x")),
+            map: Some(std::path::PathBuf::from("/abs/map.w3x")),
             ..Default::default()
         };
-        let ctx = BuildContext::new(std::path::Path::new("C:/proj"), cfg, opts);
+        let ctx = BuildContext::new(std::path::Path::new("/proj"), cfg, opts);
         assert_eq!(
             ctx.map_dir().unwrap(),
-            std::path::Path::new("D:/abs/map.w3x")
+            std::path::Path::new("/abs/map.w3x")
         );
     }
 
@@ -173,7 +170,7 @@ mod tests {
     fn missing_mapdir_errors_with_key() {
         let cfg = ProjectConfig::from_json("{}").unwrap();
         let ctx = BuildContext::new(
-            std::path::Path::new("C:/proj"),
+            std::path::Path::new("/proj"),
             cfg,
             BuildOptions::default(),
         );

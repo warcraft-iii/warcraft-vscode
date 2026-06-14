@@ -225,10 +225,7 @@ fn extract_user_script_location(msg: &str) -> (Option<String>, Option<u32>) {
                 if let Ok(line) = after[..colon].trim().parse::<u32>() {
                     // 提取文件路径(取最后一个路径分隔符之后的部分)
                     let before = &segment[..idx + 4]; // 含 .lua
-                    let file = before
-                        .rsplit(['/', '\\', ' '])
-                        .next()
-                        .unwrap_or(before);
+                    let file = before.rsplit(['/', '\\', ' ']).next().unwrap_or(before);
                     return (Some(file.to_string()), Some(line));
                 }
             }

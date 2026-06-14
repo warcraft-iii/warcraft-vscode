@@ -67,7 +67,12 @@ fn build_release_input() -> (PathBuf, String) {
 }
 
 /// 跑混淆并验证
-fn run_preset(input_path: &std::path::Path, original_result: &str, preset: &str, iterations: usize) {
+fn run_preset(
+    input_path: &std::path::Path,
+    original_result: &str,
+    preset: &str,
+    iterations: usize,
+) {
     let confuse_exe = repo_root().join("crates/wc3-confuse/target/release/wc3-confuse.exe");
     if !confuse_exe.is_file() {
         println!("  [SKIP] wc3-confuse.exe not built (run: cargo build --manifest-path crates/wc3-confuse/Cargo.toml --release)");
@@ -120,9 +125,16 @@ fn run_preset(input_path: &std::path::Path, original_result: &str, preset: &str,
             Ok(o) => {
                 let stderr = String::from_utf8_lossy(&o.stderr);
                 let stdout = String::from_utf8_lossy(&o.stdout);
-                println!("    [{i}/{iterations}] CONFUSE_FAILED (exit {})  {elapsed}ms", o.status);
-                if !stderr.is_empty() { println!("      stderr: {}", stderr.lines().next().unwrap_or("")); }
-                if !stdout.is_empty() { println!("      stdout: {}", stdout.lines().last().unwrap_or("")); }
+                println!(
+                    "    [{i}/{iterations}] CONFUSE_FAILED (exit {})  {elapsed}ms",
+                    o.status
+                );
+                if !stderr.is_empty() {
+                    println!("      stderr: {}", stderr.lines().next().unwrap_or(""));
+                }
+                if !stdout.is_empty() {
+                    println!("      stdout: {}", stdout.lines().last().unwrap_or(""));
+                }
                 fail += 1;
             }
             Err(e) => {
@@ -133,7 +145,10 @@ fn run_preset(input_path: &std::path::Path, original_result: &str, preset: &str,
     }
 
     let avg = total_ms / iterations as u128;
-    println!("  {preset}: {pass}/{} passed, avg {avg}ms/iter", pass + fail);
+    println!(
+        "  {preset}: {pass}/{} passed, avg {avg}ms/iter",
+        pass + fail
+    );
     assert_eq!(fail, 0, "{preset} had {fail} failures");
 }
 
@@ -180,9 +195,14 @@ fn confuse_bench_all_presets() {
         let elapsed = start.elapsed().as_millis();
         let out_size = std::fs::metadata(&output).map(|m| m.len()).unwrap_or(0);
         let ratio = out_size as f64 / input_size as f64 * 100.0;
-        println!("    obfuscation {}: {elapsed}ms, {out_size}B ({ratio:.0}%)",
-            if status.success() { "OK" } else { "FAILED" });
-        assert!(status.success(), "Strong obfuscation should complete successfully");
+        println!(
+            "    obfuscation {}: {elapsed}ms, {out_size}B ({ratio:.0}%)",
+            if status.success() { "OK" } else { "FAILED" }
+        );
+        assert!(
+            status.success(),
+            "Strong obfuscation should complete successfully"
+        );
     }
 
     std::fs::remove_dir_all(&root).unwrap();

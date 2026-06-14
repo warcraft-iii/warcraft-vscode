@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Rust toolchain
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+
+      # Node toolchain
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Rust checks
+      - name: Rust fmt
+        run: cargo fmt --all -- --check
+      - name: Rust clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Rust test
+        run: cargo test --workspace --locked
+
+      # wc3-confuse (独立 workspace，mlua lua51 与 lua54 feature 互斥)
+      - name: wc3-confuse fmt
+        run: cargo fmt --manifest-path crates/wc3-confuse/Cargo.toml -- --check
+      - name: wc3-confuse clippy
+        run: cargo clippy --manifest-path crates/wc3-confuse/Cargo.toml --all-targets --locked -- -D warnings
+
+      # Build wc3.exe (release) and place in bin/
+      - name: Build wc3.exe
+        run: |
+          cargo build -p wc3-cli --release
+          Copy-Item target\release\wc3.exe bin\wc3.exe -Force
+
+      # Node build
+      - name: npm install
+        run: npm ci --ignore-scripts
+      - name: Webpack build
+        run: npm run build
+
+      # Upload VSIX artifact (for publish job and manual download)
+      - name: Package VSIX
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          npm install -g @vscode/vsce
+          vsce package -o warcraft-vscode.vsix
+      - name: Upload VSIX
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: warcraft-vscode.vsix
+
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@v4
+        with:
+          name: vsix
+
+      # Publish to VS Code Marketplace
+      - name: Publish to Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VS_TOKEN }}
+        run: |
+          npm install -g @vscode/vsce
+          vsce publish --packagePath warcraft-vscode.vsix -p $VSCE_PAT
+
+      # Publish to npm
+      - name: Publish to npm
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+
+      # Create GitHub Release with VSIX
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: warcraft-vscode.vsix
+          generate_release_notes: true

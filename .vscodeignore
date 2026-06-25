@@ -16,3 +16,17 @@ postinstall.js
 prepare.js
 .lua-format
 .npmignore
+
+# Rust sources & build artifacts — never ship these (they bloat the VSIX
+# and trip the secret scanner on StormLib's embedded verification key).
+# Note: bin/ (compiled wc3 / wc3-confuse / cli.js) IS shipped and must stay.
+target/**
+crates/**
+**/Cargo.toml
+**/Cargo.lock
+**/build.rs
+testdata/**
+docs/**
+scripts/**
+typings/**
+

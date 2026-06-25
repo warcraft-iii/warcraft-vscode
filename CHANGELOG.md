@@ -1,3 +1,56 @@
+## [0.3.7-rc.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.6...v0.3.7-rc.0) (2026-06-25)
+
+
+### Bug Fixes
+
+* canonicalize template EOL to LF and harden golden generation ([9ae8533](https://github.com/warcraft-iii/warcraft-vscode/commit/9ae853393b3771cd3c9634a813ad5a3e3d7a5609))
+* **cli:** non-zero exit on invalid compile arguments ([58abebc](https://github.com/warcraft-iii/warcraft-vscode/commit/58abebcf9cd921af546e5064700eca766c470458))
+* **confuse:** patch Prometheus math.log10 for Lua 5.1/5.4 compat ([6e066d0](https://github.com/warcraft-iii/warcraft-vscode/commit/6e066d00902efe9b467558bbba334e71d9dfe411))
+* **core:** include exit status in ObjEditing failure message ([8602902](https://github.com/warcraft-iii/warcraft-vscode/commit/86029020e1edc200c731bb1c6d24af951e30d390))
+* **core:** keep space after numeric literals before dot/word tokens ([bba2784](https://github.com/warcraft-iii/warcraft-vscode/commit/bba27847857061ca7d4f33b64ff90286ea8d584f))
+* **core:** pre-delete extraction outputs and cover scripts fallback ([c704f24](https://github.com/warcraft-iii/warcraft-vscode/commit/c704f24c9dcbb93daef0d31eb9eaefcbc69f4803))
+* **core:** propagate walk errors in source collection ([3e71647](https://github.com/warcraft-iii/warcraft-vscode/commit/3e71647192ca21ad6101ab5c409814394065a2b2))
+* **core:** restrict compiletime detection to bare paren calls ([1f861ec](https://github.com/warcraft-iii/warcraft-vscode/commit/1f861ec880459a0359f54b624fa35f6aa2851d21))
+* **core:** scan requires followed by member access or chained calls ([31c112a](https://github.com/warcraft-iii/warcraft-vscode/commit/31c112a100ebb938bb6ef172124fe55e0ddf6fd3))
+* **core:** scripts fallback when extracting war3map.lua from file maps ([ef8755f](https://github.com/warcraft-iii/warcraft-vscode/commit/ef8755f156f844be83097b1a97a63707d8bb5148))
+* **core:** top-to-bottom compiletime eval, shared engine per build, AST-precise args ([01e2848](https://github.com/warcraft-iii/warcraft-vscode/commit/01e28489618b889022ebe7115cf97f4cd85b515f))
+* **core:** use cross-platform paths in unit tests (macOS compat) ([4524dea](https://github.com/warcraft-iii/warcraft-vscode/commit/4524dea6a17e1724bc7506f64f1a3bc044b91e3b))
+* **deps:** update stormlib rev to c954b79 (cmake 4.x compat fix) ([5f98d8f](https://github.com/warcraft-iii/warcraft-vscode/commit/5f98d8fece291095598af927aff1b0db33503d08))
+* enable lua54 syntax parsing in full_moon ([84450d7](https://github.com/warcraft-iii/warcraft-vscode/commit/84450d7ca20be73c09a44f278bb7801a460fea70))
+* **ext:** update bin/cli.js launcher, remove obsolete TS template sync test ([c835ca8](https://github.com/warcraft-iii/warcraft-vscode/commit/c835ca8a5ae89feb0d42f8817959bd424483fc60))
+
+
+### Features
+
+* **cli:** add compile-only subcommand for golden baseline ([0422a99](https://github.com/warcraft-iii/warcraft-vscode/commit/0422a993b564a3e864543ee94f23eb89f38481b8))
+* **cli:** objediting, pack and build subcommands ([6855597](https://github.com/warcraft-iii/warcraft-vscode/commit/685559766bebcad8304191a048921902c35ca291))
+* **cli:** wc3 compile subcommand with NDJSON events ([95f60a8](https://github.com/warcraft-iii/warcraft-vscode/commit/95f60a89ca2b5f622bc9c97dceab268f8ee73430))
+* **confuse:** prometheus runner spike on mlua/lua51 ([e1566ca](https://github.com/warcraft-iii/warcraft-vscode/commit/e1566caf293173baff854499a67ddf4f28d9501a))
+* **core:** comment macro processing (debug/release/classic/reforge) ([6124a31](https://github.com/warcraft-iii/warcraft-vscode/commit/6124a312cd653643d13349af7d1c182b7589d31d))
+* **core:** compiletime evaluation via mlua with span substitution ([c43d4ac](https://github.com/warcraft-iii/warcraft-vscode/commit/c43d4ac3e7ac09ae1667ba53d3c438cd88061e4b))
+* **core:** debug compile pipeline ([3ebc35e](https://github.com/warcraft-iii/warcraft-vscode/commit/3ebc35eb9e5f756ba19d8e7192180056f1c36d38))
+* **core:** debug/release template rendering with classic gating ([9299851](https://github.com/warcraft-iii/warcraft-vscode/commit/929985168654d4756e2e10956322da355d739d29))
+* **core:** embed ObjEditing Lua VM, eliminate ObjEditing.exe dependency ([d7723ad](https://github.com/warcraft-iii/warcraft-vscode/commit/d7723adeb36151a0aed754320a985f94cc5c1913))
+* **core:** extract file/line from minify parse errors and ObjEditing Lua tracebacks ([c28ce23](https://github.com/warcraft-iii/warcraft-vscode/commit/c28ce23a021607089ad7f015ff5235d7edd4fada))
+* **core:** lua literal helpers (comment level, keys, value serialization) ([4dbaa82](https://github.com/warcraft-iii/warcraft-vscode/commit/4dbaa8298193e6bd0419a7c1c8739e28455d02c7))
+* **core:** map packing via stormlib (generate and copy-append paths) ([adf0d46](https://github.com/warcraft-iii/warcraft-vscode/commit/adf0d4614e96c06a0d8c7ea6967797ce76d20146))
+* **core:** mpq module backed by stormlib crate (git dep) ([58bd9de](https://github.com/warcraft-iii/warcraft-vscode/commit/58bd9debc2dec795431383059a54ad92da12209b))
+* **core:** objediting orchestration (def management, source prep, exe wrapper) ([657201e](https://github.com/warcraft-iii/warcraft-vscode/commit/657201edafe86c32b4cd88d155578f7706d5b143))
+* **core:** pack file collection and windows-style relative names ([bd63e4f](https://github.com/warcraft-iii/warcraft-vscode/commit/bd63e4fdced6c6ca44346069165632f66e632ba7))
+* **core:** packlist generation replicating TS order and dedup ([6b9daf1](https://github.com/warcraft-iii/warcraft-vscode/commit/6b9daf19d053541ef7737ceede1ca3d3e61c06b5))
+* **core:** project config parsing and build context ([a7fb053](https://github.com/warcraft-iii/warcraft-vscode/commit/a7fb05338e66138bfc12fe81302452619dac408f))
+* **core:** release compile pipeline with require graph ([3f4b6a6](https://github.com/warcraft-iii/warcraft-vscode/commit/3f4b6a67221771098ab32471e13e5ee9157611a5))
+* **core:** require/dofile/loadfile scanning and resolution ([4d5ee3e](https://github.com/warcraft-iii/warcraft-vscode/commit/4d5ee3ea84b790e09a6e8a1305d0c2e026c01e41))
+* **core:** source file collection and naming rules ([f1e12ca](https://github.com/warcraft-iii/warcraft-vscode/commit/f1e12cafa6d0c25f167982daf097bc6498f6eb2a))
+* **core:** token-level lua minifier (no renaming) ([eaf7655](https://github.com/warcraft-iii/warcraft-vscode/commit/eaf765551cc3aa66452b902fa3f1e4993fe9a361))
+* **core:** war3map.j cheat injection and mopaq subprocess wrapper ([f0e561e](https://github.com/warcraft-iii/warcraft-vscode/commit/f0e561e3138b4f030b22c3d7aa452b1cac8350f6))
+* **ext:** NDJSON bridge for spawning wc3.exe subprocess ([f1b0f11](https://github.com/warcraft-iii/warcraft-vscode/commit/f1b0f11e8783f8aa62ec16246350c3dc41075a4e))
+* structured error reporting with file/line location ([e45d289](https://github.com/warcraft-iii/warcraft-vscode/commit/e45d28964e5b75cd6857967b866587d7cbcd2394))
+
+
+### Performance Improvements
+
+* **core:** linear token collection in minify, clearer spacing state ([fdd2e42](https://github.com/warcraft-iii/warcraft-vscode/commit/fdd2e420ce35a4b6b4b6839894dd1d3252f2b32a))
 ## [0.3.6](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.5...v0.3.6) (2026-04-18)
 
 

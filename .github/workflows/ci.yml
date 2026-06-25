@@ -85,8 +85,15 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           VSCE_PRE_RELEASE: ${{ contains(github.ref_name, '-') }}
+        shell: bash
         run: |
           npm install -g @vscode/vsce
+          # VS Marketplace rejects SemVer prerelease suffixes (e.g. -rc.0) in the
+          # version string — it only accepts strict X.Y.Z and tracks pre-release
+          # status via the --pre-release flag instead. Strip the suffix here so the
+          # VSIX is Marketplace-compliant; npm publish below still uses the full tag.
+          node -e "const fs=require('fs');const p=require('./package.json');p.version=p.version.replace(/[-+].*/,'');fs.writeFileSync('./package.json',JSON.stringify(p,null,2)+'\n')"
+          echo "Packaging version: $(node -p "require('./package.json').version")"
           OPT=""
           if [ "$VSCE_PRE_RELEASE" = "true" ]; then OPT="--pre-release"; fi
           vsce package $OPT --target ${{ matrix.target }} -o warcraft-vscode-${{ matrix.target }}.vsix
@@ -122,6 +129,7 @@ jobs:
       - name: Publish to Marketplace
         env:
           VSCE_PAT: ${{ secrets.VS_TOKEN }}
+        shell: bash
         run: |
           npm install -g @vscode/vsce
           OPT=""

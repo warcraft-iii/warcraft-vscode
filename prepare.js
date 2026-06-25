@@ -51,6 +51,55 @@ async function downloadRepo(owner, repo, out) {
     console.log(`Download repo ${repo} out: ${out} success`);
 }
 
+// 把 `math.log10(EXPR)` 还原为 `math.log(EXPR) / math.log(10)`，
+// 其中 EXPR 可含嵌套括号。幂等：对已经是 math.log 形式的内容不改动。
+function rewriteLog10(content) {
+    const needle = 'math.log10(';
+    let out = '';
+    let i = 0;
+    while (true) {
+        const idx = content.indexOf(needle, i);
+        if (idx < 0) {
+            out += content.slice(i);
+            break;
+        }
+        out += content.slice(i, idx);
+        // 从 needle 之后的 '(' 开始做括号配平
+        let depth = 1;
+        let j = idx + needle.length;
+        while (j < content.length && depth > 0) {
+            const ch = content[j];
+            if (ch === '(') depth++;
+            else if (ch === ')') depth--;
+            if (depth === 0) break;
+            j++;
+        }
+        if (depth !== 0) {
+            // 括号不配平，原样保留以免破坏文件
+            out += content.slice(idx);
+            break;
+        }
+        const inner = content.slice(idx + needle.length, j);
+        out += `math.log(${inner}) / math.log(10)`;
+        i = j + 1;
+    }
+    return out;
+}
+
+// 对解压后的文件应用本地补丁。
+async function applyPatches(unzip, patches) {
+    for (const patch of patches) {
+        const file = path.join(unzip, patch.file);
+        let content = await fs.readFile(file, 'utf8');
+        const before = content;
+        content = patch.rewrite(content);
+        if (content !== before) {
+            await fs.writeFile(file, content);
+            console.log(`patched ${patch.file}`);
+        }
+    }
+}
+
 async function extractFile(zipFile, out, prefix) {
     const zip = await yauzl.open(zipFile);
     try {
@@ -84,6 +133,13 @@ async function main() {
             clone: true,
             unzip: './bin/lua',
             prefix: '/src/',
+            // math.log10 在我们的 Lua 运行时不存在，还原为 math.log(x)/math.log(10)
+            patches: [
+                {
+                    file: 'prometheus/steps/NumbersToExpressions.lua',
+                    rewrite: rewriteLog10,
+                },
+            ],
         },
     ];
 
@@ -92,6 +148,9 @@ async function main() {
             await fs.emptyDir(f.unzip);
             await downloadRepo(f.owner, f.repo, f.out);
             await extractFile(f.out, f.unzip, f.prefix);
+            if (f.patches) {
+                await applyPatches(f.unzip, f.patches);
+            }
             await fs.remove(f.out);
         } else {
             const versions = await downloadAsserts(f.owner, f.repo, f.out);

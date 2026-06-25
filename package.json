@@ -215,11 +215,14 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
+    "vscode:prepublish": "npm run build && npm run cargo:build",
     "build": "webpack --mode production",
     "compile": "webpack --mode development",
     "watch": "webpack --mode development --watch --info-verbosity verbose",
     "test": "npm run compile",
+    "cargo:wc3": "node scripts/build-rust.js wc3",
+    "cargo:confuse": "node scripts/build-rust.js confuse",
+    "cargo:build": "node scripts/build-rust.js",
     "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md",
     "vscode:postinstall": "npm run prepare",
     "prepare": "node ./prepare.js"

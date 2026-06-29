@@ -77,6 +77,11 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Webpack build
         run: npm run build
+      # 拉取 Prometheus lua 资源到 bin/lua（wc3-confuse.exe 的 Lua 混淆功能需要）。
+      # VSIX 与 npm 载荷都依赖它；仅发版 tag 时需要。
+      - name: Fetch lua resources
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: node prepare.js lua
 
       # Package platform-specific VSIX
       # - 预发布 tag (如 v1.0.0-rc.1 / v1.0.0-beta.1) → 预发布包
@@ -104,6 +109,17 @@ jobs:
           name: vsix-${{ matrix.target }}
           path: warcraft-vscode-${{ matrix.target }}.vsix
 
+      # 上传 npm 载荷（仅 windows 构建）：CLI 垫片 + Rust 二进制 + lua 资源 +
+      # webpack CLI bundle。publish 任务据此发布到 npm。
+      - name: Upload npm payload
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.target == 'win32-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-payload
+          path: |
+            bin/
+            out/cli.js
+
   publish:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
@@ -123,6 +139,11 @@ jobs:
         with:
           pattern: vsix-*
           merge-multiple: true
+      # 恢复 windows 构建产出的 npm 载荷（bin/ + out/cli.js）
+      - name: Download npm payload
+        uses: actions/download-artifact@v4
+        with:
+          name: npm-payload
 
       # Publish platform-specific VSIXs to Marketplace
       # 预发布 → vsce publish --pre-release；正式版 → 普通 publish

@@ -1,3 +1,14 @@
+// npm 的 `prepare` 生命周期钩子不仅会在本地 `npm install`（开发初始化，期望运行）
+// 时触发，也会在 `npm publish` / `npm pack` 时触发。CI 的 publish 任务没有
+// node_modules，也没有 Rust 工具链，下面的 require 会因找不到 '@octokit/rest'
+// 而抛错并中断发布。发布的 npm 包只是 CLI 垫片 (bin/cli.js)；res/、bin/lua/
+// 与 bin/wc3.exe 均被 .gitignore/.npmignore 排除，本就不会从此处打包。因此
+// 在 publish/pack 上下文中直接跳过。
+if (process.env.npm_command === 'publish' || process.env.npm_command === 'pack') {
+    console.log(`prepare: skipping (npm ${process.env.npm_command})`);
+    process.exit(0);
+}
+
 const Octokit = require('@octokit/rest');
 const got = require('got');
 const fs = require('fs-extra');
@@ -104,8 +115,12 @@ async function extractFile(zipFile, out, prefix) {
     const zip = await yauzl.open(zipFile);
     try {
         await zip.walkEntries(async (entry) => {
-            if (entry.fileName.indexOf(prefix) < 0) return;
-            const newPath = entry.fileName.substring(entry.fileName.indexOf(prefix) + prefix.length);
+            const idx = entry.fileName.indexOf(prefix);
+            if (idx < 0) return;
+            // 仅匹配顶层 <root>/src/，跳过嵌套的 <root>/web/src/ 等，避免误抓
+            // 仓库里的 web/playground 资源污染 bin/lua。
+            if (entry.fileName.slice(0, idx).includes('/')) return;
+            const newPath = entry.fileName.substring(idx + prefix.length);
             if (entry.fileName.endsWith('/')) {
                 await fs.mkdirp(path.join(out, newPath));
             } else {
@@ -119,14 +134,20 @@ async function extractFile(zipFile, out, prefix) {
     }
 }
 async function main() {
+    // 可选目标过滤：`node prepare.js lua` 只拉取 Prometheus lua 资源 (bin/lua)，
+    // 供 CI 填充 npm/VSIX 载荷；跳过 ObjEditing 下载与 wc3.exe 构建（CI 单独构建）。
+    // 无参数 = 完整运行（本地 npm install 初始化）。
+    const target = process.argv[2];
     const files = [
         {
+            id: 'objediting',
             owner: 'warcraft-iii',
             repo: 'ObjEditingDefine',
             out: path.join('./res', 'def.zip'),
             json: path.join('./res', '.version.json'),
         },
         {
+            id: 'lua',
             owner: 'prometheus-lua',
             repo: 'Prometheus',
             out: path.join('./bin', 'prometheus.zip'),
@@ -141,7 +162,7 @@ async function main() {
                 },
             ],
         },
-    ];
+    ].filter((f) => !target || f.id === target);
 
     for (const f of files) {
         if (f.clone) {
@@ -158,6 +179,11 @@ async function main() {
                 await fs.writeJson(f.json, versions);
             }
         }
+    }
+
+    if (target) {
+        console.log(`prepare: targeted run (${target}), skipping wc3.exe build`);
+        return;
     }
 
     await fs.mkdirp('out');

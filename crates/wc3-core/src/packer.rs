@@ -45,7 +45,7 @@ pub fn generate_packlist(ctx: &BuildContext) -> Result<Vec<PackItem>> {
 
     items.extend(pack_items_from(&ctx.map_dir()?, true)?);
 
-    let imports = [
+    let mut imports = vec![
         "imports".to_string(),
         format!(
             "imports.{}",
@@ -60,6 +60,9 @@ pub fn generate_packlist(ctx: &BuildContext) -> Result<Vec<PackItem>> {
             }
         ),
     ];
+    if !ctx.opts.release {
+        imports.push("imports.extern".to_string());
+    }
     let libs = lib_names(ctx)?;
     for imp in &imports {
         for lib in &libs {
@@ -186,6 +189,10 @@ mod tests {
         std::fs::write(d.join("imports.reforge/sub/rf.txt"), "x").unwrap();
         std::fs::create_dir_all(d.join("imports.classic")).unwrap();
         std::fs::write(d.join("imports.classic/cls.txt"), "x").unwrap();
+        // imports.extern：仅 debug 启用，优先级最高（覆盖 imports/data.txt）
+        std::fs::create_dir_all(d.join("imports.extern")).unwrap();
+        std::fs::write(d.join("imports.extern/ext.txt"), "from-extern").unwrap();
+        std::fs::write(d.join("imports.extern/data.txt"), "extern-data").unwrap();
         // objediting 产物
         std::fs::create_dir_all(d.join(".build/objediting")).unwrap();
         std::fs::write(d.join(".build/objediting/war3map.w3u"), "obj").unwrap();
@@ -216,27 +223,29 @@ mod tests {
         let root = synth_project();
         let items = generate_packlist(&ctx(&root, false, false)).unwrap();
         // 推入序：map(data.txt, icons\i.txt) → imports(lib: common,override；root: .hidden 排除,
-        // data,override) → imports.debug(lib: libdbg) → imports.reforge(sub\rf) → objediting → war3map.lua
+        // data,override) → imports.debug(lib: libdbg) → imports.reforge(sub\rf) → imports.extern(ext,data)
+        // → objediting → war3map.lua
         // reduceRight：反序 + 同名后者优先
         assert_eq!(
             names(&items),
             vec![
                 "war3map.lua",
                 r"war3map.w3u",
+                "ext.txt",
+                "data.txt",
                 r"sub\rf.txt",
                 "libdbg.txt",
                 "override.txt",
-                "data.txt",
                 "common.txt",
                 r"icons\i.txt",
             ]
         );
-        // 同名覆盖：override 取根 imports，data 取 imports
+        // 同名覆盖：override 取根 imports，data 取 imports.extern（extern 优先级最高）
         let get = |n: &str| {
             std::fs::read_to_string(&items.iter().find(|(name, _)| name == n).unwrap().1).unwrap()
         };
         assert_eq!(get("override.txt"), "from-root");
-        assert_eq!(get("data.txt"), "imports-data");
+        assert_eq!(get("data.txt"), "extern-data");
         std::fs::remove_dir_all(&root).unwrap();
     }
 
@@ -251,6 +260,7 @@ mod tests {
         assert!(n.contains(&"rel.txt"), "imports.release 启用");
         assert!(!n.contains(&"libdbg.txt"), "imports.debug 关闭");
         assert!(!n.contains(&r"sub\rf.txt"), "imports.reforge 关闭");
+        assert!(!n.contains(&"ext.txt"), "imports.extern 关闭（release）");
         // classic：map 目录是 dir 时其文件仍收集（packByPackList 阶段才报错，与 TS 一致）
         assert!(n.contains(&r"icons\i.txt"));
         std::fs::remove_dir_all(&root).unwrap();

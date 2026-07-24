@@ -1,3 +1,18 @@
+## [0.3.8-rc.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.7-rc.0...v0.3.8-rc.0) (2026-07-24)
+
+
+### Bug Fixes
+
+* **build:** platform-aware binary names and VSIX packaging ([acc27e3](https://github.com/warcraft-iii/warcraft-vscode/commit/acc27e3607959a960f30be5f13b86d41f1f614cf))
+* **CI:** publish NPM Package failed. ([bf1dd66](https://github.com/warcraft-iii/warcraft-vscode/commit/bf1dd6662e2a163e5eecdf2d83bba5eee3b0ec88))
+
+
+### Features
+
+* **packer:** add imports.extern override for debug builds ([11b840c](https://github.com/warcraft-iii/warcraft-vscode/commit/11b840cbeae0c2a17f63bd601088ab6d52de9bb7))
+
+
+
 ## [0.3.7-rc.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.6...v0.3.7-rc.0) (2026-06-25)
 
 

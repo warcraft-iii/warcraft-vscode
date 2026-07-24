@@ -25,10 +25,12 @@ jobs:
             target: win32-x64
             binary: wc3.exe
             copy_cmd: Copy-Item target\release\wc3.exe bin\wc3.exe -Force
+            confuse_copy: Copy-Item target\release\wc3-confuse.exe bin\wc3-confuse.exe -Force
           - os: macos-latest
             target: darwin-arm64
             binary: wc3
             copy_cmd: cp target/release/wc3 bin/wc3
+            confuse_copy: cp target/release/wc3-confuse bin/wc3-confuse
     runs-on: ${{ matrix.os }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -71,6 +73,12 @@ jobs:
         run: |
           cargo build -p wc3-cli --release
           ${{ matrix.copy_cmd }}
+
+      # Build wc3-confuse (独立 workspace：mlua lua51 与 wc3-cli 的 lua54 feature 互斥)
+      - name: Build wc3-confuse
+        run: |
+          cargo build --manifest-path crates/wc3-confuse/Cargo.toml --target-dir target --release
+          ${{ matrix.confuse_copy }}
 
       # Node build
       - name: npm install

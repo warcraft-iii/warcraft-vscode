@@ -42,7 +42,8 @@ export class WarcraftBuildError extends Error {
 }
 
 function wc3ExePath(): string {
-    return env.asExetensionPath('bin/wc3.exe');
+    const bin = process.platform === 'win32' ? 'wc3.exe' : 'wc3';
+    return env.asExetensionPath(`bin/${bin}`);
 }
 
 function resDir(): string {

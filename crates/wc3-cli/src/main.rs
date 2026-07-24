@@ -48,7 +48,7 @@ enum Command {
         map: Option<PathBuf>,
         #[arg(long, value_enum, default_value = "disable")]
         confusion: ConfusionArg,
-        /// Directory containing wc3-confuse.exe (defaults next to wc3.exe)
+        /// Directory containing wc3-confuse (defaults next to wc3)
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },
@@ -61,7 +61,7 @@ enum Command {
         /// Override mapdir (file or folder)
         #[arg(short, long)]
         map: Option<PathBuf>,
-        /// Directory containing def.zip / .version.json (defaults next to wc3.exe)
+        /// Directory containing def.zip / .version.json (defaults next to wc3)
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },
@@ -96,7 +96,7 @@ enum Command {
         output: Option<PathBuf>,
         #[arg(long, value_enum, default_value = "disable")]
         confusion: ConfusionArg,
-        /// Directory containing def.zip / wc3-confuse.exe (defaults next to wc3.exe)
+        /// Directory containing def.zip / wc3-confuse (defaults next to wc3)
         #[arg(long)]
         res_dir: Option<PathBuf>,
     },
@@ -116,6 +116,16 @@ fn res_dir_or_exe_dir(res_dir: Option<PathBuf>) -> PathBuf {
             .and_then(|p| p.parent().map(|d| d.to_path_buf()))
             .unwrap_or_else(|| PathBuf::from("."))
     })
+}
+
+/// wc3-confuse 二进制名：Windows 带 `.exe`，其它平台无扩展名。
+fn confuse_exe_path(dir: &std::path::Path) -> PathBuf {
+    let name = if cfg!(windows) {
+        "wc3-confuse.exe"
+    } else {
+        "wc3-confuse"
+    };
+    dir.join(name)
 }
 
 fn make_ctx(
@@ -178,7 +188,7 @@ fn main() -> ExitCode {
         } => finish((|| {
             let ctx = make_ctx(&project, release, classic, map, confusion.into())?;
             let dir = res_dir_or_exe_dir(res_dir);
-            let confuse = dir.join("wc3-confuse.exe");
+            let confuse = confuse_exe_path(&dir);
             let tools = Tools {
                 confuse_exe: confuse.exists().then_some(confuse.as_path()),
             };
@@ -235,7 +245,7 @@ fn main() -> ExitCode {
             wc3_core::objediting::execute(&ctx, &dir)?;
             progress("objediting", "done");
             progress("compile", "Compiling script");
-            let confuse = dir.join("wc3-confuse.exe");
+            let confuse = confuse_exe_path(&dir);
             let tools = Tools {
                 confuse_exe: confuse.exists().then_some(confuse.as_path()),
             };

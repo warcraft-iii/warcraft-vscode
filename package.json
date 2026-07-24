@@ -34,10 +34,6 @@
   "bin": {
     "vscwarcraft": "./bin/cli.js"
   },
-  "files": [
-    "bin/",
-    "out/cli.js"
-  ],
   "contributes": {
     "jsonValidation": [
       {

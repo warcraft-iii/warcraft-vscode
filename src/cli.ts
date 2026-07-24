@@ -11,7 +11,8 @@ import * as cp from 'child_process';
 import { program } from 'commander';
 
 function wc3Exe(): string {
-    return path.resolve(__dirname, '../bin/wc3.exe');
+    const bin = process.platform === 'win32' ? 'wc3.exe' : 'wc3';
+    return path.resolve(__dirname, '../bin', bin);
 }
 
 function spawn(args: string[]): Promise<void> {

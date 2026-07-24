@@ -19,15 +19,19 @@ const ROOT = path.resolve(__dirname, '..');
 const BIN_DIR = path.join(ROOT, 'bin');
 const TARGET_RELEASE = path.join(ROOT, 'target', 'release');
 
+// Windows 产物带 .exe，macOS/Linux 无扩展名。artifacts 列两态供 copyArtifact 兜底，
+// label 按平台取真实名以保持日志/错误信息准确。
+const IS_WIN = process.platform === 'win32';
+
 const TARGETS = {
     wc3: {
-        label: 'wc3.exe',
+        label: IS_WIN ? 'wc3.exe' : 'wc3',
         // workspace 成员，可直接 -p
         args: ['build', '-p', 'wc3-cli', '--release'],
         artifacts: ['wc3.exe', 'wc3'],
     },
     confuse: {
-        label: 'wc3-confuse.exe',
+        label: IS_WIN ? 'wc3-confuse.exe' : 'wc3-confuse',
         // 独立 crate：必须指定 manifest；并显式 --target-dir 指向 workspace 的 target/，
         // 否则产物会落到 crates/wc3-confuse/target/ 而无法统一拷贝。
         args: [

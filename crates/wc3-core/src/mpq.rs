@@ -46,13 +46,16 @@ pub fn create_archive(out: &Path, files: &[(String, PathBuf)], with_filelist: bo
     if out.is_file() {
         std::fs::remove_file(out).map_err(|e| Error::io(out, e))?;
     }
-    let ar = stormlib::Archive::create(out, files.len(), with_filelist)
+    let mut ar = stormlib::Archive::create(out, files.len(), with_filelist)
         .map_err(|e| mpq_err(out, "create", e))?;
     for (name, path) in files {
-        let data = std::fs::read(path).map_err(|e| Error::io(path, e))?;
-        ar.write_file(name, &data)
+        let local = path
+            .to_str()
+            .ok_or_else(|| Error::new("error.io", format!("non-utf8 path: {}", path.display())))?;
+        ar.add_file(name, local)
             .map_err(|e| mpq_err(out, name, e))?;
     }
+    ar.compact().map_err(|e| mpq_err(out, "compact", e))?;
     Ok(())
 }
 

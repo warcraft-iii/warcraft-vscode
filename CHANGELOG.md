@@ -1,3 +1,9 @@
+## [0.3.9-rc.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.8-rc.0...v0.3.9-rc.0) (2026-08-29)
+
+
+### Bug Fixes
+
+* **build:** remove hardcoded VS 2022 cmake generator pin ([b73ac3e](https://github.com/warcraft-iii/warcraft-vscode/commit/b73ac3eabbb102619720ac943f39ac3c7a276639))
 ## [0.3.8-rc.0](https://github.com/warcraft-iii/warcraft-vscode/compare/v0.3.7-rc.0...v0.3.8-rc.0) (2026-07-24)
 
 

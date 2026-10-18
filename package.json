@@ -255,7 +255,7 @@
     "is-running": "^2.1.0",
     "lodash-es": "^4.17.21",
     "ps-node": "^0.1.6",
-    "simple-git": "^3.30.0",
+    "simple-git": "^4.0.1",
     "sudo-prompt": "^9.2.1",
     "vscode-nls": "^5.2.0",
     "yauzl-promise": "^2.1.3"

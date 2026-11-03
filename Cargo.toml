@@ -22,4 +22,4 @@ walkdir = "2"
 thiserror = "2"
 clap = { version = "4", features = ["derive"] }
 stormlib = { git = "https://github.com/warcraft-iii/MopaqPack-rs", rev = "c954b79" }
-zip = { version = "2", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
